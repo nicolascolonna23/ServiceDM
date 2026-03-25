@@ -52,18 +52,16 @@
             margin-top: 5px;
         }
 
-        /* CONTENEDOR CON LOGO DIFUMINADO DE FONDO */
         .container {
             width: 100%;
             max-width: 1250px;
             background: var(--card-bg);
             border-radius: 12px;
             position: relative;
-            overflow: hidden; /* Para que el logo no se salga de las esquinas redondeadas */
+            overflow: hidden;
             box-shadow: 0 20px 50px rgba(0,0,0,0.7);
         }
 
-        /* El Logo de fondo */
         .container::before {
             content: "";
             position: absolute;
@@ -72,18 +70,18 @@
             transform: translate(-50%, -50%);
             width: 60%;
             height: 60%;
-            background-image: url('logo_diemar4.png'); /* Asegúrate que el nombre sea exacto */
+            background-image: url('logo_diemar4.png');
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
-            opacity: 0.04; /* Nivel de difuminado (0.04 = 4% de visibilidad) */
-            pointer-events: none; /* Para que no estorbe al hacer clic en la tabla */
+            opacity: 0.04;
+            pointer-events: none;
             z-index: 0;
         }
 
         .table-wrapper {
             position: relative;
-            z-index: 1; /* Por encima del logo de fondo */
+            z-index: 1;
             overflow-x: auto;
         }
 
@@ -109,7 +107,6 @@
 
         th:hover { color: var(--primary-orange); }
 
-        /* Fila de filtros */
         .filter-row th {
             background-color: #0a0a0a;
             padding: 8px;
@@ -169,11 +166,11 @@
                         <th onclick="ordenarTabla(0)">Patente ↕</th>
                         <th onclick="ordenarTabla(1)">Marca ↕</th>
                         <th onclick="ordenarTabla(2)">Chofer ↕</th>
-                        <th onclick="ordenarTabla(4)">Último Service ↕</th>
-                        <th onclick="ordenarTabla(5)">KM Último ↕</th>
-                        <th onclick="ordenarTabla(6)">Próximo ↕</th>
-                        <th onclick="ordenarTabla(7)">KM Actual ↕</th>
-                        <th onclick="ordenarTabla(8)">Falta ↕</th>
+                        <th onclick="ordenarTabla(3)">Último Service ↕</th>
+                        <th onclick="ordenarTabla(4)">KM Último ↕</th>
+                        <th onclick="ordenarTabla(5)">Próximo ↕</th>
+                        <th onclick="ordenarTabla(6)">KM Actual ↕</th>
+                        <th onclick="ordenarTabla(7)">Falta ↕</th>
                     </tr>
                     <tr class="filter-row">
                         <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(0)"></th>
@@ -183,102 +180,4 @@
                         <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(4)"></th>
                         <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(5)"></th>
                         <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(6)"></th>
-                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(7)"></th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-body">
-                    <tr><td colspan="8">Cargando flota desde la nube...</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-<script>
-    const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
-
-    async function cargarDatos() {
-        try {
-            const version = new Date().getTime();
-            const response = await fetch(`${BASE_URL}&v=${version}`);
-            const csvText = await response.text();
-
-            if (csvText.includes("<html")) return;
-
-            const filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "" && f.includes(","));
-            const tablaBody = document.getElementById("tabla-body");
-            tablaBody.innerHTML = "";
-
-            filas.slice(1).forEach(fila => {
-                const col = fila.split(/[,;]/).map(c => c.replace(/"/g, "").trim());
-                if(col.length < 8) return;
-
-                const faltaVal = col[8] || "0";
-                const faltaNum = parseFloat(faltaVal.replace(/\./g, "").replace(",", "."));
-
-                let clase = "verde";
-                if (faltaNum < 5000) clase = "rojo";
-                else if (faltaNum < 15000) clase = "amarillo";
-
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td style="font-weight:bold; color:var(--primary-orange)">${col[0]}</td>
-                    <td>${col[1]}</td>
-                    <td>${col[2]}</td>
-                    <td>${col[4]}</td>
-                    <td class="km-val">${col[5]}</td>
-                    <td>${col[6]}</td>
-                    <td class="km-val">${col[7]}</td>
-                    <td><span class="status-pill ${clase}">${col[8]}</span></td>
-                `;
-                tablaBody.appendChild(tr);
-            });
-
-            document.getElementById("last-update").innerText = `Última actualización: ${new Date().toLocaleTimeString()}`;
-        } catch (e) { console.error(e); }
-    }
-
-    // FUNCIÓN PARA FILTRAR
-    function filtrarColumna(n) {
-        let inputs = document.getElementsByClassName("filter-input");
-        let filter = inputs[n].value.toUpperCase();
-        let table = document.getElementById("miTabla");
-        let tr = table.getElementsByTagName("tr");
-
-        for (let i = 2; i < tr.length; i++) { // Empezamos en 2 por las dos filas de header
-            let td = tr[i].getElementsByTagName("td")[n];
-            if (td) {
-                let txtValue = td.textContent || td.innerText;
-                tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-            }
-        }
-    }
-
-    // FUNCIÓN PARA ORDENAR (Asc/Desc)
-    let direccion = true;
-    function ordenarTabla(n) {
-        let table = document.getElementById("miTabla");
-        let rows = Array.from(table.querySelectorAll("tbody tr"));
-        
-        rows.sort((rowA, rowB) => {
-            let cellA = rowA.children[n].innerText.replace(/\./g, "").replace(",", ".");
-            let cellB = rowB.children[n].innerText.replace(/\./g, "").replace(",", ".");
-            
-            // Si es número, comparar como número
-            if (!isNaN(parseFloat(cellA)) && isFinite(cellA)) {
-                return direccion ? cellA - cellB : cellB - cellA;
-            }
-            // Si es texto
-            return direccion ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
-        });
-
-        direccion = !direccion;
-        let tbody = table.querySelector("tbody");
-        rows.forEach(row => tbody.appendChild(row));
-    }
-
-    cargarDatos();
-    setInterval(cargarDatos, 300000);
-</script>
-
-</body>
-</html>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..."
