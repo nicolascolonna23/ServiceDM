@@ -8,11 +8,11 @@
     
     <style>
         :root {
-            --bg-color: #121417;
-            --card-bg: #1e2126;
+            --bg-color: #0b0d0f;
+            --card-bg: #161a1e;
             --primary-orange: #d35400;
             --text-light: #f4f4f4;
-            --border-color: #333;
+            --border-color: #2a2e33;
             --status-red: #ff4d4d;
             --status-yellow: #ffcc00;
             --status-green: #2ecc71;
@@ -31,85 +31,119 @@
 
         .header {
             width: 100%;
-            max-width: 1200px;
+            max-width: 1250px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid var(--primary-orange);
-            padding-bottom: 20px;
+            padding-bottom: 15px;
         }
 
-        /* AJUSTE CLAVE PARA EL LOGO: */
-        .logo {
-            max-width: 100%; /* Permite que ocupe todo el ancho disponible si es necesario */
-            height: auto;
-            margin-bottom: 15px;
-            display: block; /* Asegura que se alinee como bloque */
-            max-height: 80px; /* Limita la altura máxima para que no sea gigante */
-            width: auto; /* Mantiene la proporción */
+        .logo-main {
+            max-height: 70px;
+            margin-bottom: 10px;
         }
 
         .refresh-indicator {
-            font-size: 11px;
-            color: #666;
+            font-size: 10px;
+            color: #555;
+            text-transform: uppercase;
             margin-top: 5px;
-            text-transform: uppercase;
         }
 
-        h1 {
-            font-weight: 300;
-            letter-spacing: 1px;
-            margin: 0;
-            text-transform: uppercase;
-            font-size: 1.5rem;
-            color: white;
-            text-align: center; /* Asegura que el título también esté centrado */
-        }
-
+        /* CONTENEDOR CON LOGO DIFUMINADO DE FONDO */
         .container {
             width: 100%;
-            max-width: 1200px;
-            overflow-x: auto;
+            max-width: 1250px;
             background: var(--card-bg);
-            border-radius: 8px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden; /* Para que el logo no se salga de las esquinas redondeadas */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+        }
+
+        /* El Logo de fondo */
+        .container::before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+            background-image: url('logo_diemar4.png'); /* Asegúrate que el nombre sea exacto */
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.04; /* Nivel de difuminado (0.04 = 4% de visibilidad) */
+            pointer-events: none; /* Para que no estorbe al hacer clic en la tabla */
+            z-index: 0;
+        }
+
+        .table-wrapper {
+            position: relative;
+            z-index: 1; /* Por encima del logo de fondo */
+            overflow-x: auto;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 900px;
+            min-width: 1000px;
         }
 
         th {
-            background-color: #111;
-            color: #bbb;
+            background-color: #000;
+            color: #888;
             text-transform: uppercase;
             font-size: 11px;
-            letter-spacing: 1px;
-            padding: 15px;
+            letter-spacing: 1.5px;
+            padding: 18px 10px;
             text-align: center;
+            cursor: pointer;
+            transition: color 0.3s;
+            position: sticky;
+            top: 0;
         }
+
+        th:hover { color: var(--primary-orange); }
+
+        /* Fila de filtros */
+        .filter-row th {
+            background-color: #0a0a0a;
+            padding: 8px;
+            cursor: default;
+        }
+
+        .filter-input {
+            width: 90%;
+            background: #111;
+            border: 1px solid #333;
+            color: #ccc;
+            padding: 5px;
+            font-size: 12px;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .filter-input:focus { border-color: var(--primary-orange); }
 
         td {
-            padding: 14px;
+            padding: 15px 10px;
             border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
+            font-size: 13.5px;
             text-align: center;
         }
 
-        tr:hover {
-            background-color: rgba(255, 255, 255, 0.03);
-        }
+        tr:hover { background-color: rgba(211, 84, 0, 0.05); }
 
         .status-pill {
-            padding: 4px 10px;
+            padding: 4px 12px;
             border-radius: 4px;
             font-weight: 600;
             font-size: 12px;
             display: inline-block;
-            min-width: 80px;
         }
 
         .rojo { color: var(--status-red); border: 1px solid var(--status-red); background: rgba(255,77,77,0.1); }
@@ -122,29 +156,41 @@
 <body>
 
     <div class="header">
-        <img src="logo_diemar4.png" alt="Diemar Logo" class="logo">
+        <img src="logo_diemar4.png" alt="Diemar" class="logo-main">
         <h1>Control de Servicios - Flota</h1>
-        <div class="refresh-indicator" id="last-update">Actualizando...</div>
+        <div class="refresh-indicator" id="last-update">Sincronizando...</div>
     </div>
 
     <div class="container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Patente</th>
-                    <th>Marca</th>
-                    <th>Chofer</th>
-                    <th>Último Service</th>
-                    <th>KM Último</th>
-                    <th>Próximo</th>
-                    <th>KM Actual</th>
-                    <th>Falta</th>
-                </tr>
-            </thead>
-            <tbody id="tabla-body">
-                <tr><td colspan="8">Cargando datos de flota...</td></tr>
-            </tbody>
-        </table>
+        <div class="table-wrapper">
+            <table id="miTabla">
+                <thead>
+                    <tr>
+                        <th onclick="ordenarTabla(0)">Patente ↕</th>
+                        <th onclick="ordenarTabla(1)">Marca ↕</th>
+                        <th onclick="ordenarTabla(2)">Chofer ↕</th>
+                        <th onclick="ordenarTabla(4)">Último Service ↕</th>
+                        <th onclick="ordenarTabla(5)">KM Último ↕</th>
+                        <th onclick="ordenarTabla(6)">Próximo ↕</th>
+                        <th onclick="ordenarTabla(7)">KM Actual ↕</th>
+                        <th onclick="ordenarTabla(8)">Falta ↕</th>
+                    </tr>
+                    <tr class="filter-row">
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(0)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(1)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(2)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(3)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(4)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(5)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(6)"></th>
+                        <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(7)"></th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-body">
+                    <tr><td colspan="8">Cargando flota desde la nube...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
 <script>
@@ -152,16 +198,13 @@
 
     async function cargarDatos() {
         try {
-            // Agregamos un número aleatorio al final para evitar el caché del navegador
-            const response = await fetch(`${BASE_URL}&t=${new Date().getTime()}`);
+            const version = new Date().getTime();
+            const response = await fetch(`${BASE_URL}&v=${version}`);
             const csvText = await response.text();
 
-            if (csvText.includes("<html") || csvText.includes("javascript")) {
-                console.error("Formato incorrecto recibido");
-                return;
-            }
+            if (csvText.includes("<html")) return;
 
-            const filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "");
+            const filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "" && f.includes(","));
             const tablaBody = document.getElementById("tabla-body");
             tablaBody.innerHTML = "";
 
@@ -169,43 +212,71 @@
                 const col = fila.split(/[,;]/).map(c => c.replace(/"/g, "").trim());
                 if(col.length < 8) return;
 
-                const faltaTexto = col[8] || "0";
-                const faltaNum = parseFloat(faltaTexto.replace(/\./g, "").replace(",", "."));
+                const faltaVal = col[8] || "0";
+                const faltaNum = parseFloat(faltaVal.replace(/\./g, "").replace(",", "."));
 
-                let claseEstado = "verde";
-                if (faltaNum < 5000) { 
-                    claseEstado = "rojo";
-                } else if (faltaNum < 15000) {
-                    claseEstado = "amarillo";
-                }
+                let clase = "verde";
+                if (faltaNum < 5000) clase = "rojo";
+                else if (faltaNum < 15000) clase = "amarillo";
 
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td style="font-weight:bold; color: var(--primary-orange)">${col[0]}</td>
+                    <td style="font-weight:bold; color:var(--primary-orange)">${col[0]}</td>
                     <td>${col[1]}</td>
                     <td>${col[2]}</td>
                     <td>${col[4]}</td>
                     <td class="km-val">${col[5]}</td>
                     <td>${col[6]}</td>
                     <td class="km-val">${col[7]}</td>
-                    <td><span class="status-pill ${claseEstado}">${col[8]}</span></td>
+                    <td><span class="status-pill ${clase}">${col[8]}</span></td>
                 `;
                 tablaBody.appendChild(tr);
             });
 
-            // Actualizar la hora de la última consulta en pantalla
-            const ahora = new Date();
-            document.getElementById("last-update").innerText = `Última actualización: ${ahora.toLocaleTimeString()}`;
+            document.getElementById("last-update").innerText = `Última actualización: ${new Date().toLocaleTimeString()}`;
+        } catch (e) { console.error(e); }
+    }
 
-        } catch (error) {
-            console.error("Error:", error);
+    // FUNCIÓN PARA FILTRAR
+    function filtrarColumna(n) {
+        let inputs = document.getElementsByClassName("filter-input");
+        let filter = inputs[n].value.toUpperCase();
+        let table = document.getElementById("miTabla");
+        let tr = table.getElementsByTagName("tr");
+
+        for (let i = 2; i < tr.length; i++) { // Empezamos en 2 por las dos filas de header
+            let td = tr[i].getElementsByTagName("td")[n];
+            if (td) {
+                let txtValue = td.textContent || td.innerText;
+                tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            }
         }
     }
 
-    // Ejecutar al cargar la página
-    cargarDatos();
+    // FUNCIÓN PARA ORDENAR (Asc/Desc)
+    let direccion = true;
+    function ordenarTabla(n) {
+        let table = document.getElementById("miTabla");
+        let rows = Array.from(table.querySelectorAll("tbody tr"));
+        
+        rows.sort((rowA, rowB) => {
+            let cellA = rowA.children[n].innerText.replace(/\./g, "").replace(",", ".");
+            let cellB = rowB.children[n].innerText.replace(/\./g, "").replace(",", ".");
+            
+            // Si es número, comparar como número
+            if (!isNaN(parseFloat(cellA)) && isFinite(cellA)) {
+                return direccion ? cellA - cellB : cellB - cellA;
+            }
+            // Si es texto
+            return direccion ? cellA.localeCompare(cellB) : cellB.localeCompare(cellA);
+        });
 
-    // Refrescar automáticamente cada 5 minutos (300,000 milisegundos)
+        direccion = !direccion;
+        let tbody = table.querySelector("tbody");
+        rows.forEach(row => tbody.appendChild(row));
+    }
+
+    cargarDatos();
     setInterval(cargarDatos, 300000);
 </script>
 
