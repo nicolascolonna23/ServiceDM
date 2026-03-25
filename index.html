@@ -1,49 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Servicios | Diemar</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #121417;
+            --card-bg: #1e2126;
+            --primary-orange: #d35400; /* Color naranja del logo */
+            --text-light: #f4f4f4;
+            --border-color: #333;
+            /* Colores de estado */
+            --status-red: #ff4d4d;
+            --status-yellow: #ffcc00;
+            --status-green: #2ecc71;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-light);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--primary-orange);
+            padding-bottom: 20px;
+        }
+
+        .logo {
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 10px;
+        }
+
+        h1 {
+            font-weight: 300;
+            letter-spacing: 1px;
+            margin: 0;
+            text-transform: uppercase;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            overflow-x: auto;
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+
+        th {
+            background-color: #111;
+            color: #999;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 14px;
+            text-align: center;
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        /* Indicadores de Estado */
+        .status-pill {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-block;
+        }
+
+        .rojo { color: var(--status-red); border: 1px solid var(--status-red); background: rgba(255,77,77,0.1); }
+        .amarillo { color: var(--status-yellow); border: 1px solid var(--status-yellow); background: rgba(255,204,0,0.1); }
+        .verde { color: var(--status-green); border: 1px solid var(--status-green); background: rgba(46,204,113,0.1); }
+
+        /* Estilo para los KM */
+        .km-val { font-family: monospace; font-size: 15px; }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.2rem; }
+            .logo { max-width: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="logo_diemar4.png" alt="Diemar Logo" class="logo">
+        <h1>Control de Servicios - Flota</h1>
+    </div>
+
+    <div class="container">
+        <table id="tabla">
+            <thead>
+                <tr>
+                    <th>Patente</th>
+                    <th>Marca</th>
+                    <th>Chofer</th>
+                    <th>Último Service</th>
+                    <th>KM Último</th>
+                    <th>Próximo</th>
+                    <th>KM Actual</th>
+                    <th>Falta</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-body">
+                </tbody>
+        </table>
+    </div>
+
 <script>
-const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
+    const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
 
-fetch(URL)
-  .then(response => response.text())
-  .then(data => {
-    // Dividimos por líneas y limpiamos espacios en blanco
-    let filas = data.split(/\r?\n/).filter(linea => linea.trim() !== "");
-    let tabla = document.getElementById("tabla");
+    fetch(URL)
+      .then(response => response.text())
+      .then(data => {
+        const filas = data.split(/\r?\n/).filter(f => f.trim() !== "");
+        const tablaBody = document.getElementById("tabla-body");
+        
+        // Limpiar tabla por si acaso
+        tablaBody.innerHTML = "";
 
-    filas.slice(1).forEach(fila => {
-      // Separamos por coma o punto y coma
-      let col = fila.split(/[,;]/);
+        filas.slice(1).forEach(fila => {
+          // Soporte para coma o punto y coma
+          const col = fila.split(/[,;]/).map(c => c.replace(/"/g, "").trim());
 
-      if(col.length < 8) return; 
+          if(col.length < 8) return;
 
-      // Limpiamos comillas y espacios de los datos
-      col = col.map(c => c.replace(/"/g, "").trim());
+          // Procesar "Falta" (columna index 8)
+          const faltaTexto = col[8] || "0";
+          const faltaNum = parseFloat(faltaTexto.replace(/\./g, "").replace(",", "."));
 
-      // Procesamos el valor de "Falta" (columna index 8)
-      // Eliminamos el punto de miles y cambiamos coma decimal por punto
-      let faltaRaw = col[8] || "0";
-      let falta = parseFloat(faltaRaw.replace(/\./g, "").replace(",", "."));
+          let claseEstado = "";
+          if (faltaNum < 50000) {
+            claseEstado = "rojo";
+          } else if (faltaNum < 150000) {
+            claseEstado = "amarillo";
+          } else {
+            claseEstado = "verde";
+          }
 
-      let clase = "";
-      if (falta < 50000) {
-        clase = "rojo";
-      } else if (falta < 150000) {
-        clase = "amarillo";
-      } else {
-        clase = "verde";
-      }
-
-      let row = `<tr class="${clase}">
-        <td>${col[0] || ""}</td>
-        <td>${col[1] || ""}</td>
-        <td>${col[2] || ""}</td>
-        <td>${col[4] || ""}</td>
-        <td>${col[5] || ""}</td>
-        <td>${col[6] || ""}</td>
-        <td>${col[7] || ""}</td>
-        <td>${col[8] || ""}</td>
-      </tr>`;
-
-      tabla.innerHTML += row;
-    });
-  })
-  .catch(err => console.error("Error al cargar datos:", err));
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td style="font-weight:bold; color: var(--primary-orange)">${col[0]}</td>
+            <td>${col[1]}</td>
+            <td>${col[2]}</td>
+            <td>${col[4]}</td>
+            <td class="km-val">${col[5]}</td>
+            <td>${col[6]}</td>
+            <td class="km-val">${col[7]}</td>
+            <td><span class="status-pill ${claseEstado}">${col[8]} km</span></td>
+          `;
+          tablaBody.appendChild(tr);
+        });
+      })
+      .catch(error => {
+        console.error("Error cargando el CSV:", error);
+        document.getElementById("tabla-body").innerHTML = `<tr><td colspan="8">Error al cargar datos. Verifica la conexión.</td></tr>`;
+      });
 </script>
+
+</body>
+</html>
