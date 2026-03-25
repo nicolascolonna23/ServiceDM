@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Control de Servicios</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: white;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            background: white;
+            color: black;
+        }
+
+        th {
+            background: purple;
+            color: white;
+            padding: 8px;
+        }
+
+        td {
+            padding: 6px;
+            text-align: center;
+        }
+
+        tr:nth-child(even) {
+            background: #e6f0f5;
+        }
+
+        .rojo {
+            background: red !important;
+            color: white;
+        }
+
+        .amarillo {
+            background: orange !important;
+        }
+
+        .verde {
+            background: lightgreen !important;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Control de Servicios - Flota</h1>
+
+<table id="tabla">
+    <tr>
+        <th>Patente</th>
+        <th>Marca</th>
+        <th>Chofer</th>
+        <th>Último Service</th>
+        <th>KM Último</th>
+        <th>Próximo</th>
+        <th>KM Actual</th>
+        <th>Falta</th>
+    </tr>
+</table>
+
+<script>
+
+const URL = "PEGÁ_ACÁ_TU_LINK_CSV";
+
+fetch(URL)
+  .then(response => response.text())
+  .then(data => {
+
+    let filas = data.split("\n");
+    let tabla = document.getElementById("tabla");
+
+    filas.slice(1).forEach(fila => {
+
+      let col = fila.split(",");
+
+      if(col.length < 9) return;
+
+      let falta = parseFloat(col[8].replace(/\./g, "").replace(",", "."));
+
+      let clase = "";
+
+      if (falta < 50000) {
+        clase = "rojo";
+      } else if (falta < 150000) {
+        clase = "amarillo";
+      } else {
+        clase = "verde";
+      }
+
+      let row = `<tr class="${clase}">
+        <td>${col[0]}</td>
+        <td>${col[1]}</td>
+        <td>${col[2]}</td>
+        <td>${col[4]}</td>
+        <td>${col[5]}</td>
+        <td>${col[6]}</td>
+        <td>${col[7]}</td>
+        <td>${col[8]}</td>
+      </tr>`;
+
+      tabla.innerHTML += row;
+    });
+
+  });
+
+</script>
+
+</body>
+</html>
