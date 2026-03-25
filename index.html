@@ -1,94 +1,28 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Control de Servicios</title>
-
-    <style>
-        body {
-            font-family: Arial;
-            background: #111;
-            color: white;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            background: white;
-            color: black;
-        }
-
-        th {
-            background: purple;
-            color: white;
-            padding: 8px;
-        }
-
-        td {
-            padding: 6px;
-            text-align: center;
-        }
-
-        tr:nth-child(even) {
-            background: #e6f0f5;
-        }
-
-        .rojo {
-            background: red !important;
-            color: white;
-        }
-
-        .amarillo {
-            background: orange !important;
-        }
-
-        .verde {
-            background: lightgreen !important;
-        }
-    </style>
-</head>
-<body>
-
-<h1>Control de Servicios - Flota</h1>
-
-<table id="tabla">
-    <tr>
-        <th>Patente</th>
-        <th>Marca</th>
-        <th>Chofer</th>
-        <th>Último Service</th>
-        <th>KM Último</th>
-        <th>Próximo</th>
-        <th>KM Actual</th>
-        <th>Falta</th>
-    </tr>
-</table>
-
 <script>
-
 const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
 
 fetch(URL)
   .then(response => response.text())
   .then(data => {
-
-    let filas = data.split("\n");
+    // Dividimos por líneas y limpiamos espacios en blanco
+    let filas = data.split(/\r?\n/).filter(linea => linea.trim() !== "");
     let tabla = document.getElementById("tabla");
 
     filas.slice(1).forEach(fila => {
+      // Separamos por coma o punto y coma
+      let col = fila.split(/[,;]/);
 
-      let col = fila.split(",");
+      if(col.length < 8) return; 
 
-      if(col.length < 9) return;
+      // Limpiamos comillas y espacios de los datos
+      col = col.map(c => c.replace(/"/g, "").trim());
 
-      let falta = parseFloat(col[8].replace(/\./g, "").replace(",", "."));
+      // Procesamos el valor de "Falta" (columna index 8)
+      // Eliminamos el punto de miles y cambiamos coma decimal por punto
+      let faltaRaw = col[8] || "0";
+      let falta = parseFloat(faltaRaw.replace(/\./g, "").replace(",", "."));
 
       let clase = "";
-
       if (falta < 50000) {
         clase = "rojo";
       } else if (falta < 150000) {
@@ -98,22 +32,18 @@ fetch(URL)
       }
 
       let row = `<tr class="${clase}">
-        <td>${col[0]}</td>
-        <td>${col[1]}</td>
-        <td>${col[2]}</td>
-        <td>${col[4]}</td>
-        <td>${col[5]}</td>
-        <td>${col[6]}</td>
-        <td>${col[7]}</td>
-        <td>${col[8]}</td>
+        <td>${col[0] || ""}</td>
+        <td>${col[1] || ""}</td>
+        <td>${col[2] || ""}</td>
+        <td>${col[4] || ""}</td>
+        <td>${col[5] || ""}</td>
+        <td>${col[6] || ""}</td>
+        <td>${col[7] || ""}</td>
+        <td>${col[8] || ""}</td>
       </tr>`;
 
       tabla.innerHTML += row;
     });
-
-  });
-
+  })
+  .catch(err => console.error("Error al cargar datos:", err));
 </script>
-
-</body>
-</html>
