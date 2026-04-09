@@ -161,16 +161,18 @@
         <thead>
           <tr>
             <th onclick="ordenarTablaPrefiltro(0)">Patente &#8597;</th>
-            <th onclick="ordenarTablaPrefiltro(1)">Ult. Cambio (KM) &#8597;</th>
-            <th onclick="ordenarTablaPrefiltro(2)">Falta &#8597;</th>
+            <th onclick="ordenarTablaPrefiltro(1)">KM Ult. Cambio &#8597;</th>
+            <th onclick="ordenarTablaPrefiltro(2)">KM Próximo Cambio &#8597;</th>
+            <th onclick="ordenarTablaPrefiltro(3)">Falta &#8597;</th>
           </tr>
           <tr class="filter-row">
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(0)"></th>
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(1)"></th>
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(2)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(3)"></th>
           </tr>
         </thead>
-        <tbody id="tabla-body-prefiltro"><tr><td colspan="3">Cargando prefiltros...</td></tr></tbody>
+        <tbody id="tabla-body-prefiltro"><tr><td colspan="4">Cargando prefiltros...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -286,13 +288,14 @@
             return;
           }
           if (!col[0] || !col[0].trim()) return;
-          var faltaNum = parseFloat((col[2] || "0").replace(/\./g, "").replace(",", "."));
+          var faltaNum = parseFloat((col[3] || "0").replace(/\./g, "").replace(",", "."));
           var clase = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
           var tr = document.createElement("tr");
           tr.innerHTML =
             '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
             '<td class="km-val">' + col[1] + '</td>' +
-            '<td><span class="status-pill ' + clase + '">' + col[2] + '</span></td>';
+            '<td class="km-val">' + col[2] + '</td>' +
+            '<td><span class="status-pill ' + clase + '">' + col[3] + '</span></td>';
           tablaBody.appendChild(tr);
         });
       } catch(e) { console.error("Error prefiltros:", e); }
