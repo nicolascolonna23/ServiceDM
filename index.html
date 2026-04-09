@@ -155,7 +155,6 @@
 
   <!-- MODULO 2: PREFILTROS -->
   <div class="section-title">Cambio de Prefiltros</div>
-  <div id="pf-counter" style="width:100%;max-width:1250px;font-size:12px;color:#666;margin-bottom:6px"></div>
   <div class="container">
     <div class="table-wrapper">
       <table id="tablaPrefiltro">
@@ -164,16 +163,14 @@
             <th onclick="ordenarTablaPrefiltro(0)">Patente &#8597;</th>
             <th onclick="ordenarTablaPrefiltro(1)">Ult. Cambio (KM) &#8597;</th>
             <th onclick="ordenarTablaPrefiltro(2)">Falta &#8597;</th>
-            <th onclick="ordenarTablaPrefiltro(3)">Fuente &#8597;</th>
           </tr>
           <tr class="filter-row">
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(0)"></th>
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(1)"></th>
             <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(2)"></th>
-            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(3)"></th>
           </tr>
         </thead>
-        <tbody id="tabla-body-prefiltro"><tr><td colspan="4">Cargando prefiltros...</td></tr></tbody>
+        <tbody id="tabla-body-prefiltro"><tr><td colspan="3">Cargando prefiltros...</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -205,31 +202,49 @@
     }
 
     // ============ SERVICIOS ============
+    // Convierte filas CSV (ya spliteadas) en filas de tabla
+    function agregarFilasServicio(filas, tablaBody) {
+      filas.slice(1).forEach(function(fila) {
+        var col = parsearLinea(fila);
+        if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
+        var faltaNum = parseFloat((col[8] || "0").replace(/\./g, "").replace(",", "."));
+        var clase = faltaNum < 5000 ? "rojo" : faltaNum < 15000 ? "amarillo" : "verde";
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
+          '<td>' + col[1] + '</td>' +
+          '<td>' + col[2] + '</td>' +
+          '<td>' + col[4] + '</td>' +
+          '<td class="km-val">' + col[5] + '</td>' +
+          '<td>' + col[6] + '</td>' +
+          '<td class="km-val">' + col[7] + '</td>' +
+          '<td><span class="status-pill ' + clase + '">' + col[8] + '</span></td>';
+        tablaBody.appendChild(tr);
+      });
+    }
+
     async function cargarDatos() {
       try {
-        var response = await fetch(BASE_URL + "&v=" + new Date().getTime());
-        var csvText = await response.text();
-        if (csvText.includes("<html")) return;
-        var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
+        // Cargar hoja principal y Services_conjunto en paralelo
+        var [resp1, resp2] = await Promise.all([
+          fetch(BASE_URL + "&gid=0&v=" + new Date().getTime()),
+          fetch(CONJUNTO_URL  + "&v=" + new Date().getTime())
+        ]);
+        var csv1 = await resp1.text();
+        var csv2 = await resp2.text();
+
         var tablaBody = document.getElementById("tabla-body");
         tablaBody.innerHTML = "";
-        filas.slice(1).forEach(function(fila) {
-          var col = parsearLinea(fila);
-          if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
-          var faltaNum = parseFloat((col[8] || "0").replace(/\./g, "").replace(",", "."));
-          var clase = faltaNum < 5000 ? "rojo" : faltaNum < 15000 ? "amarillo" : "verde";
-          var tr = document.createElement("tr");
-          tr.innerHTML =
-            '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
-            '<td>' + col[1] + '</td>' +
-            '<td>' + col[2] + '</td>' +
-            '<td>' + col[4] + '</td>' +
-            '<td class="km-val">' + col[5] + '</td>' +
-            '<td>' + col[6] + '</td>' +
-            '<td class="km-val">' + col[7] + '</td>' +
-            '<td><span class="status-pill ' + clase + '">' + col[8] + '</span></td>';
-          tablaBody.appendChild(tr);
-        });
+
+        if (!csv1.includes("<html")) {
+          var filas1 = csv1.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
+          agregarFilasServicio(filas1, tablaBody);
+        }
+        if (!csv2.includes("<html")) {
+          var filas2 = csv2.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
+          agregarFilasServicio(filas2, tablaBody);
+        }
+
         document.getElementById("last-update").innerText = "Ultima actualizacion: " + new Date().toLocaleTimeString();
       } catch(e) { console.error(e); }
     }
@@ -254,15 +269,16 @@
       ordenAsc = !ordenAsc;
     }
 
-    // ============ PREFILTROS ============
-    // Parsea una hoja de prefiltro y devuelve array de objetos { patente, ult, falta, fuente }
-    async function parsearHojaPrefiltro(url, etiqueta) {
+    // ============ PREFILTROS (solo service_LAD) ============
+    async function cargarDatosPrefiltro() {
       try {
-        var response = await fetch(url + "&v=" + new Date().getTime());
-        var csvText  = await response.text();
-        if (csvText.includes("<html")) return [];
+        var response = await fetch(PREFILTRO_URL + "&v=" + new Date().getTime());
+        var csvText = await response.text();
+        if (csvText.includes("<html")) return;
         var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== ""; });
-        var headersFound = false, resultado = [];
+        var tablaBody = document.getElementById("tabla-body-prefiltro");
+        tablaBody.innerHTML = "";
+        var headersFound = false;
         filas.forEach(function(fila) {
           var col = parsearLinea(fila);
           if (!headersFound) {
@@ -270,58 +286,16 @@
             return;
           }
           if (!col[0] || !col[0].trim()) return;
-          resultado.push({ patente: col[0].trim(), ult: col[1] || '', falta: col[2] || '', fuente: etiqueta });
+          var faltaNum = parseFloat((col[2] || "0").replace(/\./g, "").replace(",", "."));
+          var clase = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
+          var tr = document.createElement("tr");
+          tr.innerHTML =
+            '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
+            '<td class="km-val">' + col[1] + '</td>' +
+            '<td><span class="status-pill ' + clase + '">' + col[2] + '</span></td>';
+          tablaBody.appendChild(tr);
         });
-        return resultado;
-      } catch(e) {
-        console.error("Error cargando " + etiqueta + ":", e);
-        return [];
-      }
-    }
-
-    async function cargarDatosPrefiltro() {
-      // Cargar ambas hojas en paralelo
-      var [filas1, filas2] = await Promise.all([
-        parsearHojaPrefiltro(PREFILTRO_URL, "service_LAD"),
-        parsearHojaPrefiltro(CONJUNTO_URL,  "Services_conjunto")
-      ]);
-
-      // Combinar: priorizar service_LAD en caso de patente duplicada
-      var visto = {}, combinado = [];
-      filas1.concat(filas2).forEach(function(r) {
-        if (!visto[r.patente]) {
-          visto[r.patente] = true;
-          combinado.push(r);
-        }
-      });
-
-      // Ordenar por patente
-      combinado.sort(function(a, b) { return a.patente.localeCompare(b.patente); });
-
-      // Contador por fuente
-      var nLad  = combinado.filter(function(r){ return r.fuente === "service_LAD"; }).length;
-      var nConj = combinado.filter(function(r){ return r.fuente === "Services_conjunto"; }).length;
-      document.getElementById("pf-counter").innerHTML =
-        '<span style="background:#1e3a5f;color:#60a5fa;border:1px solid #3b82f6;border-radius:3px;padding:1px 8px;font-weight:700;font-size:11px">service_LAD: ' + nLad + '</span>' +
-        '&nbsp;&nbsp;' +
-        '<span style="background:#1a2e1a;color:#4ade80;border:1px solid #22c55e;border-radius:3px;padding:1px 8px;font-weight:700;font-size:11px">Services_conjunto: ' + nConj + '</span>' +
-        '&nbsp;&nbsp;Total: <b style="color:#e2e8f0">' + combinado.length + '</b> unidades';
-
-      // Renderizar tabla
-      var tablaBody = document.getElementById("tabla-body-prefiltro");
-      tablaBody.innerHTML = "";
-      combinado.forEach(function(r) {
-        var faltaNum = parseFloat((r.falta || "0").replace(/\./g, "").replace(",", "."));
-        var clase    = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
-        var badgeCls = r.fuente === "service_LAD" ? "src-lad" : "src-conj";
-        var tr = document.createElement("tr");
-        tr.innerHTML =
-          '<td style="font-weight:bold;color:var(--primary-orange)">' + r.patente + '</td>' +
-          '<td class="km-val">' + r.ult + '</td>' +
-          '<td><span class="status-pill ' + clase + '">' + r.falta + '</span></td>' +
-          '<td><span class="src-badge ' + badgeCls + '">' + r.fuente + '</span></td>';
-        tablaBody.appendChild(tr);
-      });
+      } catch(e) { console.error("Error prefiltros:", e); }
     }
 
     function filtrarColumnaPrefiltro(n) {
