@@ -8,15 +8,25 @@ from sklearn.preprocessing import PolynomialFeatures
 import plotly.graph_objects as go
 import warnings
 warnings.filterwarnings('ignore')
+
 st.set_page_config(
     page_title="Expreso Diemar — Predicción Combustible",
     page_icon="🚛",
     layout="wide",
 )
+
 LOGO_URL  = "https://raw.githubusercontent.com/nicolascolonna23/Modelo-Prediccion-Combustible/main/logo_diemar4.png"
 IVECO_URL = "https://raw.githubusercontent.com/nicolascolonna23/Modelo-Prediccion-Combustible/main/S-Way-6x2-1.webp"
 SCANIA_URL= "https://raw.githubusercontent.com/nicolascolonna23/Modelo-Prediccion-Combustible/main/2016p.png"
+
 DARK_CSS = """
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control de Servicios | Diemar</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
 [data-testid="stAppViewContainer"] { background: #0f172a; }
 [data-testid="stSidebar"] { background: #1e293b; }
@@ -78,14 +88,83 @@ section[data-testid="stMain"] { background: #0f172a; }
 .pf-falta-ok  { color:#22c55e; font-weight:700; }
 .pf-falta-warn { color:#f59e0b; font-weight:700; }
 .pf-falta-bad  { color:#ef4444; font-weight:700; }
-.pf-source-badge {
-    display:inline-block; font-size:.65rem; font-weight:700; padding:2px 7px;
-    border-radius:4px; letter-spacing:.3px; text-transform:uppercase;
-}
-.pf-source-lad  { background:#1e3a5f; color:#60a5fa; border:1px solid #3b82f6; }
-.pf-source-conj { background:#1a2e1a; color:#4ade80; border:1px solid #22c55e; }
+  :root {
+    --bg-color: #0b0d0f;
+    --card-bg: #161a1e;
+    --primary-orange: #d35400;
+    --text-light: #f4f4f4;
+    --border-color: #2a2e33;
+    --status-red: #ff4d4d;
+    --status-yellow: #ffcc00;
+    --status-green: #2ecc71;
+  }
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-light);
+    margin: 0; padding: 20px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .header {
+    width: 100%; max-width: 1250px;
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--primary-orange);
+    padding-bottom: 15px;
+  }
+  .logo-main { max-height: 70px; margin-bottom: 10px; }
+  .refresh-indicator { font-size: 10px; color: #555; text-transform: uppercase; margin-top: 5px; }
+  .section-title {
+    width: 100%; max-width: 1250px;
+    font-size: 14px; font-weight: 600; color: #aaa;
+    text-transform: uppercase; letter-spacing: 2px;
+    margin: 30px 0 8px; padding-bottom: 6px;
+    border-left: 3px solid var(--primary-orange); padding-left: 12px;
+  }
+  .container {
+    width: 100%; max-width: 1250px;
+    background: var(--card-bg); border-radius: 12px;
+    position: relative; overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    margin-bottom: 10px;
+  }
+  .container::before {
+    content: "";
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 60%; height: 60%;
+    background-image: url('logo_diemar4.png');
+    background-repeat: no-repeat; background-position: center; background-size: contain;
+    opacity: 0.04; pointer-events: none; z-index: 0;
+  }
+  .table-wrapper { position: relative; z-index: 1; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 600px; }
+  th {
+    background-color: #000; color: #888;
+    text-transform: uppercase; font-size: 11px; letter-spacing: 1.5px;
+    padding: 18px 10px; text-align: center; cursor: pointer;
+    transition: color 0.3s; position: sticky; top: 0;
+  }
+  th:hover { color: var(--primary-orange); }
+  .filter-row th { background-color: #0a0a0a; padding: 8px; cursor: default; }
+  .filter-input {
+    width: 90%; background: #111; border: 1px solid #333;
+    color: #ccc; padding: 5px; font-size: 12px; border-radius: 4px; outline: none;
+  }
+  .filter-input:focus { border-color: var(--primary-orange); }
+  td { padding: 15px 10px; border-bottom: 1px solid var(--border-color); font-size: 13.5px; text-align: center; }
+  tr:hover { background-color: rgba(211, 84, 0, 0.05); }
+  .status-pill {
+    padding: 4px 12px; border-radius: 4px; font-weight: 600;
+    font-size: 12px; display: inline-block; min-width: 90px;
+  }
+  .rojo    { color: var(--status-red);    border: 1px solid var(--status-red);    background: rgba(255,77,77,0.1); }
+  .amarillo{ color: var(--status-yellow); border: 1px solid var(--status-yellow); background: rgba(255,204,0,0.1); }
+  .verde   { color: var(--status-green);  border: 1px solid var(--status-green);  background: rgba(46,204,113,0.1); }
+  .km-val  { font-family: 'Courier New', monospace; font-weight: bold; }
 </style>
 """
+
 pg = st.sidebar.radio(
     "Navegacion",
     ["Dashboard Principal", "Modelo Predictivo"],
@@ -95,17 +174,13 @@ pg = st.sidebar.radio(
 st.sidebar.markdown("---")
 st.sidebar.image(LOGO_URL, width=160)
 
-# ── URLs Google Sheets ─────────────────────────────────────────────────────────
 BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR35NkYPtJrOrdYHLGUH7GIW93s5cPAqQ0zEk5fP1c3gvErwbUW7HJ2OeWBYaBVsYKVmCf0yhLvs6eG/pub?output=csv"
-GID_TEL              = "0"
-GID_UNID             = "882343299"
-GID_PREFILTRO        = "1669414303"   # hoja service_LAD
-GID_SERVICES_CONJUNTO = "1026354276"  # hoja Services_conjunto
-
-URL_TEL               = f"{BASE_URL}&gid={GID_TEL}"
-URL_UNID              = f"{BASE_URL}&gid={GID_UNID}"
-URL_PREFILTRO         = f"{BASE_URL}&gid={GID_PREFILTRO}"
-URL_SERVICES_CONJUNTO = f"{BASE_URL}&gid={GID_SERVICES_CONJUNTO}"
+GID_TEL      = "0"
+GID_UNID     = "882343299"
+GID_PREFILTRO = "1669414303"   # ← pestaña Prefiltro del spreadsheet SERVICES
+URL_TEL      = f"{BASE_URL}&gid={GID_TEL}"
+URL_UNID     = f"{BASE_URL}&gid={GID_UNID}"
+URL_PREFILTRO = f"{BASE_URL}&gid={GID_PREFILTRO}"
 
 
 @st.cache_data(ttl=600)
@@ -113,6 +188,7 @@ def cargar_datos():
     try:
         df1 = pd.read_csv(URL_TEL)
         df2 = pd.read_csv(URL_UNID)
+
         def limpiar(df):
             df.columns = [str(c).strip().upper() for c in df.columns]
             df = df.loc[:, ~df.columns.duplicated()]
@@ -142,10 +218,13 @@ def cargar_datos():
             if "FECHA" in df.columns:
                 df["FECHA"] = pd.to_datetime(df["FECHA"], errors="coerce", dayfirst=True)
             return df
+
         df1 = limpiar(df1)
         df2 = limpiar(df2)
+
         if "L100KM" not in df1.columns and "LITROS" in df1.columns and "KM" in df1.columns:
             df1["L100KM"] = (df1["LITROS"] / df1["KM"].replace(0, np.nan) * 100).round(2)
+
         extra = [c for c in ["DOMINIO", "RALENTI"] if c in df2.columns]
         if len(extra) > 1:
             df2r = df2[extra].groupby("DOMINIO").sum(numeric_only=True).reset_index()
@@ -153,29 +232,31 @@ def cargar_datos():
             if "RALENTI_u" in df1.columns:
                 df1["RALENTI"] = df1["RALENTI"].combine_first(df1["RALENTI_u"])
                 df1.drop(columns=["RALENTI_u"], inplace=True)
+
         if "EMPRESA" in df1.columns:
             df1 = df1[df1["EMPRESA"].str.upper().str.contains("LAD|DIEMAR", na=False)]
+
         if "DOMINIO" in df2.columns and not df2.empty:
             lad_units = df2["DOMINIO"].dropna().unique()
             if len(lad_units) > 0:
                 df1 = df1[df1["DOMINIO"].isin(lad_units)]
+
         if "FECHA" in df1.columns:
             df1 = df1[df1["FECHA"].dt.year == 2026]
+
         return df1, df2
+
     except Exception as e:
         st.error(f"Error cargando datos: {e}")
         return pd.DataFrame(), pd.DataFrame()
 
 
-def _parsear_hoja_prefiltro(url, etiqueta):
-    """
-    Carga y normaliza una hoja con formato Prefiltro.
-    Devuelve un DataFrame con columnas:
-      PATENTE | KM ULTIMO CAMBIO | KM PROXIMO CAMBIO | FALTA | FUENTE
-    """
+@st.cache_data(ttl=600)
+def cargar_prefiltro():
+    """Carga la hoja Prefiltro del spreadsheet SERVICES."""
     try:
-        raw = pd.read_csv(url, header=None)
-        # Buscar fila con encabezados reales (contiene "PATENTE")
+        raw = pd.read_csv(URL_PREFILTRO, header=None)
+        # Buscar la fila que contiene los encabezados reales (PATENTE)
         header_row = None
         for i, row in raw.iterrows():
             if any("PATENTE" in str(v).upper() for v in row.values):
@@ -183,18 +264,21 @@ def _parsear_hoja_prefiltro(url, etiqueta):
                 break
         if header_row is None:
             return pd.DataFrame()
-        df_pf = pd.read_csv(url, skiprows=header_row)
+
+        df_pf = pd.read_csv(URL_PREFILTRO, skiprows=header_row)
         df_pf.columns = [str(c).strip().upper() for c in df_pf.columns]
         df_pf = df_pf.dropna(how='all')
-        # Renombrar columnas
+
+        # Renombrar columnas con los nombres correctos
         cm = {}
         for c in df_pf.columns:
             cu = c.upper()
-            if "PATENTE" in cu or "DOMINIO" in cu: cm[c] = "PATENTE"
-            elif "ULT" in cu:                       cm[c] = "KM ULTIMO CAMBIO"
-            elif "PROX" in cu:                      cm[c] = "KM PROXIMO CAMBIO"
-            elif "FALTA" in cu:                     cm[c] = "FALTA"
+            if "PATENTE" in cu or "DOMINIO" in cu:      cm[c] = "PATENTE"
+            elif "ULT" in cu:                            cm[c] = "KM ULTIMO CAMBIO"
+            elif "PROX" in cu:                           cm[c] = "KM PROXIMO CAMBIO"
+            elif "FALTA" in cu:                          cm[c] = "FALTA"
         df_pf = df_pf.rename(columns=cm)
+
         # Limpiar numéricos
         for col in ["KM ULTIMO CAMBIO", "KM PROXIMO CAMBIO", "FALTA"]:
             if col in df_pf.columns:
@@ -202,31 +286,14 @@ def _parsear_hoja_prefiltro(url, etiqueta):
                               .str.replace(".", "", regex=False)
                               .str.replace(",", ".", regex=False))
                 df_pf[col] = pd.to_numeric(df_pf[col], errors="coerce")
+
         cols = [c for c in ["PATENTE", "KM ULTIMO CAMBIO", "KM PROXIMO CAMBIO", "FALTA"] if c in df_pf.columns]
         df_pf = df_pf[cols].dropna(subset=["PATENTE"])
-        df_pf = df_pf[df_pf["PATENTE"].astype(str).str.strip() != ""]
-        df_pf["FUENTE"] = etiqueta
+        df_pf = df_pf[df_pf["PATENTE"].str.strip() != ""]
         return df_pf.reset_index(drop=True)
+
     except Exception:
         return pd.DataFrame()
-
-
-@st.cache_data(ttl=600)
-def cargar_prefiltro():
-    """
-    Carga y combina las hojas service_LAD y Services_conjunto.
-    Devuelve un único DataFrame ordenado por PATENTE.
-    """
-    df_lad  = _parsear_hoja_prefiltro(URL_PREFILTRO,         "service_LAD")
-    df_conj = _parsear_hoja_prefiltro(URL_SERVICES_CONJUNTO, "Services_conjunto")
-    partes  = [df for df in [df_lad, df_conj] if not df.empty]
-    if not partes:
-        return pd.DataFrame()
-    df_total = pd.concat(partes, ignore_index=True)
-    # Eliminar duplicados: si la misma patente aparece en ambas, priorizar service_LAD
-    df_total = df_total.drop_duplicates(subset=["PATENTE"], keep="first")
-    df_total = df_total.sort_values("PATENTE").reset_index(drop=True)
-    return df_total
 
 
 @st.cache_data(ttl=3600)
@@ -291,10 +358,12 @@ if df.empty:
 
 df['MES_PERIODO'] = df['FECHA'].dt.to_period('M')
 df['MES_NUM']     = df['FECHA'].dt.month
+
 meses_df = df.groupby('MES_PERIODO').agg(
     LITROS=('LITROS', 'sum'), KM=('KM', 'sum')
 ).reset_index().sort_values('MES_PERIODO')
 meses_df['L100'] = (meses_df['LITROS'] / meses_df['KM'].replace(0, np.nan) * 100).round(2)
+
 ralenti_total    = df['RALENTI'].sum() if 'RALENTI' in df.columns else 0
 ralenti_delta_txt = ''
 if 'RALENTI' in df.columns and 'MES_PERIODO' in df.columns:
@@ -311,6 +380,7 @@ if 'RALENTI' in df.columns and 'MES_PERIODO' in df.columns:
 #  DASHBOARD PRINCIPAL
 # ══════════════════════════════════════════════════════════════════════════════
 if pg == "Dashboard Principal":
+
     col_logo, col_title = st.columns([1, 5])
     with col_logo:
         st.image(LOGO_URL, width=130)
@@ -320,24 +390,29 @@ if pg == "Dashboard Principal":
             <div style='font-size:1.6rem;font-weight:800;color:#f1f5f9;'>Expreso Diemar &mdash; Dashboard LAD 2026</div>
             <div style='font-size:.9rem;color:#94a3b8;margin-top:4px;'>Telemetria flota LAD &middot; Solo datos 2026 &middot; Actualizacion automatica</div>
         </div>""", unsafe_allow_html=True)
+
     st.markdown(
         f'<div style="margin-bottom:12px;">'
         f'<span class="price-badge">&#9981; Precio gasoil: <b>${precio_gasoil:,.0f}/L</b></span>'
         f'&nbsp;&nbsp;<span style="font-size:.75rem;color:#64748b;">Fuente: {precio_fuente}</span></div>',
         unsafe_allow_html=True)
+
     st.markdown('<div class="sec-title">Métricas Globales — 2026</div>', unsafe_allow_html=True)
+
     lts_total  = df['LITROS'].sum()  if 'LITROS'  in df.columns else 0
     kms_total  = df['KM'].sum()      if 'KM'      in df.columns else 0
     l100_prom  = round(lts_total / kms_total * 100, 2) if kms_total > 0 else 0
     costo_est  = lts_total * precio_gasoil
     n_unidades = df['DOMINIO'].nunique() if 'DOMINIO' in df.columns else 0
     ralenti_pct = round(ralenti_total / lts_total * 100, 1) if lts_total > 0 else 0
+
     if len(meses_df) >= 2:
         delta_l100 = meses_df['L100'].iloc[-1] - meses_df['L100'].iloc[-2]
         delta_txt  = f"{'▲' if delta_l100>0 else '▼'} {abs(delta_l100):.2f} vs mes anterior"
         delta_col  = 'kpi-red' if delta_l100 > 0 else 'kpi-green'
     else:
         delta_txt, delta_col = '', ''
+
     def kpi(cont, color, label, value, sub=''):
         cont.markdown(
             f'<div class="kpi-card {color}">'
@@ -345,26 +420,31 @@ if pg == "Dashboard Principal":
             f'<div class="kpi-value">{value}</div>'
             f'<div class="kpi-sub">{sub}</div>'
             f'</div>', unsafe_allow_html=True)
+
     k1, k2, k3 = st.columns(3)
     kpi(k1, '',          '⛽ Litros totales',   f'{lts_total:,.0f}',      'litros 2026')
     kpi(k2, '',          '🛣️ KM recorridos',    f'{kms_total:,.0f}',      'kilómetros 2026')
     kpi(k3, delta_col,   '📊 L/100km flota',    f'{l100_prom:.2f}',       delta_txt)
+
     k4, k5, k6 = st.columns(3)
     kpi(k4, 'kpi-amber', '💰 Costo estimado',   f'${costo_est/1e6:.1f}M', f'@ ${precio_gasoil:,.0f}/L')
     kpi(k5, 'kpi-green', '🚛 Unidades activas', f'{n_unidades}',          'dominios únicos')
     _ral_sub = (f'{ralenti_total:,.0f} L · {ralenti_delta_txt}' if ralenti_delta_txt
                 else f'{ralenti_total:,.0f} L en ralentí')
     kpi(k6, 'kpi-amber', '⏱️ % Ralentí',        f'{ralenti_pct:.1f}%',    _ral_sub)
+
     st.divider()
 
     # ── Rendimiento por marca ─────────────────────────────────────────────────
     st.markdown('<div class="sec-title">Rendimiento por Marca — 2026</div>', unsafe_allow_html=True)
+
     def stats_marca(marca):
         sub = df[df['MARCA'].str.upper() == marca.upper()] if 'MARCA' in df.columns else pd.DataFrame()
         if sub.empty:
             return {'l100': 0, 'lts': 0, 'kms': 0, 'n': 0}
         lts = sub['LITROS'].sum(); kms = sub['KM'].sum()
         return {'l100': round(lts/kms*100, 2) if kms > 0 else 0, 'lts': lts, 'kms': kms, 'n': sub['DOMINIO'].nunique()}
+
     tc1, tc2 = st.columns(2)
     for col_t, marca, img_url, modelo in [
         (tc1, 'IVECO',  IVECO_URL,  'S-Way 6x2'),
@@ -379,11 +459,13 @@ if pg == "Dashboard Principal":
             sc2.metric('Unidades',           f"{s['n']}")
             sc3.metric('Litros 2026',        f"{s['lts']:,.0f}")
             st.caption(f"Modelo: {modelo} | {s['kms']:,.0f} km")
+
     st.divider()
 
     # ── Ranking de eficiencia ─────────────────────────────────────────────────
     st.markdown('<div class="sec-title">Ranking de Eficiencia — 2026</div>', unsafe_allow_html=True)
     rcol1, rcol2 = st.columns(2)
+
     def render_ranking(col, titulo, df_rank, color_fn):
         with col:
             st.markdown(f'**{titulo}**')
@@ -405,6 +487,7 @@ if pg == "Dashboard Principal":
                        f'</div>')
             rh += '</div>'
             st.markdown(rh, unsafe_allow_html=True)
+
     if 'DOMINIO' in df.columns and 'L100KM' in df.columns:
         base      = df[df['L100KM'] > 0].groupby('DOMINIO')['L100KM'].mean().round(2).reset_index()
         rank_eff  = base.sort_values('L100KM').head(10)
@@ -413,35 +496,26 @@ if pg == "Dashboard Principal":
                        lambda i: '#22c55e' if i<=3 else ('#f59e0b' if i<=6 else '#ef4444'))
         render_ranking(rcol2, 'TOP 10 menos eficientes (mayor L/100km)', rank_inef,
                        lambda i: '#ef4444' if i<=3 else ('#f59e0b' if i<=6 else '#22c55e'))
+
     st.divider()
 
     # ── Cambio Prefiltro ──────────────────────────────────────────────────────
     st.markdown('<div class="sec-title">🔧 Cambio Prefiltro</div>', unsafe_allow_html=True)
+
     df_pf = cargar_prefiltro()
+
     if df_pf.empty:
         st.info('Sin datos de prefiltro disponibles.')
     else:
-        # Contadores por fuente
-        n_lad  = (df_pf['FUENTE'] == 'service_LAD').sum()   if 'FUENTE' in df_pf.columns else 0
-        n_conj = (df_pf['FUENTE'] == 'Services_conjunto').sum() if 'FUENTE' in df_pf.columns else 0
-        st.markdown(
-            f'<div style="margin-bottom:10px;font-size:.8rem;color:#94a3b8;">'
-            f'<span class="pf-source-badge pf-source-lad">service_LAD: {n_lad}</span>'
-            f'&nbsp;&nbsp;'
-            f'<span class="pf-source-badge pf-source-conj">Services_conjunto: {n_conj}</span>'
-            f'&nbsp;&nbsp;Total: <b style="color:#e2e8f0">{len(df_pf)}</b> unidades'
-            f'</div>',
-            unsafe_allow_html=True)
-
-        # Construir tabla HTML con color según FALTA y badge de fuente
-        display_cols = [c for c in ["PATENTE", "KM ULTIMO CAMBIO", "KM PROXIMO CAMBIO", "FALTA", "FUENTE"] if c in df_pf.columns]
+        # Construir tabla HTML con color según FALTA
         html = '<table class="pf-table"><thead><tr>'
-        for col in display_cols:
+        for col in df_pf.columns:
             html += f'<th>{col}</th>'
         html += '</tr></thead><tbody>'
-        for _, row in df_pf[display_cols].iterrows():
+
+        for _, row in df_pf.iterrows():
             html += '<tr>'
-            for col in display_cols:
+            for col in df_pf.columns:
                 val = row[col]
                 if col == 'FALTA' and pd.notna(val):
                     fval = float(val)
@@ -452,24 +526,20 @@ if pg == "Dashboard Principal":
                     else:
                         cls = 'pf-falta-bad'
                     html += f'<td class="{cls}">{fval:,.0f} km</td>'
-                elif col == 'FUENTE':
-                    badge_cls = 'pf-source-lad' if val == 'service_LAD' else 'pf-source-conj'
-                    html += f'<td><span class="pf-source-badge {badge_cls}">{val}</span></td>'
-                elif pd.notna(val) and col not in ('PATENTE', 'FUENTE'):
-                    try:
-                        html += f'<td>{float(val):,.0f}</td>'
-                    except Exception:
-                        html += f'<td>{val}</td>'
+                elif pd.notna(val) and col != 'PATENTE':
+                    html += f'<td>{float(val):,.0f}</td>'
                 else:
                     html += f'<td>{val}</td>'
             html += '</tr>'
         html += '</tbody></table>'
         st.markdown(html, unsafe_allow_html=True)
+
     st.divider()
 
     with st.expander('Ver datos completos 2026'):
         cols_s = [c for c in ['DOMINIO','MARCA','FECHA','KM','LITROS','L100KM','RALENTI'] if c in df.columns]
         st.dataframe(df[cols_s], use_container_width=True, height=380)
+
     st.caption(f'Datos 2026: Google Sheets Expreso Diemar | Precio: {precio_fuente} | Actualización cada 10 min')
 
 
@@ -486,13 +556,16 @@ else:
             <div style='font-size:1.6rem;font-weight:800;color:#f1f5f9;'>Modelo Predictivo &mdash; LAD 2026</div>
             <div style='font-size:.9rem;color:#94a3b8;margin-top:4px;'>Regresión polinomial &middot; Simulador What-If &middot; Alertas de desvío</div>
         </div>""", unsafe_allow_html=True)
+
     st.markdown(
         f'<span class="price-badge">&#9981; Precio gasoil: <b>${precio_gasoil:,.0f}/L</b></span>'
         f'&nbsp;&nbsp;<span style="font-size:.75rem;color:#64748b;">Fuente: {precio_fuente}</span>',
         unsafe_allow_html=True)
     st.markdown('<br>', unsafe_allow_html=True)
+
     hist = meses_df[meses_df['KM'] > 0].copy()
     hist['T'] = range(len(hist))
+
     if len(hist) >= 2:
         X      = hist['T'].values.reshape(-1, 1)
         y_l100 = hist['L100'].values
@@ -505,22 +578,29 @@ else:
         r2_l100    = model_l100.score(Xp, y_l100)
         residuals  = y_l100 - model_l100.predict(Xp)
         std_res    = np.std(residuals)
+
         t_max     = hist['T'].max()
         t_fut     = np.array([t_max+1, t_max+2, t_max+3]).reshape(-1, 1)
         Xf        = poly.transform(t_fut)
         pred_l100 = np.clip(model_l100.predict(Xf), 0, 100)
         pred_lts  = np.clip(model_lts.predict(Xf),  0, None)
+
         ultimo    = hist['MES_PERIODO'].iloc[-1]
         meses_fut = [(ultimo + i + 1).strftime('%b %Y') for i in range(3)]
+
         st.info(f'🧠 Modelo entrenado con {len(hist)} meses | R² = {r2_l100:.3f} | σ residuos = {std_res:.2f}')
+
         st.markdown('<div class="sec-title">Predicción por Mes</div>', unsafe_allow_html=True)
         pc1, pc2, pc3 = st.columns(3)
         for c, mes, l100_p, lts_p in zip([pc1,pc2,pc3], meses_fut, pred_l100, pred_lts):
             costo_p = lts_p * precio_gasoil
             c.metric(label=f'Predicción {mes}', value=f'{l100_p:.2f} L/100km',
                      delta=f'{lts_p:,.0f} L | ${costo_p/1e6:.2f}M')
+
         st.divider()
+
         st.markdown('<div class="sec-title">Evolución con Proyección e Intervalo de Confianza</div>', unsafe_allow_html=True)
+
         all_labels = [str(p) for p in hist['MES_PERIODO']] + meses_fut
         all_hist   = hist['L100'].tolist() + [None, None, None]
         all_pred   = [None]*(len(hist)-1) + [float(hist['L100'].iloc[-1])] + [float(v) for v in pred_l100]
@@ -530,10 +610,12 @@ else:
         lower_vals = ([None]*(len(hist)-1)
                       + [float(hist['L100'].iloc[-1]) - 1.5*std_res]
                       + [float(v) - 1.5*std_res for v in pred_l100])
+
         pred_start  = len(hist) - 1
         pred_labels = all_labels[pred_start:]
         upper_clean = [upper_vals[i] for i in range(pred_start, len(all_labels))]
         lower_clean = [lower_vals[i] for i in range(pred_start, len(all_labels))]
+
         fig = go.Figure()
         fig.add_trace(go.Scatter(
             x=pred_labels+pred_labels[::-1], y=upper_clean+lower_clean[::-1],
@@ -569,7 +651,90 @@ else:
             height=400, margin=dict(l=10,r=10,t=40,b=10), hovermode='x unified')
         st.plotly_chart(fig, use_container_width=True)
         st.caption('± 1.5σ intervalo de confianza | Línea roja = histórico | Línea azul = predicción')
+
         st.divider()
+</head>
+<body>
+
+<div class="header">
+  <img src="logo_diemar4.png" alt="Diemar" class="logo-main">
+  <h1>Control de Servicios - Flota</h1>
+  <div class="refresh-indicator" id="last-update">Sincronizando...</div>
+</div>
+
+<!-- MODULO 1: SERVICIOS -->
+<div class="section-title">Services - Flota</div>
+<div class="container">
+  <div class="table-wrapper">
+    <table id="miTabla">
+      <thead>
+        <tr>
+          <th onclick="ordenarTabla(0)">Patente &#8597;</th>
+          <th onclick="ordenarTabla(1)">Marca &#8597;</th>
+          <th onclick="ordenarTabla(2)">Chofer &#8597;</th>
+          <th onclick="ordenarTabla(3)">Ultimo Service &#8597;</th>
+          <th onclick="ordenarTabla(4)">KM Ultimo &#8597;</th>
+          <th onclick="ordenarTabla(5)">Proximo &#8597;</th>
+          <th onclick="ordenarTabla(6)">KM Actual &#8597;</th>
+          <th onclick="ordenarTabla(7)">Falta &#8597;</th>
+        </tr>
+        <tr class="filter-row">
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(0)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(1)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(2)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(3)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(4)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(5)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(6)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(7)"></th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body"><tr><td colspan="8">Cargando flota...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODULO 2: PREFILTROS -->
+<div class="section-title">Cambio de Prefiltros</div>
+<div class="container">
+  <div class="table-wrapper">
+    <table id="tablaPrefiltro">
+      <thead>
+        <tr>
+          <th onclick="ordenarTablaPrefiltro(0)">Patente &#8597;</th>
+          <th onclick="ordenarTablaPrefiltro(1)">KM Ultimo Cambio &#8597;</th>
+          <th onclick="ordenarTablaPrefiltro(2)">KM Proximo Cambio &#8597;</th>
+          <th onclick="ordenarTablaPrefiltro(3)">Falta &#8597;</th>
+        </tr>
+        <tr class="filter-row">
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(0)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(1)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(2)"></th>
+          <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(3)"></th>
+        </tr>
+      </thead>
+      <tbody id="tabla-body-prefiltro"><tr><td colspan="4">Cargando prefiltros...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const BASE_URL      = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
+const PREFILTRO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv&gid=1669414303";
+
+// Parser CSV que respeta campos entre comillas
+function parsearLinea(linea) {
+  var resultado = []; var actual = ''; var enComillas = false;
+  for (var i = 0; i < linea.length; i++) {
+    var c = linea[i];
+    if (c === '"') { enComillas = !enComillas; }
+    else if ((c === ',' || c === ';') && !enComillas) { resultado.push(actual.trim()); actual = ''; }
+    else { actual += c; }
+  }
+  resultado.push(actual.trim());
+  return resultado;
+}
+
         st.markdown('<div class="sec-title">🚨 Alerta de Desvío — Predicción vs. Real</div>', unsafe_allow_html=True)
         if len(hist) >= 2:
             ultimo_real_mes  = str(hist['MES_PERIODO'].iloc[-1])
@@ -604,14 +769,72 @@ else:
                         unsafe_allow_html=True)
             else:
                 st.info('Se necesitan al menos 3 meses para comparar predicción vs. real.')
+// Limpia numero para comparar/ordenar
+function limpiarNumero(texto) {
+  if (!texto) return 0;
+  var limpio = texto.replace(/\./g, "").replace(",", ".").trim();
+  var num = parseFloat(limpio);
+  return isNaN(num) ? texto.toLowerCase() : num;
+}
+
         st.divider()
+// ============ SERVICIOS ============
+async function cargarDatos() {
+  try {
+    var response = await fetch(BASE_URL + "&v=" + new Date().getTime());
+    var csvText = await response.text();
+    if (csvText.includes("<html")) return;
+    var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
+    var tablaBody = document.getElementById("tabla-body");
+    tablaBody.innerHTML = "";
+    filas.slice(1).forEach(function(fila) {
+      var col = parsearLinea(fila);
+      if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
+      var faltaNum = parseFloat((col[8] || "0").replace(/\./g, "").replace(",", "."));
+      var clase = faltaNum < 5000 ? "rojo" : faltaNum < 15000 ? "amarillo" : "verde";
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
+        '<td>' + col[1] + '</td>' +
+        '<td>' + col[2] + '</td>' +
+        '<td>' + col[4] + '</td>' +
+        '<td class="km-val">' + col[5] + '</td>' +
+        '<td>' + col[6] + '</td>' +
+        '<td class="km-val">' + col[7] + '</td>' +
+        '<td><span class="status-pill ' + clase + '">' + col[8] + '</span></td>';
+      tablaBody.appendChild(tr);
+    });
+    document.getElementById("last-update").innerText = "Ultima actualizacion: " + new Date().toLocaleTimeString();
+  } catch(e) { console.error(e); }
+}
+
         st.markdown('<div class="sec-title">🎨 Simulador What-If</div>', unsafe_allow_html=True)
         st.markdown('<div style="color:#94a3b8;margin-bottom:12px;font-size:.9rem;">Mové el slider para simular escenarios de precio futuro.</div>', unsafe_allow_html=True)
+function filtrarColumna(n) {
+  var filter = document.querySelectorAll('#miTabla .filter-input')[n].value.toUpperCase();
+  Array.from(document.getElementById("miTabla").getElementsByTagName("tr")).slice(2).forEach(function(tr) {
+    var td = tr.getElementsByTagName("td")[n];
+    if (td) tr.style.display = (td.textContent || td.innerText).toUpperCase().includes(filter) ? "" : "none";
+  });
+}
+
         delta_precio_pct = st.slider(
             '💸 Variación precio combustible (%)',
             min_value=-30, max_value=50, value=0, step=1,
             help='Simula cómo cambiaría el costo si el precio del gasoil varía')
         precio_sim = precio_gasoil * (1 + delta_precio_pct / 100)
+var ordenAsc = true;
+function ordenarTabla(n) {
+  var tbody = document.querySelector("#miTabla tbody");
+  Array.from(tbody.querySelectorAll("tr")).sort(function(a, b) {
+    var va = limpiarNumero(a.children[n].innerText);
+    var vb = limpiarNumero(b.children[n].innerText);
+    if (typeof va === 'number' && typeof vb === 'number') return ordenAsc ? va - vb : vb - va;
+    return ordenAsc ? va.toString().localeCompare(vb.toString()) : vb.toString().localeCompare(va.toString());
+  }).forEach(function(r) { tbody.appendChild(r); });
+  ordenAsc = !ordenAsc;
+}
+
         wf1, wf2 = st.columns(2)
         with wf1:
             st.markdown(
@@ -633,6 +856,36 @@ else:
                 f'<div class="kpi-sub">{diff_costo:+.2f}M vs base</div>'
                 f'</div>',
                 unsafe_allow_html=True)
+// ============ PREFILTROS ============
+async function cargarDatosPrefiltro() {
+  try {
+    var response = await fetch(PREFILTRO_URL + "&v=" + new Date().getTime());
+    var csvText = await response.text();
+    if (csvText.includes("<html")) return;
+    var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== ""; });
+    var tablaBody = document.getElementById("tabla-body-prefiltro");
+    tablaBody.innerHTML = "";
+    var headersFound = false;
+    filas.forEach(function(fila) {
+      var col = parsearLinea(fila);
+      if (!headersFound) {
+        if (col[0] && col[0].toUpperCase() === "PATENTE") headersFound = true;
+        return;
+      }
+      if (!col[0]) return;
+      var faltaNum = parseFloat((col[3] || "0").replace(/\./g, "").replace(",", "."));
+      var clase = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
+        '<td class="km-val">' + col[1] + '</td>' +
+        '<td class="km-val">' + col[2] + '</td>' +
+        '<td><span class="status-pill ' + clase + '">' + col[3] + '</span></td>';
+      tablaBody.appendChild(tr);
+    });
+  } catch(e) { console.error("Error prefiltros:", e); }
+}
+
         st.markdown('<br><b style="color:#e2e8f0">Costo Proyectado — 3 meses (precio simulado)</b>', unsafe_allow_html=True)
         cost_df = pd.DataFrame({
             'Mes':               meses_fut,
@@ -643,6 +896,33 @@ else:
             'Dif. M$':           [round(v * (precio_sim - precio_gasoil) / 1e6, 2) for v in pred_lts]
         })
         st.dataframe(cost_df, use_container_width=True, hide_index=True)
+function filtrarColumnaPrefiltro(n) {
+  var filter = document.querySelectorAll('#tablaPrefiltro .filter-input')[n].value.toUpperCase();
+  Array.from(document.getElementById("tablaPrefiltro").getElementsByTagName("tr")).slice(2).forEach(function(tr) {
+    var td = tr.getElementsByTagName("td")[n];
+    if (td) tr.style.display = (td.textContent || td.innerText).toUpperCase().includes(filter) ? "" : "none";
+  });
+}
+
     else:
         st.info('Se necesitan al menos 2 meses de datos de 2026 para el modelo predictivo.')
+var ordenAscPrefiltro = true;
+function ordenarTablaPrefiltro(n) {
+  var tbody = document.querySelector("#tablaPrefiltro tbody");
+  Array.from(tbody.querySelectorAll("tr")).sort(function(a, b) {
+    var va = limpiarNumero(a.children[n].innerText);
+    var vb = limpiarNumero(b.children[n].innerText);
+    if (typeof va === 'number' && typeof vb === 'number') return ordenAscPrefiltro ? va - vb : vb - va;
+    return ordenAscPrefiltro ? va.toString().localeCompare(vb.toString()) : vb.toString().localeCompare(va.toString());
+  }).forEach(function(r) { tbody.appendChild(r); });
+  ordenAscPrefiltro = !ordenAscPrefiltro;
+}
+
     st.caption(f'Datos 2026: Google Sheets Expreso Diemar | Precio: {precio_fuente} | Actualización cada 10 min')
+cargarDatos();
+cargarDatosPrefiltro();
+setInterval(cargarDatos, 300000);
+setInterval(cargarDatosPrefiltro, 300000);
+</script>
+</body>
+</html>
