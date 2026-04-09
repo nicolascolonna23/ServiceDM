@@ -1,148 +1,133 @@
-border-bottom: 2px solid var(--primary-orange);
-padding-bottom: 15px;
-}
-    .logo-main {
-      max-height: 70px;
-      margin-bottom: 10px;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Servicios | Diemar</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0d0f;
+      --card-bg: #161a1e;
+      --primary-orange: #d35400;
+      --text-light: #f4f4f4;
+      --border-color: #2a2e33;
+      --status-red: #ff4d4d;
+      --status-yellow: #ffcc00;
+      --status-green: #2ecc71;
     }
-    .refresh-indicator {
-      font-size: 10px;
-      color: #555;
-      text-transform: uppercase;
-      margin-top: 5px;
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-
-    /* TÃ­tulos de secciÃ³n */
+    .header {
+      width: 100%;
+      max-width: 1250px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 2px solid var(--primary-orange);
+      padding-bottom: 15px;
+    }
     .logo-main { max-height: 70px; margin-bottom: 10px; }
     .refresh-indicator { font-size: 10px; color: #555; text-transform: uppercase; margin-top: 5px; }
-.section-title {
-width: 100%;
-max-width: 1250px;
-@@ -61,10 +51,6 @@
-border-left: 3px solid var(--primary-orange);
-padding-left: 12px;
-}
-    .section-title:first-of-type {
-      margin-top: 0;
-    }
-
-.container {
-width: 100%;
-max-width: 1250px;
-@@ -75,15 +61,12 @@
-box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-margin-bottom: 10px;
-}
-    /* LOGO DIFUMINADO DE FONDO */
-.container::before {
-content: "";
-position: absolute;
-      top: 50%;
-      left: 50%;
-      top: 50%; left: 50%;
-transform: translate(-50%, -50%);
-      width: 60%;
-      height: 60%;
-      width: 60%; height: 60%;
-background-image: url('logo_diemar4.png');
-background-repeat: no-repeat;
-background-position: center;
-@@ -92,16 +75,8 @@
-pointer-events: none;
-z-index: 0;
-}
-    .table-wrapper {
-      position: relative;
-      z-index: 1;
-      overflow-x: auto;
-    }
-    table {
+    .section-title {
       width: 100%;
-      border-collapse: collapse;
-      min-width: 600px;
+      max-width: 1250px;
+      font-size: 14px;
+      font-weight: 600;
+      color: #aaa;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 30px 0 8px;
+      padding-bottom: 6px;
+      border-left: 3px solid var(--primary-orange);
+      padding-left: 12px;
+    }
+    .container {
+      width: 100%;
+      max-width: 1250px;
+      background: var(--card-bg);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      margin-bottom: 10px;
+    }
+    .container::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60%; height: 60%;
+      background-image: url('logo_diemar4.png');
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: contain;
+      opacity: 0.04;
+      pointer-events: none;
+      z-index: 0;
     }
     .table-wrapper { position: relative; z-index: 1; overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; min-width: 600px; }
-th {
-background-color: #000;
-color: #888;
-@@ -116,70 +91,44 @@
-top: 0;
-}
-th:hover { color: var(--primary-orange); }
-    .filter-row th {
-      background-color: #0a0a0a;
-      padding: 8px;
-      cursor: default;
+    th {
+      background-color: #000;
+      color: #888;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      padding: 18px 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.3s;
+      position: sticky;
+      top: 0;
     }
+    th:hover { color: var(--primary-orange); }
     .filter-row th { background-color: #0a0a0a; padding: 8px; cursor: default; }
-.filter-input {
-      width: 90%;
-      background: #111;
-      border: 1px solid #333;
-      color: #ccc;
-      padding: 5px;
-      font-size: 12px;
-      border-radius: 4px;
-      outline: none;
+    .filter-input {
       width: 90%; background: #111; border: 1px solid #333;
       color: #ccc; padding: 5px; font-size: 12px; border-radius: 4px; outline: none;
-}
-.filter-input:focus { border-color: var(--primary-orange); }
-    td {
-      padding: 15px 10px;
-      border-bottom: 1px solid var(--border-color);
-      font-size: 13.5px;
-      text-align: center;
     }
+    .filter-input:focus { border-color: var(--primary-orange); }
     td { padding: 15px 10px; border-bottom: 1px solid var(--border-color); font-size: 13.5px; text-align: center; }
-tr:hover { background-color: rgba(211, 84, 0, 0.05); }
-    .status-pill {
-      padding: 4px 12px;
-      border-radius: 4px;
-      font-weight: 600;
-      font-size: 12px;
-      display: inline-block;
-      min-width: 90px;
-    }
-    .rojo  { color: var(--status-red);    border: 1px solid var(--status-red);    background: rgba(255,77,77,0.1); }
+    tr:hover { background-color: rgba(211, 84, 0, 0.05); }
     .status-pill { padding: 4px 12px; border-radius: 4px; font-weight: 600; font-size: 12px; display: inline-block; min-width: 90px; }
     .rojo     { color: var(--status-red);    border: 1px solid var(--status-red);    background: rgba(255,77,77,0.1); }
-.amarillo { color: var(--status-yellow); border: 1px solid var(--status-yellow); background: rgba(255,204,0,0.1); }
-    .verde { color: var(--status-green);  border: 1px solid var(--status-green);  background: rgba(46,204,113,0.1); }
-    .km-val {
-      font-family: 'Courier New', monospace;
-      font-weight: bold;
-    }
+    .amarillo { color: var(--status-yellow); border: 1px solid var(--status-yellow); background: rgba(255,204,0,0.1); }
     .verde    { color: var(--status-green);  border: 1px solid var(--status-green);  background: rgba(46,204,113,0.1); }
     .km-val   { font-family: 'Courier New', monospace; font-weight: bold; }
-</style>
+    /* Badge fuente */
+    .src-badge {
+      display: inline-block; font-size: 10px; font-weight: 700;
+      padding: 1px 6px; border-radius: 3px; margin-left: 6px;
+      text-transform: uppercase; letter-spacing: .3px; vertical-align: middle;
+    }
+    .src-lad  { background: #1e3a5f; color: #60a5fa; border: 1px solid #3b82f6; }
+    .src-conj { background: #1a2e1a; color: #4ade80; border: 1px solid #22c55e; }
+  </style>
 </head>
 <body>
+  <div class="header">
+    <img src="logo_diemar4.png" alt="Diemar" class="logo-main">
+    <h1>Control de Servicios - Flota</h1>
+    <div class="refresh-indicator" id="last-update">Sincronizando...</div>
+  </div>
 
-  <!-- HEADER -->
-<div class="header">
-<img src="logo_diemar4.png" alt="Diemar" class="logo-main">
-<h1>Control de Servicios - Flota</h1>
-<div class="refresh-indicator" id="last-update">Sincronizando...</div>
-</div>
-
-  <!-- ===================== MÃDULO 1: SERVICIOS ===================== -->
   <!-- MODULO 1: SERVICIOS -->
-<div class="section-title">Services - Flota</div>
-<div class="container">
-<div class="table-wrapper">
-<table id="miTabla">
-<thead>
-<tr>
-            <th onclick="ordenarTabla(0)">Patente â</th>
-            <th onclick="ordenarTabla(1)">Marca â</th>
-            <th onclick="ordenarTabla(2)">Chofer â</th>
-            <th onclick="ordenarTabla(3)">Ãltimo Service â</th>
-            <th onclick="ordenarTabla(4)">KM Ãltimo â</th>
-            <th onclick="ordenarTabla(5)">PrÃ³ximo â</th>
-            <th onclick="ordenarTabla(6)">KM Actual â</th>
-            <th onclick="ordenarTabla(7)">Falta â</th>
+  <div class="section-title">Services - Flota</div>
+  <div class="container">
+    <div class="table-wrapper">
+      <table id="miTabla">
+        <thead>
+          <tr>
             <th onclick="ordenarTabla(0)">Patente &#8597;</th>
             <th onclick="ordenarTabla(1)">Marca &#8597;</th>
             <th onclick="ordenarTabla(2)">Chofer &#8597;</th>
@@ -151,70 +136,61 @@ tr:hover { background-color: rgba(211, 84, 0, 0.05); }
             <th onclick="ordenarTabla(5)">Proximo &#8597;</th>
             <th onclick="ordenarTabla(6)">KM Actual &#8597;</th>
             <th onclick="ordenarTabla(7)">Falta &#8597;</th>
-</tr>
-<tr class="filter-row">
-<th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(0)"></th>
-@@ -192,199 +141,164 @@ <h1>Control de Servicios - Flota</h1>
-<th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(7)"></th>
-</tr>
-</thead>
-        <tbody id="tabla-body">
-          <tr><td colspan="8">Cargando flota...</td></tr>
-        </tbody>
+          </tr>
+          <tr class="filter-row">
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(0)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(1)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(2)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(3)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(4)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(5)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(6)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumna(7)"></th>
+          </tr>
+        </thead>
         <tbody id="tabla-body"><tr><td colspan="8">Cargando flota...</td></tr></tbody>
-</table>
-</div>
-</div>
+      </table>
+    </div>
+  </div>
 
-  <!-- ===================== MÃDULO 2: PREFILTROS ===================== -->
   <!-- MODULO 2: PREFILTROS -->
-<div class="section-title">Cambio de Prefiltros</div>
-<div class="container">
-<div class="table-wrapper">
-<table id="tablaPrefiltro">
-<thead>
-<tr>
-            <th onclick="ordenarTablaPrefiltro(0)">Patente â</th>
-            <th onclick="ordenarTablaPrefiltro(1)">Ãlt. Cambio (KM) â</th>
-            <th onclick="ordenarTablaPrefiltro(2)">Falta â</th>
+  <div class="section-title">Cambio de Prefiltros</div>
+  <div id="pf-counter" style="width:100%;max-width:1250px;font-size:12px;color:#666;margin-bottom:6px"></div>
+  <div class="container">
+    <div class="table-wrapper">
+      <table id="tablaPrefiltro">
+        <thead>
+          <tr>
             <th onclick="ordenarTablaPrefiltro(0)">Patente &#8597;</th>
             <th onclick="ordenarTablaPrefiltro(1)">Ult. Cambio (KM) &#8597;</th>
             <th onclick="ordenarTablaPrefiltro(2)">Falta &#8597;</th>
-</tr>
-<tr class="filter-row">
-<th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(0)"></th>
-<th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(1)"></th>
-<th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(2)"></th>
-</tr>
-</thead>
-        <tbody id="tabla-body-prefiltro">
-          <tr><td colspan="3">Cargando prefiltros...</td></tr>
-        </tbody>
-        <tbody id="tabla-body-prefiltro"><tr><td colspan="3">Cargando prefiltros...</td></tr></tbody>
-</table>
-</div>
-</div>
+            <th onclick="ordenarTablaPrefiltro(3)">Fuente &#8597;</th>
+          </tr>
+          <tr class="filter-row">
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(0)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(1)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(2)"></th>
+            <th><input type="text" class="filter-input" placeholder="Filtrar..." onkeyup="filtrarColumnaPrefiltro(3)"></th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body-prefiltro"><tr><td colspan="4">Cargando prefiltros...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 
-<script>
-    // ===================== SERVICIOS =====================
-const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
-    const PREFILTRO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv&gid=1669414303";
+  <script>
+    const BASE_URL       = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv";
+    const PREFILTRO_URL  = BASE_URL + "&gid=1669414303";   // service_LAD
+    const CONJUNTO_URL   = BASE_URL + "&gid=1026354276";   // Services_conjunto
 
     // Parser CSV que respeta campos entre comillas
     function parsearLinea(linea) {
-      var resultado = [];
-      var actual = '';
-      var enComillas = false;
+      var resultado = [], actual = '', enComillas = false;
       for (var i = 0; i < linea.length; i++) {
         var c = linea[i];
-        if (c === '"') {
-          enComillas = !enComillas;
-        } else if ((c === ',' || c === ';') && !enComillas) {
-          resultado.push(actual.trim());
-          actual = '';
-        } else {
-          actual += c;
-        }
+        if (c === '"') { enComillas = !enComillas; }
+        else if ((c === ',' || c === ';') && !enComillas) { resultado.push(actual.trim()); actual = ''; }
+        else { actual += c; }
       }
       resultado.push(actual.trim());
       return resultado;
@@ -229,40 +205,17 @@ const BASE_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MC
     }
 
     // ============ SERVICIOS ============
-async function cargarDatos() {
-try {
-        const version = new Date().getTime();
-        const response = await fetch(`${BASE_URL}&v=${version}`);
-        const csvText = await response.text();
+    async function cargarDatos() {
+      try {
         var response = await fetch(BASE_URL + "&v=" + new Date().getTime());
         var csvText = await response.text();
-if (csvText.includes("<html")) return;
-        const filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "" && f.includes(","));
-        const tablaBody = document.getElementById("tabla-body");
+        if (csvText.includes("<html")) return;
         var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
         var tablaBody = document.getElementById("tabla-body");
-tablaBody.innerHTML = "";
-        filas.slice(1).forEach(fila => {
-          const col = fila.split(/[,;]/).map(c => c.replace(/"/g, "").trim());
+        tablaBody.innerHTML = "";
         filas.slice(1).forEach(function(fila) {
           var col = parsearLinea(fila);
-if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
-          const faltaVal = col[8] || "0";
-          const faltaNum = parseFloat(faltaVal.replace(/\./g, "").replace(",", "."));
-          let clase = "verde";
-          if (faltaNum < 5000) clase = "rojo";
-          else if (faltaNum < 15000) clase = "amarillo";
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="font-weight:bold; color:var(--primary-orange)">${col[0]}</td>
-            <td>${col[1]}</td>
-            <td>${col[2]}</td>
-            <td>${col[4]}</td>
-            <td class="km-val">${col[5]}</td>
-            <td>${col[6]}</td>
-            <td class="km-val">${col[7]}</td>
-            <td><span class="status-pill ${clase}">${col[8]}</span></td>
-          `;
+          if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
           var faltaNum = parseFloat((col[8] || "0").replace(/\./g, "").replace(",", "."));
           var clase = faltaNum < 5000 ? "rojo" : faltaNum < 15000 ? "amarillo" : "verde";
           var tr = document.createElement("tr");
@@ -275,55 +228,22 @@ if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
             '<td>' + col[6] + '</td>' +
             '<td class="km-val">' + col[7] + '</td>' +
             '<td><span class="status-pill ' + clase + '">' + col[8] + '</span></td>';
-tablaBody.appendChild(tr);
-});
-        document.getElementById("last-update").innerText = `Ãltima actualizaciÃ³n: ${new Date().toLocaleTimeString()}`;
-      } catch (e) {
-        console.error(e);
-      }
+          tablaBody.appendChild(tr);
+        });
         document.getElementById("last-update").innerText = "Ultima actualizacion: " + new Date().toLocaleTimeString();
       } catch(e) { console.error(e); }
-}
+    }
 
-function filtrarColumna(n) {
-      let inputs = document.querySelectorAll('#miTabla .filter-input');
-      let filter = inputs[n].value.toUpperCase();
-      let table = document.getElementById("miTabla");
-      let tr = table.getElementsByTagName("tr");
-      for (let i = 2; i < tr.length; i++) {
-        let td = tr[i].getElementsByTagName("td")[n];
-        if (td) {
-          let txtValue = td.textContent || td.innerText;
-          tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-        }
-      }
+    function filtrarColumna(n) {
       var filter = document.querySelectorAll('#miTabla .filter-input')[n].value.toUpperCase();
       Array.from(document.getElementById("miTabla").getElementsByTagName("tr")).slice(2).forEach(function(tr) {
         var td = tr.getElementsByTagName("td")[n];
         if (td) tr.style.display = (td.textContent || td.innerText).toUpperCase().includes(filter) ? "" : "none";
       });
-}
+    }
 
-    let ordenAsc = true;
     var ordenAsc = true;
-function ordenarTabla(n) {
-      let table = document.getElementById("miTabla");
-      let tbody = table.querySelector("tbody");
-      let rows = Array.from(tbody.querySelectorAll("tr"));
-      const limpiarNumero = (texto) => {
-        if (!texto) return 0;
-        let limpio = texto.replace(/\./g, "").replace(",", ".").trim();
-        let num = parseFloat(limpio);
-        return isNaN(num) ? texto.toLowerCase() : num;
-      };
-      rows.sort((rowA, rowB) => {
-        let valA = limpiarNumero(rowA.children[n].innerText);
-        let valB = limpiarNumero(rowB.children[n].innerText);
-        if (typeof valA === 'number' && typeof valB === 'number') {
-          return ordenAsc ? valA - valB : valB - valA;
-        }
-        return ordenAsc ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
-      });
+    function ordenarTabla(n) {
       var tbody = document.querySelector("#miTabla tbody");
       Array.from(tbody.querySelectorAll("tr")).sort(function(a, b) {
         var va = limpiarNumero(a.children[n].innerText);
@@ -331,114 +251,89 @@ function ordenarTabla(n) {
         if (typeof va === 'number' && typeof vb === 'number') return ordenAsc ? va - vb : vb - va;
         return ordenAsc ? va.toString().localeCompare(vb.toString()) : vb.toString().localeCompare(va.toString());
       }).forEach(function(r) { tbody.appendChild(r); });
-ordenAsc = !ordenAsc;
-      rows.forEach(row => tbody.appendChild(row));
-}
-
-    // ===================== PREFILTROS =====================
-    // URL de la hoja "Prefiltro" del spreadsheet SERVICES (GID: 1669414303)
-    // Usa el mismo spreadsheet publicado que los services. Si los datos no cargan,
-    // publicÃ¡ la hoja Prefiltro en: Archivo â Compartir â Publicar en la web â Prefiltro â CSV
-    const PREFILTRO_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv&gid=1669414303";
+      ordenAsc = !ordenAsc;
+    }
 
     // ============ PREFILTROS ============
-async function cargarDatosPrefiltro() {
-try {
-        const version = new Date().getTime();
-        const response = await fetch(`${PREFILTRO_URL}&v=${version}`);
-        const csvText = await response.text();
-        var response = await fetch(PREFILTRO_URL + "&v=" + new Date().getTime());
-        var csvText = await response.text();
-if (csvText.includes("<html")) return;
-
-        const filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "");
-        const tablaBody = document.getElementById("tabla-body-prefiltro");
+    // Parsea una hoja de prefiltro y devuelve array de objetos { patente, ult, falta, fuente }
+    async function parsearHojaPrefiltro(url, etiqueta) {
+      try {
+        var response = await fetch(url + "&v=" + new Date().getTime());
+        var csvText  = await response.text();
+        if (csvText.includes("<html")) return [];
         var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== ""; });
-        var tablaBody = document.getElementById("tabla-body-prefiltro");
-tablaBody.innerHTML = "";
-
-        // La hoja tiene: fila 1 = tÃ­tulo "CAMBIO PREFILTRO", fila 2 = vacÃ­a, fila 3 = headers
-        // Salteamos hasta encontrar la fila de headers (PATENTE)
-        let headersFound = false;
-        filas.forEach(fila => {
-          const col = fila.split(/[,;]/).map(c => c.replace(/"/g, "").trim());
-        var headersFound = false;
+        var headersFound = false, resultado = [];
         filas.forEach(function(fila) {
           var col = parsearLinea(fila);
-if (!headersFound) {
-            if (col[0] && col[0].toUpperCase() === "PATENTE") { headersFound = true; }
+          if (!headersFound) {
             if (col[0] && col[0].toUpperCase() === "PATENTE") headersFound = true;
-return;
-}
-          if (!col[0] || col[0].toLowerCase() === "patente") return;
-
-          const faltaVal = col[2] || "0";
-          const faltaNum = parseFloat(faltaVal.replace(/\./g, "").replace(",", "."));
-          let clase = "verde";
-          if (faltaNum < 0)    clase = "rojo";
-          else if (faltaNum < 5000) clase = "amarillo";
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td style="font-weight:bold; color:var(--primary-orange)">${col[0]}</td>
-            <td class="km-val">${col[1]}</td>
-            <td><span class="status-pill ${clase}">${col[2]}</span></td>
-          `;
-          if (!col[0]) return;
-          var faltaNum = parseFloat((col[2] || "0").replace(/\./g, "").replace(",", "."));
-          var clase = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
-          var tr = document.createElement("tr");
-          tr.innerHTML =
-            '<td style="font-weight:bold;color:var(--primary-orange)">' + col[0] + '</td>' +
-            '<td class="km-val">' + col[1] + '</td>' +
-            '<td><span class="status-pill ' + clase + '">' + col[2] + '</span></td>';
-tablaBody.appendChild(tr);
-});
-      } catch (e) {
-        console.error("Error cargando prefiltros:", e);
+            return;
+          }
+          if (!col[0] || !col[0].trim()) return;
+          resultado.push({ patente: col[0].trim(), ult: col[1] || '', falta: col[2] || '', fuente: etiqueta });
+        });
+        return resultado;
+      } catch(e) {
+        console.error("Error cargando " + etiqueta + ":", e);
+        return [];
       }
-      } catch(e) { console.error("Error prefiltros:", e); }
-}
+    }
 
-function filtrarColumnaPrefiltro(n) {
-      let inputs = document.querySelectorAll('#tablaPrefiltro .filter-input');
-      let filter = inputs[n].value.toUpperCase();
-      let table = document.getElementById("tablaPrefiltro");
-      let tr = table.getElementsByTagName("tr");
-      for (let i = 2; i < tr.length; i++) {
-        let td = tr[i].getElementsByTagName("td")[n];
-        if (td) {
-          let txtValue = td.textContent || td.innerText;
-          tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+    async function cargarDatosPrefiltro() {
+      // Cargar ambas hojas en paralelo
+      var [filas1, filas2] = await Promise.all([
+        parsearHojaPrefiltro(PREFILTRO_URL, "service_LAD"),
+        parsearHojaPrefiltro(CONJUNTO_URL,  "Services_conjunto")
+      ]);
+
+      // Combinar: priorizar service_LAD en caso de patente duplicada
+      var visto = {}, combinado = [];
+      filas1.concat(filas2).forEach(function(r) {
+        if (!visto[r.patente]) {
+          visto[r.patente] = true;
+          combinado.push(r);
         }
-      }
+      });
+
+      // Ordenar por patente
+      combinado.sort(function(a, b) { return a.patente.localeCompare(b.patente); });
+
+      // Contador por fuente
+      var nLad  = combinado.filter(function(r){ return r.fuente === "service_LAD"; }).length;
+      var nConj = combinado.filter(function(r){ return r.fuente === "Services_conjunto"; }).length;
+      document.getElementById("pf-counter").innerHTML =
+        '<span style="background:#1e3a5f;color:#60a5fa;border:1px solid #3b82f6;border-radius:3px;padding:1px 8px;font-weight:700;font-size:11px">service_LAD: ' + nLad + '</span>' +
+        '&nbsp;&nbsp;' +
+        '<span style="background:#1a2e1a;color:#4ade80;border:1px solid #22c55e;border-radius:3px;padding:1px 8px;font-weight:700;font-size:11px">Services_conjunto: ' + nConj + '</span>' +
+        '&nbsp;&nbsp;Total: <b style="color:#e2e8f0">' + combinado.length + '</b> unidades';
+
+      // Renderizar tabla
+      var tablaBody = document.getElementById("tabla-body-prefiltro");
+      tablaBody.innerHTML = "";
+      combinado.forEach(function(r) {
+        var faltaNum = parseFloat((r.falta || "0").replace(/\./g, "").replace(",", "."));
+        var clase    = faltaNum < 0 ? "rojo" : faltaNum < 5000 ? "amarillo" : "verde";
+        var badgeCls = r.fuente === "service_LAD" ? "src-lad" : "src-conj";
+        var tr = document.createElement("tr");
+        tr.innerHTML =
+          '<td style="font-weight:bold;color:var(--primary-orange)">' + r.patente + '</td>' +
+          '<td class="km-val">' + r.ult + '</td>' +
+          '<td><span class="status-pill ' + clase + '">' + r.falta + '</span></td>' +
+          '<td><span class="src-badge ' + badgeCls + '">' + r.fuente + '</span></td>';
+        tablaBody.appendChild(tr);
+      });
+    }
+
+    function filtrarColumnaPrefiltro(n) {
       var filter = document.querySelectorAll('#tablaPrefiltro .filter-input')[n].value.toUpperCase();
       Array.from(document.getElementById("tablaPrefiltro").getElementsByTagName("tr")).slice(2).forEach(function(tr) {
         var td = tr.getElementsByTagName("td")[n];
         if (td) tr.style.display = (td.textContent || td.innerText).toUpperCase().includes(filter) ? "" : "none";
       });
-}
+    }
 
-    let ordenAscPrefiltro = true;
     var ordenAscPrefiltro = true;
-function ordenarTablaPrefiltro(n) {
-      let table = document.getElementById("tablaPrefiltro");
-      let tbody = table.querySelector("tbody");
-      let rows = Array.from(tbody.querySelectorAll("tr"));
-      const limpiarNumero = (texto) => {
-        if (!texto) return 0;
-        let limpio = texto.replace(/\./g, "").replace(",", ".").trim();
-        let num = parseFloat(limpio);
-        return isNaN(num) ? texto.toLowerCase() : num;
-      };
-      rows.sort((rowA, rowB) => {
-        let valA = limpiarNumero(rowA.children[n].innerText);
-        let valB = limpiarNumero(rowB.children[n].innerText);
-        if (typeof valA === 'number' && typeof valB === 'number') {
-          return ordenAscPrefiltro ? valA - valB : valB - valA;
-        }
-        return ordenAscPrefiltro ? valA.toString().localeCompare(valB.toString()) : valB.toString().localeCompare(valA.toString());
-      });
+    function ordenarTablaPrefiltro(n) {
       var tbody = document.querySelector("#tablaPrefiltro tbody");
       Array.from(tbody.querySelectorAll("tr")).sort(function(a, b) {
         var va = limpiarNumero(a.children[n].innerText);
@@ -446,11 +341,13 @@ function ordenarTablaPrefiltro(n) {
         if (typeof va === 'number' && typeof vb === 'number') return ordenAscPrefiltro ? va - vb : vb - va;
         return ordenAscPrefiltro ? va.toString().localeCompare(vb.toString()) : vb.toString().localeCompare(va.toString());
       }).forEach(function(r) { tbody.appendChild(r); });
-ordenAscPrefiltro = !ordenAscPrefiltro;
-      rows.forEach(row => tbody.appendChild(row));
-}
+      ordenAscPrefiltro = !ordenAscPrefiltro;
+    }
 
-    // Carga inicial y refresco automÃ¡tico cada 5 minutos
-cargarDatos();
-cargarDatosPrefiltro();
-setInterval(cargarDatos, 300000);
+    cargarDatos();
+    cargarDatosPrefiltro();
+    setInterval(cargarDatos, 300000);
+    setInterval(cargarDatosPrefiltro, 300000);
+  </script>
+</body>
+</html>
