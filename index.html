@@ -114,7 +114,6 @@
     <div class="refresh-indicator" id="last-update">Sincronizando...</div>
   </div>
 
-  <!-- MODULO 1: LARGA DISTANCIA (LAD) -->
   <div class="section-title">Servicios - Larga Distancia (LAD)</div>
   <div class="container">
     <div class="table-wrapper">
@@ -146,7 +145,6 @@
     </div>
   </div>
 
-  <!-- MODULO 2: RESTO DE LA FLOTA (CONJUNTO) -->
   <div class="section-title">Servicios - Resto de la Flota</div>
   <div class="container">
     <div class="table-wrapper">
@@ -178,7 +176,6 @@
     </div>
   </div>
 
-  <!-- MODULO 3: PREFILTROS -->
   <div class="section-title">Cambio de Prefiltros</div>
   <div class="container">
     <div class="table-wrapper">
@@ -208,7 +205,9 @@
     const CONJUNTO_URL  = BASE_URL + "&gid=1026354276";
     const PREFILTRO_URL = BASE_URL + "&gid=1669414303";
 
-    // Parser CSV que respeta campos entre comillas
+    // Variable para almacenar patentes de LAD y filtrar en Resto de Flota
+    let patentesLAD = new Set();
+
     function parsearLinea(linea) {
       var resultado = [], actual = '', enComillas = false;
       for (var i = 0; i < linea.length; i++) {
@@ -221,7 +220,6 @@
       return resultado;
     }
 
-    // Limpia numero para comparar/ordenar
     function limpiarNumero(texto) {
       if (!texto) return 0;
       var limpio = texto.replace(/\./g, "").replace(",", ".").trim();
@@ -229,9 +227,8 @@
       return isNaN(num) ? texto.toLowerCase() : num;
     }
 
-    // Genera filas para tablas de servicio (8 columnas)
     function agregarFilasServicio(filas, tablaBody) {
-      filas.slice(1).forEach(function(fila) {
+      filas.forEach(function(fila) {
         var col = parsearLinea(fila);
         if (col.length < 9 || !col[0] || col[0].toLowerCase() === "patente") return;
         var faltaNum = parseFloat((col[8] || "0").replace(/\./g, "").replace(",", "."));
@@ -257,9 +254,20 @@
         var csv  = await resp.text();
         var tablaBody = document.getElementById("tabla-body-lad");
         tablaBody.innerHTML = "";
+        patentesLAD.clear();
+
         if (!csv.includes("<html")) {
-          var filas = csv.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
-          agregarFilasServicio(filas, tablaBody);
+          var filas = csv.split(/\r?\n/).filter(f => f.trim() !== "" && f.includes(","));
+          
+          // Guardar patentes detectadas
+          filas.slice(1).forEach(fila => {
+            let col = parsearLinea(fila);
+            if(col[0] && col[0].toLowerCase() !== "patente") {
+                patentesLAD.add(col[0].trim().toUpperCase());
+            }
+          });
+
+          agregarFilasServicio(filas.slice(1), tablaBody);
         }
       } catch(e) { console.error("Error LAD:", e); }
     }
@@ -271,9 +279,18 @@
         var csv  = await resp.text();
         var tablaBody = document.getElementById("tabla-body-conjunto");
         tablaBody.innerHTML = "";
+
         if (!csv.includes("<html")) {
-          var filas = csv.split(/\r?\n/).filter(function(f) { return f.trim() !== "" && f.includes(","); });
-          agregarFilasServicio(filas, tablaBody);
+          var filas = csv.split(/\r?\n/).filter(f => f.trim() !== "" && f.includes(","));
+          
+          // Filtrar: Solo patentes que NO estén en el Set de LAD
+          var filasFiltradas = filas.slice(1).filter(fila => {
+            let col = parsearLinea(fila);
+            let patente = col[0] ? col[0].trim().toUpperCase() : "";
+            return !patentesLAD.has(patente);
+          });
+
+          agregarFilasServicio(filasFiltradas, tablaBody);
         }
       } catch(e) { console.error("Error Conjunto:", e); }
     }
@@ -284,7 +301,7 @@
         var response = await fetch(PREFILTRO_URL + "&v=" + new Date().getTime());
         var csvText  = await response.text();
         if (csvText.includes("<html")) return;
-        var filas = csvText.split(/\r?\n/).filter(function(f) { return f.trim() !== ""; });
+        var filas = csvText.split(/\r?\n/).filter(f => f.trim() !== "");
         var tablaBody = document.getElementById("tabla-body-prefiltro");
         tablaBody.innerHTML = "";
         var headersFound = false;
@@ -310,12 +327,13 @@
 
     // ============ CARGA GENERAL ============
     async function cargarTodo() {
-      await Promise.all([cargarLAD(), cargarConjunto(), cargarPrefiltros()]);
+      // Cargamos LAD primero para identificar qué patentes excluir del resto
+      await cargarLAD();
+      await Promise.all([cargarConjunto(), cargarPrefiltros()]);
       document.getElementById("last-update").innerText =
         "Ultima actualizacion: " + new Date().toLocaleTimeString();
     }
 
-    // ============ FILTROS Y ORDEN (genéricos por tabla ID) ============
     function filtrarColumna(tablaId, n) {
       var inputs = document.querySelectorAll('#' + tablaId + ' .filter-input');
       var filter = inputs[n].value.toUpperCase();
@@ -338,7 +356,6 @@
       ordenesAsc[tablaId] = !ordenesAsc[tablaId];
     }
 
-    // Carga inicial y refresco automático cada 5 minutos
     cargarTodo();
     setInterval(cargarTodo, 300000);
   </script>
