@@ -67,9 +67,14 @@ def extraer_odometros_scania() -> dict:
     opciones.add_argument("--headless=new")
     opciones.add_argument("--no-sandbox")
     opciones.add_argument("--disable-dev-shm-usage")
-    opciones.add_argument("--disable-gpu")
     opciones.add_argument("--window-size=1280,900")
     opciones.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36")
+    # WebGL flags — necesarios para Scania que usa mapa WebGL
+    opciones.add_argument("--enable-webgl")
+    opciones.add_argument("--use-gl=swiftshader")
+    opciones.add_argument("--enable-accelerated-2d-canvas")
+    opciones.add_argument("--ignore-gpu-blocklist")
+    opciones.add_argument("--disable-gpu-sandbox")
 
     driver = webdriver.Chrome(options=opciones)
     wait   = WebDriverWait(driver, 30)
@@ -235,6 +240,29 @@ def extraer_odometros_scania() -> dict:
                     links_vehiculos.append(href)
                     print(f"  Link vehiculo: {href}")
             print(f"Estrategia 3 (links con vehicle): {len(links_vehiculos)}")
+
+        # Estrategia 4: interceptar llamadas API via requests del navegador
+        if not links_vehiculos:
+            print("Intentando capturar UUIDs via JavaScript...")
+            try:
+                # Buscar UUIDs en todo el DOM incluyendo shadow roots y scripts
+                uuids_js = driver.execute_script("""
+                    var uuids = [];
+                    var regex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g;
+                    var text = document.documentElement.innerHTML;
+                    var match;
+                    while ((match = regex.exec(text)) !== null) {
+                        if (!uuids.includes(match[0])) uuids.push(match[0]);
+                    }
+                    return uuids;
+                """)
+                print(f"UUIDs encontrados via JS: {uuids_js[:5]}")
+                for uuid in uuids_js:
+                    url = f"https://fmp-fleetposition.cs.scania.com/vehicles/vehicle-details/{uuid}"
+                    if url not in links_vehiculos:
+                        links_vehiculos.append(url)
+            except Exception as e:
+                print(f"Error JS: {e}")
 
         if not links_vehiculos:
             print("No se encontraron vehículos — guardando HTML...")
