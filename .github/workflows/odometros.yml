@@ -2,7 +2,6 @@ name: Actualizar Odómetros (Nexpro + Scania)
 
 on:
   schedule:
-    # Lunes a sábado a las 10:00 AM Argentina (UTC-3 = 13:00 UTC)
     - cron: '0 13 * * 1-6'
   workflow_dispatch:
 
@@ -37,10 +36,10 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python nexpro_odometros.py
 
-      - name: Correr Scania
+      - name: Correr Scania (API)
         env:
-          SCANIA_USUARIO:           ${{ secrets.SCANIA_USUARIO }}
-          SCANIA_PASSWORD:          ${{ secrets.SCANIA_PASSWORD }}
+          SCANIA_CLIENT_ID:         ${{ secrets.SCANIA_CLIENT_ID }}
+          SCANIA_CLIENT_SECRET:     ${{ secrets.SCANIA_CLIENT_SECRET }}
           SHEET_ID:                 ${{ secrets.SHEET_ID }}
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python scania_odometros.py
