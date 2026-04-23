@@ -1,34 +1,34 @@
 """
 scania_odometros.py
-Autenticación Scania FMS API - Challenge/Response (3 pasos)
-Sin Selenium — llamadas HTTP directas a dataaccess.scania.com
+Usa Selenium con Xvfb (display virtual) para evitar el error de WebGL.
+Navega fmp-fleetposition.cs.scania.com y extrae odómetros de cada vehículo.
 """
 
 import os
 import re
 import json
-import hmac
-import hashlib
-import base64
+import time
 import tempfile
-import requests
 from datetime import datetime
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 
 import gspread
 from google.oauth2.service_account import Credentials
 
 # ─── CREDENCIALES DESDE GITHUB SECRETS ──────────────────────────────────────
-SCANIA_CLIENT_ID     = os.environ["SCANIA_CLIENT_ID"]
-SCANIA_CLIENT_SECRET = os.environ["SCANIA_CLIENT_SECRET"]
-SHEET_ID             = os.environ["SHEET_ID"]
-GOOGLE_CREDS         = os.environ["GOOGLE_CREDENTIALS_JSON"]
+SCANIA_USUARIO  = os.environ["SCANIA_USUARIO"]
+SCANIA_PASSWORD = os.environ["SCANIA_PASSWORD"]
+SHEET_ID        = os.environ["SHEET_ID"]
+GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
 
-# ─── ENDPOINTS SCANIA ────────────────────────────────────────────────────────
-BASE_URL       = "https://dataaccess.scania.com"
-CHALLENGE_URL  = f"{BASE_URL}/auth/clientid2challenge"
-TOKEN_URL      = f"{BASE_URL}/auth/response2token"
-POSITIONS_URL  = f"{BASE_URL}/rfms4/vehiclepositions"
-VEHICLES_URL   = f"{BASE_URL}/rfms4/vehicles"
+# ─── URLS ────────────────────────────────────────────────────────────────────
+LOGIN_URL = "https://my.scania.com/start"
+FLOTA_URL = "https://fmp-fleetposition.cs.scania.com/vehicles/vehicles-list"
 
 # ─── CONFIGURACIÓN SHEETS ────────────────────────────────────────────────────
 PESTANAS = [
@@ -40,177 +40,196 @@ PESTANAS = [
     "Services-TUC",
 ]
 
-COL_PATENTE   = 0  # Columna A
-COL_KM_ACTUAL = 7  # Columna H
+COL_PATENTE   = 0
+COL_KM_ACTUAL = 7
 
 
 # ─── HELPERS ────────────────────────────────────────────────────────────────
 def normalizar_patente(texto: str) -> str:
     return re.sub(r"\s+", "", str(texto)).upper().strip()
 
-def base64url_decode(s: str) -> bytes:
-    """Decodifica base64url (reemplaza - por + y _ por /)"""
-    s = s.replace('-', '+').replace('_', '/')
-    # Padding
-    pad = 4 - len(s) % 4
-    if pad != 4:
-        s += '=' * pad
-    return base64.b64decode(s)
-
-def base64url_encode(b: bytes) -> str:
-    """Codifica bytes a base64url (sin padding)"""
-    s = base64.b64encode(b).decode('utf-8')
-    s = s.rstrip('=')
-    s = s.replace('+', '-').replace('/', '_')
-    return s
+def es_patente(texto: str) -> bool:
+    t = normalizar_patente(texto)
+    return bool(re.match(r'^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$', t))
 
 
-# ─── PASO 1-2-3: OBTENER TOKEN ───────────────────────────────────────────────
-def obtener_token() -> str:
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Autenticando con Scania API...")
-
-    # ── Step 1: Get Challenge ──────────────────────────────────────────────
-    print("  Step 1: Obteniendo challenge...")
-    resp1 = requests.post(
-        CHALLENGE_URL,
-        data={"clientId": SCANIA_CLIENT_ID},
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        timeout=30
-    )
-    print(f"  Step 1 response: {resp1.status_code}")
-
-    if resp1.status_code != 200:
-        raise Exception(f"Error Step 1: {resp1.status_code} — {resp1.text[:200]}")
-
-    challenge = resp1.json().get("challenge")
-    if not challenge:
-        raise Exception(f"No se recibió challenge: {resp1.text[:200]}")
-    print(f"  Challenge recibido: {challenge[:20]}...")
-
-    # ── Step 2: Create Challenge Response ─────────────────────────────────
-    print("  Step 2: Calculando HMAC-SHA256...")
-    secret_bytes   = base64url_decode(SCANIA_CLIENT_SECRET)
-    challenge_bytes = base64url_decode(challenge)
-    hmac_result    = hmac.new(secret_bytes, challenge_bytes, hashlib.sha256).digest()
-    challenge_response = base64url_encode(hmac_result)
-    print(f"  Challenge response: {challenge_response[:20]}...")
-
-    # ── Step 3: Get Token ──────────────────────────────────────────────────
-    print("  Step 3: Obteniendo token...")
-    resp3 = requests.post(
-        TOKEN_URL,
-        data={
-            "clientId": SCANIA_CLIENT_ID,
-            "Response": challenge_response,
-        },
-        headers={"Content-Type": "application/x-www-form-urlencoded"},
-        timeout=30
-    )
-    print(f"  Step 3 response: {resp3.status_code}")
-
-    if resp3.status_code != 200:
-        raise Exception(f"Error Step 3: {resp3.status_code} — {resp3.text[:200]}")
-
-    token = resp3.json().get("token")
-    if not token:
-        raise Exception(f"No se recibió token: {resp3.text[:200]}")
-
-    print(f"  ✅ Token obtenido correctamente")
-    return token
-
-
-# ─── EXTRAER ODÓMETROS ───────────────────────────────────────────────────────
+# ─── EXTRACCIÓN ─────────────────────────────────────────────────────────────
 def extraer_odometros_scania() -> dict:
-    token = obtener_token()
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/json; rfms=vehiclepositions.v4.0",
-    }
+    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome con Xvfb...")
 
+    # Con Xvfb corriendo (iniciado en el workflow), Chrome puede usar display virtual
+    # Esto resuelve el error de WebGL que ocurre en headless puro
+    opciones = Options()
+    opciones.add_argument("--no-sandbox")
+    opciones.add_argument("--disable-dev-shm-usage")
+    opciones.add_argument("--window-size=1280,900")
+    opciones.add_argument("--disable-gpu")
+    opciones.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36")
+    # Sin --headless para que use el display virtual de Xvfb
+    opciones.add_argument(f"--display={os.environ.get('DISPLAY', ':99')}")
+
+    driver = webdriver.Chrome(options=opciones)
+    wait   = WebDriverWait(driver, 30)
     odometros = {}
 
-    # ── Obtener posiciones con odómetro ────────────────────────────────────
-    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Obteniendo posiciones/odómetros...")
-    resp = requests.get(
-        POSITIONS_URL,
-        headers=headers,
-        params={"latestOnly": "true"},
-        timeout=30
-    )
-    print(f"  Positions response: {resp.status_code}")
+    try:
+        # ── Login ──────────────────────────────────────────────────────────
+        print(f"[{datetime.now().strftime('%H:%M:%S')}] Navegando al login...")
+        driver.get(LOGIN_URL)
+        time.sleep(5)
+        print(f"URL: {driver.current_url}")
 
-    if resp.status_code == 200:
-        data = resp.json()
-        print(f"  Respuesta (1000 chars): {json.dumps(data)[:1000]}")
+        # Campo usuario
+        campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
+        driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, SCANIA_USUARIO)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_usuario)
+        time.sleep(0.5)
 
-        posiciones = (
-            data.get("vehiclePositions") or
-            data.get("VehiclePositionResponse", {}).get("VehiclePosition", []) or
-            []
-        )
-        print(f"  Posiciones: {len(posiciones)}")
+        # Botón siguiente
+        btn_next = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        driver.execute_script("arguments[0].click();", btn_next)
+        time.sleep(3)
 
-        for pos in posiciones:
-            vin = pos.get("vin") or pos.get("Vin", "")
+        # Campo contraseña
+        campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
+        driver.execute_script("arguments[0].value = arguments[1];", campo_pass, SCANIA_PASSWORD)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_pass)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
+        time.sleep(0.5)
 
-            # Odómetro — viene en metros
-            km = 0
-            km_metros = (
-                pos.get("tachographSpeed") or  # no es esto
-                pos.get("wheelBasedSpeed") or  # tampoco
-                pos.get("gnssPosition", {}).get("altitude") or  # tampoco
-                0
-            )
+        btn_login = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        driver.execute_script("arguments[0].click();", btn_login)
+        print(f"Login enviado, esperando...")
+        time.sleep(10)
+        print(f"Post-login URL: {driver.current_url}")
 
-            # Buscar odómetro en todos los campos posibles
-            for campo in ["hrTotalVehicleDistance", "totalVehicleDistance",
-                          "TotalVehicleDistance", "HrTotalVehicleDistance",
-                          "odometer", "Odometer"]:
-                val = pos.get(campo)
-                if val and int(val) > 1000:
-                    km = int(val) // 1000
-                    break
+        # ── Aceptar cookies ────────────────────────────────────────────────
+        for sel in ["//button[contains(text(),'Acepto')]", "//button[contains(text(),'Accept')]", "button[id*='accept' i]"]:
+            try:
+                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
+                driver.execute_script("arguments[0].click();", btn)
+                print(f"Cookies aceptadas")
+                time.sleep(2)
+                break
+            except:
+                pass
 
-            # También buscar dentro de accumulatedData
-            acum = pos.get("accumulatedData") or pos.get("AccumulatedData") or {}
-            if not km and acum:
-                for campo in ["totalVehicleDistance", "TotalVehicleDistance",
-                              "hrTotalVehicleDistance"]:
-                    val = acum.get(campo)
-                    if val and int(val) > 1000:
-                        km = int(val) // 1000
-                        break
+        # ── Navegar a lista de vehículos ───────────────────────────────────
+        print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Navegando a lista de vehículos...")
+        driver.get(FLOTA_URL)
+        time.sleep(15)  # Más tiempo para WebGL con Xvfb
 
-            # Obtener patente — puede estar en externalId o en el VIN
-            patente_raw = (
-                pos.get("externalId") or
-                pos.get("ExternalId") or
-                pos.get("licensePlate") or
-                pos.get("vehicleIdentificationNumber") or
-                vin
-            )
-            patente = normalizar_patente(patente_raw) if patente_raw else None
+        # Aceptar cookies si aparecen de nuevo
+        for sel in ["//button[contains(text(),'Acepto')]", "button[id*='accept' i]"]:
+            try:
+                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
+                driver.execute_script("arguments[0].click();", btn)
+                time.sleep(3)
+                break
+            except:
+                pass
 
-            if patente and km:
-                odometros[patente] = km
-                print(f"  ✅ {patente}: {km:,} km")
-            elif vin:
-                print(f"  ⚠️  VIN {vin}: patente={patente}, km={km} — campos: {list(pos.keys())[:8]}")
+        print(f"URL flota: {driver.current_url}")
+        body_text = driver.find_element(By.TAG_NAME, "body").text
+        print(f"Texto visible (500 chars): {body_text[:500]}")
 
-    else:
-        print(f"  Error: {resp.text[:300]}")
+        # ── Extraer links de vehículos ─────────────────────────────────────
+        links = []
 
-    # ── Si no encontró nada, intentar con vehicles ──────────────────────────
-    if not odometros:
-        print(f"\n  Intentando con /rfms4/vehicles...")
-        headers_v = {
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/json; rfms=vehicles.v4.0",
-        }
-        resp_v = requests.get(VEHICLES_URL, headers=headers_v, timeout=30)
-        print(f"  Vehicles response: {resp_v.status_code}")
-        if resp_v.status_code == 200:
-            print(f"  Vehicles data: {resp_v.text[:500]}")
+        # Estrategia 1: links directos
+        elementos = driver.find_elements(By.CSS_SELECTOR, "a[href*='vehicle-details']")
+        for el in elementos:
+            href = el.get_attribute("href") or ""
+            if href and href not in links:
+                links.append(href)
+        print(f"Links directos: {len(links)}")
+
+        # Estrategia 2: UUIDs en el HTML
+        if not links:
+            uuids = re.findall(r'vehicle-details/([0-9a-f-]{36})', driver.page_source)
+            uuids_unicos = list(dict.fromkeys(uuids))
+            for uuid in uuids_unicos:
+                url = f"https://fmp-fleetposition.cs.scania.com/vehicles/vehicle-details/{uuid}"
+                if url not in links:
+                    links.append(url)
+            print(f"UUIDs en HTML: {len(links)}")
+
+        # Estrategia 3: buscar via JavaScript
+        if not links:
+            try:
+                uuids_js = driver.execute_script("""
+                    var uuids = [];
+                    var regex = /vehicle-details\\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/g;
+                    var text = document.documentElement.innerHTML;
+                    var match;
+                    while ((match = regex.exec(text)) !== null) {
+                        if (!uuids.includes(match[1])) uuids.push(match[1]);
+                    }
+                    return uuids;
+                """)
+                for uuid in (uuids_js or []):
+                    url = f"https://fmp-fleetposition.cs.scania.com/vehicles/vehicle-details/{uuid}"
+                    if url not in links:
+                        links.append(url)
+                print(f"UUIDs via JS: {len(links)}")
+            except Exception as e:
+                print(f"Error JS: {e}")
+
+        if not links:
+            with open("diagnostico_scania.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+            print("Sin links — HTML guardado para diagnóstico")
+
+        print(f"Total vehículos a procesar: {len(links)}")
+
+        # ── Extraer km de cada vehículo ────────────────────────────────────
+        for url in links:
+            try:
+                driver.get(url)
+                time.sleep(5)
+
+                body = driver.find_element(By.TAG_NAME, "body").text
+
+                # Buscar patente
+                patente = None
+                matches = re.findall(r'\b[A-Z]{2}\d{3}[A-Z]{2}\b|\b[A-Z]{3}\d{3}\b', body)
+                if matches:
+                    patente = normalizar_patente(matches[0])
+
+                # Buscar km — formato "1.211.581 km" o "Cuentakilómetros X"
+                km = 0
+                # Buscar después de "Cuentakilómetros"
+                match_ck = re.search(r'Cuentakil[oó]metros\s*([\d.,]+)', body, re.IGNORECASE)
+                if match_ck:
+                    km = int(re.sub(r'[^\d]', '', match_ck.group(1)))
+
+                # Buscar número grande seguido de km
+                if not km:
+                    km_matches = re.findall(r'([\d]{1,3}(?:[.,]\d{3})+)\s*km', body, re.IGNORECASE)
+                    for km_txt in km_matches:
+                        val = int(re.sub(r'[^\d]', '', km_txt))
+                        if val > 10000 and val > km:
+                            km = val
+
+                if patente and km:
+                    odometros[patente] = km
+                    print(f"  ✅ {patente}: {km:,} km")
+                else:
+                    print(f"  ⚠️  {url[-8:]}: patente={patente}, km={km}")
+                    print(f"      Texto: {body[:200]}")
+
+            except Exception as e:
+                print(f"  ❌ Error: {e}")
+                continue
+
+    except Exception as e:
+        print(f"\n❌ Error general: {e}")
+        with open("error_scania.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        raise
+    finally:
+        driver.quit()
 
     print(f"\nTotal Scania: {len(odometros)} vehículos")
     return odometros
@@ -254,16 +273,16 @@ def actualizar_sheets(odometros: dict):
                 patente = normalizar_patente(fila[COL_PATENTE])
                 if patente in odometros:
                     from gspread.utils import rowcol_to_a1
-                    km_scania  = odometros[patente]
+                    km_scania    = odometros[patente]
                     km_sheet_str = fila[COL_KM_ACTUAL].strip() if len(fila) > COL_KM_ACTUAL else ""
-                    km_sheet   = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
+                    km_sheet     = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
                     if km_scania > km_sheet:
                         celda = rowcol_to_a1(idx, COL_KM_ACTUAL + 1)
                         batch.append({"range": celda, "values": [[km_scania]]})
                         print(f"    ✅ {fila[COL_PATENTE]} → {km_scania:,} km")
                         total += 1
                     else:
-                        print(f"    ⏭️  {fila[COL_PATENTE]} sin cambio (Sheet: {km_sheet:,} ≥ Scania: {km_scania:,})")
+                        print(f"    ⏭️  {fila[COL_PATENTE]} sin cambio")
                 else:
                     no_encontrados.append(f"{nombre}: {fila[COL_PATENTE]}")
 
@@ -278,7 +297,7 @@ def actualizar_sheets(odometros: dict):
     print(f"\n{'='*50}")
     print(f"✅ Scania actualizados: {total} vehículos")
     if no_encontrados:
-        print(f"⚠️  No encontrados en Scania ({len(no_encontrados)}):")
+        print(f"⚠️  No encontrados ({len(no_encontrados)}):")
         for p in no_encontrados[:10]:
             print(f"   - {p}")
     print(f"{'='*50}")
@@ -287,7 +306,7 @@ def actualizar_sheets(odometros: dict):
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print(f"\n{'='*50}")
-    print(f"  SCANIA API → GOOGLE SHEETS")
+    print(f"  SCANIA SELENIUM → GOOGLE SHEETS")
     print(f"  {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"{'='*50}")
 
