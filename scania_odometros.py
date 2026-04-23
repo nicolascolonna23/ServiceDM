@@ -115,15 +115,9 @@ def extraer_odometros_scania() -> dict:
         for inp in inputs:
             print(f"  input type={inp.get_attribute('type')} id={inp.get_attribute('id')} name={inp.get_attribute('name')}")
 
-        # El campo de email está dentro de un iframe — hay que entrar primero
-        iframes = driver.find_elements(By.TAG_NAME, "iframe")
-        print(f"Iframes: {len(iframes)}")
-        if iframes:
-            driver.switch_to.frame(iframes[0])
-            print("Entré al iframe")
-
-        # Campo usuario por name=email
-        campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email'], input[type='text'], input[type='email']")))
+        # Campo email — está en el DOM principal, NO en el iframe
+        # Usar name=email que es el identificador correcto
+        campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email']")))
         campo_usuario.click()
         time.sleep(0.5)
         campo_usuario.clear()
