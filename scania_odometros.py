@@ -96,15 +96,34 @@ def extraer_odometros_scania() -> dict:
             except:
                 pass
 
-        # Campo usuario — usar send_keys real (no JS) para que Continue funcione
+        # Guardar HTML del login para diagnóstico
         from selenium.webdriver.common.keys import Keys
+        driver.save_screenshot("login_scania.png")
+        with open("login_scania.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+        print(f"HTML y screenshot del login guardados")
+
+        # Verificar si hay iframes
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        print(f"Iframes encontrados: {len(iframes)}")
+        for iframe in iframes:
+            print(f"  iframe src: {iframe.get_attribute('src')}")
+
+        # Imprimir todos los inputs de la página
+        inputs = driver.find_elements(By.TAG_NAME, "input")
+        print(f"Inputs encontrados: {len(inputs)}")
+        for inp in inputs:
+            print(f"  input type={inp.get_attribute('type')} id={inp.get_attribute('id')} name={inp.get_attribute('name')}")
+
+        # Campo usuario
         campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
         campo_usuario.click()
         time.sleep(0.5)
         campo_usuario.clear()
         campo_usuario.send_keys(SCANIA_USUARIO)
         time.sleep(1)
-        print(f"Usuario ingresado: {campo_usuario.get_attribute('value')[:5]}...")
+        val = campo_usuario.get_attribute('value')
+        print(f"Usuario ingresado: '{val[:10]}...' (len={len(val)})")
 
         # Botón "Continue" — Scania usa ese texto, no submit genérico
         btn_clickeado = False
