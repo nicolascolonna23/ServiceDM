@@ -80,28 +80,40 @@ def extraer_odometros_scania() -> dict:
         print(f"URL: {driver.current_url}")
 
         # Campo usuario
+        print(f"Página de login cargada: {driver.title}")
         campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
         driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, SCANIA_USUARIO)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
         driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_usuario)
-        time.sleep(0.5)
+        time.sleep(1)
+        print(f"Usuario ingresado")
 
-        # Botón siguiente
-        btn_next = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        # Botón siguiente — esperar a que sea clickeable
+        btn_next = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
         driver.execute_script("arguments[0].click();", btn_next)
-        time.sleep(3)
+        print(f"Botón siguiente clickeado, esperando página de contraseña...")
+        time.sleep(6)
+        print(f"URL después de siguiente: {driver.current_url}")
 
-        # Campo contraseña
-        campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
+        # Campo contraseña — puede tardar más con Xvfb
+        print(f"Buscando campo contraseña...")
+        try:
+            campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
+        except:
+            # Segundo intento con más tiempo
+            time.sleep(5)
+            campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
+
         driver.execute_script("arguments[0].value = arguments[1];", campo_pass, SCANIA_PASSWORD)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_pass)
         driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
-        time.sleep(0.5)
+        time.sleep(1)
+        print(f"Contraseña ingresada")
 
-        btn_login = driver.find_element(By.CSS_SELECTOR, "button[type='submit']")
+        btn_login = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
         driver.execute_script("arguments[0].click();", btn_login)
-        print(f"Login enviado, esperando...")
-        time.sleep(10)
+        print(f"Login enviado, esperando redirección...")
+        time.sleep(12)
         print(f"Post-login URL: {driver.current_url}")
 
         # ── Aceptar cookies ────────────────────────────────────────────────
