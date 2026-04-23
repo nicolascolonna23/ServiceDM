@@ -79,8 +79,24 @@ def extraer_odometros_scania() -> dict:
         time.sleep(5)
         print(f"URL: {driver.current_url}")
 
-        # Campo usuario
+        # Aceptar cookies PRIMERO — bloquea el login si no se acepta
         print(f"Página de login cargada: {driver.title}")
+        for sel_cookie in [
+            "//button[contains(text(),'I accept')]",
+            "//button[contains(text(),'Accept')]",
+            "//button[contains(text(),'Acepto')]",
+            "button[id*='accept' i]",
+        ]:
+            try:
+                btn_c = driver.find_element(By.XPATH if sel_cookie.startswith("//") else By.CSS_SELECTOR, sel_cookie)
+                driver.execute_script("arguments[0].click();", btn_c)
+                print(f"Cookies aceptadas en login: {sel_cookie}")
+                time.sleep(2)
+                break
+            except:
+                pass
+
+        # Campo usuario
         campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
         driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, SCANIA_USUARIO)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
@@ -88,12 +104,32 @@ def extraer_odometros_scania() -> dict:
         time.sleep(1)
         print(f"Usuario ingresado")
 
-        # Botón siguiente — esperar a que sea clickeable
-        btn_next = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
-        driver.execute_script("arguments[0].click();", btn_next)
-        print(f"Botón siguiente clickeado, esperando página de contraseña...")
-        time.sleep(6)
-        print(f"URL después de siguiente: {driver.current_url}")
+        # Botón "Continue" — Scania usa ese texto, no submit genérico
+        btn_clickeado = False
+        for sel_btn in [
+            "//button[contains(text(),'Continue')]",
+            "//button[contains(text(),'Continuar')]",
+            "//button[contains(text(),'Siguiente')]",
+            "button[type='submit']",
+            "input[type='submit']",
+        ]:
+            try:
+                btn_next = driver.find_element(By.XPATH if sel_btn.startswith("//") else By.CSS_SELECTOR, sel_btn)
+                driver.execute_script("arguments[0].click();", btn_next)
+                print(f"Botón Continue clickeado: {sel_btn}")
+                btn_clickeado = True
+                break
+            except:
+                continue
+
+        if not btn_clickeado:
+            from selenium.webdriver.common.keys import Keys
+            print("Botón no encontrado — usando Enter")
+            campo_usuario.send_keys(Keys.RETURN)
+
+        time.sleep(8)
+        print(f"URL después de Continue: {driver.current_url}")
+        print(f"Título: {driver.title}")
 
         # Campo contraseña — puede tardar más con Xvfb
         print(f"Buscando campo contraseña...")
