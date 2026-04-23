@@ -201,14 +201,15 @@ def extraer_odometros() -> dict:
                                         if mejor_km is None or val > mejor_km:
                                             mejor_km = val
                             if mejor_km:
-                                odometros[patente] = mejor_km
-                                print(f"  ✅ {patente}: {mejor_km:,} km")
+                                # Solo actualizar si el valor nuevo es mayor (más confiable)
+                                if patente not in odometros or mejor_km > odometros[patente]:
+                                    odometros[patente] = mejor_km
+                                    print(f"  ✅ {patente}: {mejor_km:,} km")
 
-            print(f"  Filas procesadas: {filas_totales}")
+            print(f"  Filas procesadas: {filas_totales} | Acumulado: {len(odometros)} vehículos")
 
-            if odometros:
-                print(f"Extracción exitosa: {len(odometros)} vehículos")
-                break
+        # Recorrimos todas las URLs — mostrar resumen
+        print(f"\nExtracción completa: {len(odometros)} vehículos en total")
 
         if not odometros:
             print(f"\n⚠️  Sin datos. URL final: {driver.current_url}")
