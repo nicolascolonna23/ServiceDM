@@ -21,7 +21,7 @@ jobs:
       - name: Instalar Google Chrome y Xvfb
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          echo "deb [arch=amd64] http://dl.google.coxm/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
           sudo apt-get install -y google-chrome-stable xvfb
 
@@ -51,11 +51,13 @@ jobs:
           DISPLAY:                  ":99"
         run: python scania_odometros.py
 
-      - name: Subir diagnóstico si hubo error
-        if: failure()
+      - name: Subir diagnóstico siempre
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: diagnostico
+          name: diagnostico-scania
           path: |
             diagnostico*.html
             error*.html
+            login_scania.html
+            login_scania.png
