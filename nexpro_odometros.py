@@ -144,10 +144,12 @@ def extraer_odometros() -> dict:
 
         # --- Buscar sección de odómetros/flota ---
         urls_reportes = [
-            "https://nexproconnect.net/Iveco/Reportes/VehicleRanking.aspx",
-            "https://nexproconnect.net/Iveco/Reportes/PosicionFlota.aspx",
-            "https://nexproconnect.net/Iveco/Reportes/Flota.aspx",
-            "https://nexproconnect.net/Iveco/Mapa/Mapa.aspx",
+            "https://nexproconnect.net/Iveco/Unidades/UnidadesShowTable2.aspx",
+            "https://nexproconnect.net/Iveco/MapServer/Seguimiento_V3.aspx",
+            "https://nexproconnect.net/Iveco/MapServer/Seguimiento2.aspx",
+            "https://nexproconnect.net/Iveco/Reportes/Scoring_UnidadesIveco.aspx",
+            "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx",
+            "https://nexproconnect.net/Iveco/CAN/UnidadesCAN2.aspx",
         ]
 
         for url in urls_reportes:
