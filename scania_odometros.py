@@ -147,39 +147,102 @@ def extraer_odometros_scania() -> dict:
         time.sleep(10)
         print(f"Post-login URL: {driver.current_url}")
 
+        # ── ACEPTAR COOKIES ────────────────────────────────────────────────
+        # El banner de cookies bloquea la carga — hay que aceptarlo primero
+        for sel_cookie in [
+            "button[id*='accept' i]",
+            "button[class*='accept' i]",
+            "button[data-testid*='accept' i]",
+            "//button[contains(text(),'Acepto')]",
+            "//button[contains(text(),'Accept')]",
+            "//button[contains(text(),'acepto')]",
+        ]:
+            try:
+                if sel_cookie.startswith("//"):
+                    btn_cookie = driver.find_element(By.XPATH, sel_cookie)
+                else:
+                    btn_cookie = driver.find_element(By.CSS_SELECTOR, sel_cookie)
+                driver.execute_script("arguments[0].click();", btn_cookie)
+                print(f"✅ Cookies aceptadas: {sel_cookie}")
+                time.sleep(2)
+                break
+            except:
+                continue
+
         # ── NAVEGAR A LISTA DE VEHÍCULOS ───────────────────────────────────
         print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Navegando a lista de vehículos...")
         driver.get(SCANIA_FLOTA_URL)
-        time.sleep(8)
+        time.sleep(12)  # Scania carga lento con JS
+
+        # Aceptar cookies también en la página de flota si aparece
+        for sel_cookie in [
+            "//button[contains(text(),'Acepto')]",
+            "//button[contains(text(),'Accept')]",
+            "button[id*='accept' i]",
+        ]:
+            try:
+                if sel_cookie.startswith("//"):
+                    btn_cookie = driver.find_element(By.XPATH, sel_cookie)
+                else:
+                    btn_cookie = driver.find_element(By.CSS_SELECTOR, sel_cookie)
+                driver.execute_script("arguments[0].click();", btn_cookie)
+                print(f"✅ Cookies aceptadas en flota: {sel_cookie}")
+                time.sleep(3)
+                break
+            except:
+                pass
         print(f"URL flota: {driver.current_url}")
 
-        # Esperar que cargue la lista
-        try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[href*='vehicle-details'], [class*='vehicle'], [class*='Vehicle']")))
-            print("Lista de vehículos cargada")
-        except:
-            print("Timeout esperando lista — continuando igual")
-
+        # Hacer scroll para forzar carga lazy
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(3)
+        driver.execute_script("window.scrollTo(0, 0);")
+        time.sleep(2)
+
+        # Imprimir texto visible para diagnóstico
+        body_text = driver.find_element(By.TAG_NAME, "body").text
+        print(f"Texto visible (primeras 500 chars): {body_text[:500]}")
 
         # ── EXTRAER LINKS DE VEHÍCULOS ─────────────────────────────────────
         links_vehiculos = []
 
-        # Buscar links a vehicle-details
+        # Estrategia 1: links directos a vehicle-details
         elementos = driver.find_elements(By.CSS_SELECTOR, "a[href*='vehicle-details']")
         for el in elementos:
             href = el.get_attribute("href")
             if href and "vehicle-details" in href and href not in links_vehiculos:
                 links_vehiculos.append(href)
+        print(f"Estrategia 1 (links directos): {len(links_vehiculos)}")
 
-        # Si no encontró links, buscar por texto de patente en la lista
+        # Estrategia 2: buscar patentes en texto y construir URLs
         if not links_vehiculos:
-            print("No se encontraron links directos — buscando patentes en la lista...")
+            # Buscar IDs de vehículos en el HTML (UUIDs)
+            page_source = driver.page_source
+            uuids = re.findall(r'vehicle-details/([0-9a-f-]{36})', page_source)
+            uuids_unicos = list(dict.fromkeys(uuids))
+            for uuid in uuids_unicos:
+                url = f"https://fmp-fleetposition.cs.scania.com/vehicles/vehicle-details/{uuid}"
+                if url not in links_vehiculos:
+                    links_vehiculos.append(url)
+            print(f"Estrategia 2 (UUIDs en HTML): {len(links_vehiculos)}")
+
+        # Estrategia 3: buscar en elementos clickeables con patente
+        if not links_vehiculos:
+            todos_links = driver.find_elements(By.TAG_NAME, "a")
+            for link in todos_links:
+                href = link.get_attribute("href") or ""
+                if "vehicle" in href.lower() and href not in links_vehiculos:
+                    links_vehiculos.append(href)
+                    print(f"  Link vehiculo: {href}")
+            print(f"Estrategia 3 (links con vehicle): {len(links_vehiculos)}")
+
+        if not links_vehiculos:
+            print("No se encontraron vehículos — guardando HTML...")
             with open("diagnostico_scania_lista.html", "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             print("HTML guardado: diagnostico_scania_lista.html")
 
-        print(f"Vehículos encontrados: {len(links_vehiculos)}")
+        print(f"Total vehículos a procesar: {len(links_vehiculos)}")
 
         # ── EXTRAER KM DE CADA VEHÍCULO ────────────────────────────────────
         for url_vehiculo in links_vehiculos:
