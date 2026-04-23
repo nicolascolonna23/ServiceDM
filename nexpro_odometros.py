@@ -90,7 +90,8 @@ def extraer_odometros() -> dict:
         campo_usuario = None
         for sel in selectores_usuario:
             try:
-                campo_usuario = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, sel)))
+                # element_to_be_clickable espera a que el campo esté activo y habilitado
+                campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, sel)))
                 print(f"Campo usuario: {sel}")
                 break
             except:
@@ -99,14 +100,22 @@ def extraer_odometros() -> dict:
         if not campo_usuario:
             raise Exception("No se encontró el campo usuario — guardá diagnostico.html para revisar")
 
-        campo_pass = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
+        campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
 
-        campo_usuario.clear()
-        campo_usuario.send_keys(NEXPRO_USUARIO)
+        # Usar JavaScript para escribir — más robusto que send_keys en portales ASP.NET
+        driver.execute_script("arguments[0].value = '';", campo_usuario)
+        driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, NEXPRO_USUARIO)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_usuario)
         time.sleep(0.5)
-        campo_pass.clear()
-        campo_pass.send_keys(NEXPRO_PASSWORD)
+
+        driver.execute_script("arguments[0].value = '';", campo_pass)
+        driver.execute_script("arguments[0].value = arguments[1];", campo_pass, NEXPRO_PASSWORD)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_pass)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
         time.sleep(0.5)
+
+        print(f"Credenciales ingresadas via JavaScript")
 
         # Botón login
         selectores_btn = [
@@ -128,9 +137,9 @@ def extraer_odometros() -> dict:
         if not btn:
             raise Exception("No se encontró el botón de login")
 
-        btn.click()
+        driver.execute_script("arguments[0].click();", btn)
         print(f"Login enviado, esperando redirección...")
-        time.sleep(6)
+        time.sleep(8)
         print(f"Post-login URL: {driver.current_url}")
 
         # --- Buscar sección de odómetros/flota ---
