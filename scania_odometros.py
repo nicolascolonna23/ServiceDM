@@ -1,12 +1,15 @@
 """
 scania_odometros.py
-Usa la API REST de Scania (rFMS) para obtener odómetros.
-Sin Selenium, sin browser — llamadas HTTP directas.
+Autenticación Scania FMS API - Challenge/Response (3 pasos)
+Sin Selenium — llamadas HTTP directas a dataaccess.scania.com
 """
 
 import os
 import re
 import json
+import hmac
+import hashlib
+import base64
 import tempfile
 import requests
 from datetime import datetime
@@ -20,10 +23,12 @@ SCANIA_CLIENT_SECRET = os.environ["SCANIA_CLIENT_SECRET"]
 SHEET_ID             = os.environ["SHEET_ID"]
 GOOGLE_CREDS         = os.environ["GOOGLE_CREDENTIALS_JSON"]
 
-# ─── ENDPOINTS SCANIA API ────────────────────────────────────────────────────
-TOKEN_URL    = "https://id.scania.com/auth/realms/fg-ext/protocol/openid-connect/token"
-VEHICLES_URL = "https://api.scania.com/rfms/v4/vehicles"
-STATUS_URL   = "https://api.scania.com/rfms/v4/vehiclestatuses"
+# ─── ENDPOINTS SCANIA ────────────────────────────────────────────────────────
+BASE_URL       = "https://dataaccess.scania.com"
+CHALLENGE_URL  = f"{BASE_URL}/auth/clientid2challenge"
+TOKEN_URL      = f"{BASE_URL}/auth/response2token"
+POSITIONS_URL  = f"{BASE_URL}/rfms4/vehiclepositions"
+VEHICLES_URL   = f"{BASE_URL}/rfms4/vehicles"
 
 # ─── CONFIGURACIÓN SHEETS ────────────────────────────────────────────────────
 PESTANAS = [
@@ -43,123 +48,175 @@ COL_KM_ACTUAL = 7  # Columna H
 def normalizar_patente(texto: str) -> str:
     return re.sub(r"\s+", "", str(texto)).upper().strip()
 
+def base64url_decode(s: str) -> bytes:
+    """Decodifica base64url (reemplaza - por + y _ por /)"""
+    s = s.replace('-', '+').replace('_', '/')
+    # Padding
+    pad = 4 - len(s) % 4
+    if pad != 4:
+        s += '=' * pad
+    return base64.b64decode(s)
 
-# ─── PASO 1: OBTENER TOKEN ───────────────────────────────────────────────────
+def base64url_encode(b: bytes) -> str:
+    """Codifica bytes a base64url (sin padding)"""
+    s = base64.b64encode(b).decode('utf-8')
+    s = s.rstrip('=')
+    s = s.replace('+', '-').replace('/', '_')
+    return s
+
+
+# ─── PASO 1-2-3: OBTENER TOKEN ───────────────────────────────────────────────
 def obtener_token() -> str:
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Obteniendo token OAuth...")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Autenticando con Scania API...")
 
-    resp = requests.post(TOKEN_URL, data={
-        "grant_type":    "client_credentials",
-        "client_id":     SCANIA_CLIENT_ID,
-        "client_secret": SCANIA_CLIENT_SECRET,
-    }, timeout=30)
+    # ── Step 1: Get Challenge ──────────────────────────────────────────────
+    print("  Step 1: Obteniendo challenge...")
+    resp1 = requests.post(
+        CHALLENGE_URL,
+        data={"clientId": SCANIA_CLIENT_ID},
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=30
+    )
+    print(f"  Step 1 response: {resp1.status_code}")
 
-    print(f"  Token response: {resp.status_code}")
+    if resp1.status_code != 200:
+        raise Exception(f"Error Step 1: {resp1.status_code} — {resp1.text[:200]}")
 
-    if resp.status_code != 200:
-        print(f"  Error: {resp.text[:300]}")
-        raise Exception(f"Error obteniendo token: {resp.status_code}")
+    challenge = resp1.json().get("challenge")
+    if not challenge:
+        raise Exception(f"No se recibió challenge: {resp1.text[:200]}")
+    print(f"  Challenge recibido: {challenge[:20]}...")
 
-    token = resp.json().get("access_token")
-    print(f"  ✅ Token obtenido")
+    # ── Step 2: Create Challenge Response ─────────────────────────────────
+    print("  Step 2: Calculando HMAC-SHA256...")
+    secret_bytes   = base64url_decode(SCANIA_CLIENT_SECRET)
+    challenge_bytes = base64url_decode(challenge)
+    hmac_result    = hmac.new(secret_bytes, challenge_bytes, hashlib.sha256).digest()
+    challenge_response = base64url_encode(hmac_result)
+    print(f"  Challenge response: {challenge_response[:20]}...")
+
+    # ── Step 3: Get Token ──────────────────────────────────────────────────
+    print("  Step 3: Obteniendo token...")
+    resp3 = requests.post(
+        TOKEN_URL,
+        data={
+            "clientId": SCANIA_CLIENT_ID,
+            "Response": challenge_response,
+        },
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        timeout=30
+    )
+    print(f"  Step 3 response: {resp3.status_code}")
+
+    if resp3.status_code != 200:
+        raise Exception(f"Error Step 3: {resp3.status_code} — {resp3.text[:200]}")
+
+    token = resp3.json().get("token")
+    if not token:
+        raise Exception(f"No se recibió token: {resp3.text[:200]}")
+
+    print(f"  ✅ Token obtenido correctamente")
     return token
 
 
-# ─── PASO 2: EXTRAER ODÓMETROS ──────────────────────────────────────────────
+# ─── EXTRAER ODÓMETROS ───────────────────────────────────────────────────────
 def extraer_odometros_scania() -> dict:
     token = obtener_token()
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/json",
+        "Accept": "application/json; rfms=vehiclepositions.v4.0",
     }
 
     odometros = {}
 
-    # ── Obtener lista de vehículos ──────────────────────────────────────────
-    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Obteniendo lista de vehículos...")
-    resp_v = requests.get(VEHICLES_URL, headers=headers, timeout=30)
-    print(f"  Vehicles response: {resp_v.status_code}")
+    # ── Obtener posiciones con odómetro ────────────────────────────────────
+    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Obteniendo posiciones/odómetros...")
+    resp = requests.get(
+        POSITIONS_URL,
+        headers=headers,
+        params={"latestOnly": "true"},
+        timeout=30
+    )
+    print(f"  Positions response: {resp.status_code}")
 
-    vehiculos = []
-    if resp_v.status_code == 200:
-        data_v = resp_v.json()
-        print(f"  Respuesta: {json.dumps(data_v)[:500]}")
-        vehiculos = (
-            data_v.get("vehicles") or
-            data_v.get("Vehicle") or
-            data_v.get("VehicleResponse", {}).get("Vehicle", []) or
+    if resp.status_code == 200:
+        data = resp.json()
+        print(f"  Respuesta (1000 chars): {json.dumps(data)[:1000]}")
+
+        posiciones = (
+            data.get("vehiclePositions") or
+            data.get("VehiclePositionResponse", {}).get("VehiclePosition", []) or
             []
         )
-        print(f"  Vehículos: {len(vehiculos)}")
-        for v in vehiculos:
-            print(f"    {json.dumps(v)[:150]}")
-    else:
-        print(f"  Error: {resp_v.text[:300]}")
+        print(f"  Posiciones: {len(posiciones)}")
 
-    # ── Obtener estado actual (odómetro) ────────────────────────────────────
-    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Obteniendo odómetros...")
-    resp_s = requests.get(STATUS_URL, headers=headers,
-                          params={"latestOnly": "true"}, timeout=30)
-    print(f"  Status response: {resp_s.status_code}")
+        for pos in posiciones:
+            vin = pos.get("vin") or pos.get("Vin", "")
 
-    vin_a_km = {}
-    if resp_s.status_code == 200:
-        data_s = resp_s.json()
-        print(f"  Respuesta (1000 chars): {json.dumps(data_s)[:1000]}")
-
-        statuses = (
-            data_s.get("vehicleStatuses") or
-            data_s.get("VehicleStatus") or
-            data_s.get("VehicleStatusResponse", {}).get("VehicleStatus", []) or
-            []
-        )
-
-        for s in statuses:
-            vin = s.get("vin") or s.get("Vin", "")
+            # Odómetro — viene en metros
             km = 0
-
-            # Odómetro viene en metros — dividir por 1000
-            acum = s.get("accumulatedData") or s.get("AccumulatedData") or {}
             km_metros = (
-                acum.get("totalVehicleDistance") or
-                acum.get("TotalVehicleDistance") or
-                s.get("hrTotalVehicleDistance") or
-                s.get("HrTotalVehicleDistance") or
+                pos.get("tachographSpeed") or  # no es esto
+                pos.get("wheelBasedSpeed") or  # tampoco
+                pos.get("gnssPosition", {}).get("altitude") or  # tampoco
                 0
             )
-            if km_metros:
-                km = int(km_metros) // 1000
 
-            if vin and km:
-                vin_a_km[vin] = km
-                print(f"  VIN {vin}: {km:,} km")
-    else:
-        print(f"  Error: {resp_s.text[:300]}")
+            # Buscar odómetro en todos los campos posibles
+            for campo in ["hrTotalVehicleDistance", "totalVehicleDistance",
+                          "TotalVehicleDistance", "HrTotalVehicleDistance",
+                          "odometer", "Odometer"]:
+                val = pos.get(campo)
+                if val and int(val) > 1000:
+                    km = int(val) // 1000
+                    break
 
-    # ── Cruzar VIN → patente ────────────────────────────────────────────────
-    if vin_a_km and vehiculos:
-        for v in vehiculos:
-            vin = v.get("vin") or v.get("Vin", "")
+            # También buscar dentro de accumulatedData
+            acum = pos.get("accumulatedData") or pos.get("AccumulatedData") or {}
+            if not km and acum:
+                for campo in ["totalVehicleDistance", "TotalVehicleDistance",
+                              "hrTotalVehicleDistance"]:
+                    val = acum.get(campo)
+                    if val and int(val) > 1000:
+                        km = int(val) // 1000
+                        break
+
+            # Obtener patente — puede estar en externalId o en el VIN
             patente_raw = (
-                v.get("externalId") or
-                v.get("licensePlate") or
-                v.get("name") or
-                v.get("ExternalId") or
-                ""
+                pos.get("externalId") or
+                pos.get("ExternalId") or
+                pos.get("licensePlate") or
+                pos.get("vehicleIdentificationNumber") or
+                vin
             )
-            patente = normalizar_patente(patente_raw)
-            if patente and vin in vin_a_km:
-                odometros[patente] = vin_a_km[vin]
-                print(f"  ✅ {patente}: {vin_a_km[vin]:,} km")
-    elif vin_a_km:
-        # Si no hay lista de vehículos, usar VIN como clave
-        odometros = vin_a_km
+            patente = normalizar_patente(patente_raw) if patente_raw else None
+
+            if patente and km:
+                odometros[patente] = km
+                print(f"  ✅ {patente}: {km:,} km")
+            elif vin:
+                print(f"  ⚠️  VIN {vin}: patente={patente}, km={km} — campos: {list(pos.keys())[:8]}")
+
+    else:
+        print(f"  Error: {resp.text[:300]}")
+
+    # ── Si no encontró nada, intentar con vehicles ──────────────────────────
+    if not odometros:
+        print(f"\n  Intentando con /rfms4/vehicles...")
+        headers_v = {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json; rfms=vehicles.v4.0",
+        }
+        resp_v = requests.get(VEHICLES_URL, headers=headers_v, timeout=30)
+        print(f"  Vehicles response: {resp_v.status_code}")
+        if resp_v.status_code == 200:
+            print(f"  Vehicles data: {resp_v.text[:500]}")
 
     print(f"\nTotal Scania: {len(odometros)} vehículos")
     return odometros
 
 
-# ─── PASO 3: ACTUALIZAR SHEETS ───────────────────────────────────────────────
+# ─── ACTUALIZAR SHEETS ───────────────────────────────────────────────────────
 def actualizar_sheets(odometros: dict):
     if not odometros:
         print("⚠️  Sin datos para actualizar.")
@@ -197,9 +254,9 @@ def actualizar_sheets(odometros: dict):
                 patente = normalizar_patente(fila[COL_PATENTE])
                 if patente in odometros:
                     from gspread.utils import rowcol_to_a1
-                    km_scania = odometros[patente]
+                    km_scania  = odometros[patente]
                     km_sheet_str = fila[COL_KM_ACTUAL].strip() if len(fila) > COL_KM_ACTUAL else ""
-                    km_sheet = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
+                    km_sheet   = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
                     if km_scania > km_sheet:
                         celda = rowcol_to_a1(idx, COL_KM_ACTUAL + 1)
                         batch.append({"range": celda, "values": [[km_scania]]})
@@ -221,7 +278,7 @@ def actualizar_sheets(odometros: dict):
     print(f"\n{'='*50}")
     print(f"✅ Scania actualizados: {total} vehículos")
     if no_encontrados:
-        print(f"⚠️  No encontrados ({len(no_encontrados)}):")
+        print(f"⚠️  No encontrados en Scania ({len(no_encontrados)}):")
         for p in no_encontrados[:10]:
             print(f"   - {p}")
     print(f"{'='*50}")
@@ -239,4 +296,4 @@ if __name__ == "__main__":
     if odometros:
         actualizar_sheets(odometros)
     else:
-        print("\n⚠️  Sin datos de Scania — puede que los camiones estén apagados.")
+        print("\n⚠️  Sin datos de Scania.")
