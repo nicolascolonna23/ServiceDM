@@ -1,0 +1,47 @@
+name: Actualizar Odómetros Nexpro
+
+on:
+  schedule:
+    # Corre de lunes a sábado a las 10:00 AM Argentina (UTC-3 = 13:00 UTC)
+    - cron: '0 13 * * 1-6'
+  workflow_dispatch:  # permite correrlo manualmente desde GitHub con un click
+
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clonar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Google Chrome
+        run: |
+          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update
+          sudo apt-get install -y google-chrome-stable
+
+      - name: Instalar dependencias Python
+        run: pip install -r requirements.txt
+
+      - name: Correr script
+        env:
+          NEXPRO_USUARIO:           ${{ secrets.NEXPRO_USUARIO }}
+          NEXPRO_PASSWORD:          ${{ secrets.NEXPRO_PASSWORD }}
+          SHEET_ID:                 ${{ secrets.SHEET_ID }}
+          GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: python nexpro_odometros.py
+
+      - name: Subir diagnóstico si hubo error
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostico
+          path: |
+            diagnostico.html
+            error.html
