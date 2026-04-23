@@ -157,18 +157,44 @@ def extraer_odometros() -> dict:
             driver.get(url)
             time.sleep(8)
 
-            # Intentar desactivar paginación (mostrar todos los registros)
-            for sel_todos in ["select[id*='size']", "select[id*='length']", "select[name*='length']"]:
+            # Desactivar paginación — mostrar todos los registros
+            from selenium.webdriver.support.ui import Select
+            selectores_paginacion = [
+                "select",  # cualquier select en la página
+                "select[id*='size']",
+                "select[id*='length']",
+                "select[id*='registros']",
+                "select[name*='length']",
+                "select[name*='size']",
+            ]
+            paginacion_desactivada = False
+            for sel_pag in selectores_paginacion:
                 try:
-                    from selenium.webdriver.support.ui import Select
-                    sel_elem = driver.find_element(By.CSS_SELECTOR, sel_todos)
-                    select = Select(sel_elem)
-                    select.select_by_value("-1")
-                    time.sleep(4)
-                    print(f"  Paginación desactivada")
+                    elementos = driver.find_elements(By.CSS_SELECTOR, sel_pag)
+                    for sel_elem in elementos:
+                        select = Select(sel_elem)
+                        opciones = [o.get_attribute("value") for o in select.options]
+                        print(f"  Select encontrado — opciones: {opciones}")
+                        # Intentar primero -1 (todos), sino el valor más alto
+                        if "-1" in opciones:
+                            select.select_by_value("-1")
+                            paginacion_desactivada = True
+                        elif opciones:
+                            # Tomar el valor numérico más alto
+                            nums = [(int(v), v) for v in opciones if v.lstrip("-").isdigit()]
+                            if nums:
+                                valor_max = max(nums, key=lambda x: x[0])[1]
+                                select.select_by_value(valor_max)
+                                paginacion_desactivada = True
+                        if paginacion_desactivada:
+                            print(f"  ✅ Paginación ajustada")
+                            time.sleep(4)
+                            break
+                except Exception as ep:
+                    print(f"  Select error: {ep}")
+                    continue
+                if paginacion_desactivada:
                     break
-                except:
-                    pass
 
             tablas = driver.find_elements(By.TAG_NAME, "table")
             if not tablas:
