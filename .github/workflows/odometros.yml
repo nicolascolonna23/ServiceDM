@@ -1,10 +1,10 @@
-name: Actualizar Odómetros Nexpro
+name: Actualizar Odómetros (Nexpro + Scania)
 
 on:
   schedule:
-    # Corre de lunes a sábado a las 10:00 AM Argentina (UTC-3 = 13:00 UTC)
+    # Lunes a sábado a las 10:00 AM Argentina (UTC-3 = 13:00 UTC)
     - cron: '0 13 * * 1-6'
-  workflow_dispatch:  # permite correrlo manualmente desde GitHub con un click
+  workflow_dispatch:
 
 jobs:
   actualizar:
@@ -29,7 +29,7 @@ jobs:
       - name: Instalar dependencias Python
         run: pip install -r requirements.txt
 
-      - name: Correr script
+      - name: Correr Nexpro (Iveco)
         env:
           NEXPRO_USUARIO:           ${{ secrets.NEXPRO_USUARIO }}
           NEXPRO_PASSWORD:          ${{ secrets.NEXPRO_PASSWORD }}
@@ -37,11 +37,19 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python nexpro_odometros.py
 
+      - name: Correr Scania
+        env:
+          SCANIA_USUARIO:           ${{ secrets.SCANIA_USUARIO }}
+          SCANIA_PASSWORD:          ${{ secrets.SCANIA_PASSWORD }}
+          SHEET_ID:                 ${{ secrets.SHEET_ID }}
+          GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: python scania_odometros.py
+
       - name: Subir diagnóstico si hubo error
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: diagnostico
           path: |
-            diagnostico.html
-            error.html
+            diagnostico*.html
+            error*.html
