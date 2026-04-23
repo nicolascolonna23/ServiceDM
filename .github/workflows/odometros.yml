@@ -18,12 +18,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Google Chrome
+      - name: Instalar Google Chrome y Xvfb
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
           echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          sudo apt-get install -y google-chrome-stable xvfb
 
       - name: Instalar dependencias Python
         run: pip install -r requirements.txt
@@ -36,12 +36,19 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python nexpro_odometros.py
 
-      - name: Correr Scania (API)
+      - name: Iniciar Xvfb para Scania
+        run: |
+          Xvfb :99 -screen 0 1280x900x24 &
+          echo "DISPLAY=:99" >> $GITHUB_ENV
+          sleep 2
+
+      - name: Correr Scania (Selenium + Xvfb)
         env:
-          SCANIA_CLIENT_ID:         ${{ secrets.SCANIA_CLIENT_ID }}
-          SCANIA_CLIENT_SECRET:     ${{ secrets.SCANIA_CLIENT_SECRET }}
+          SCANIA_USUARIO:           ${{ secrets.SCANIA_USUARIO }}
+          SCANIA_PASSWORD:          ${{ secrets.SCANIA_PASSWORD }}
           SHEET_ID:                 ${{ secrets.SHEET_ID }}
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          DISPLAY:                  ":99"
         run: python scania_odometros.py
 
       - name: Subir diagnóstico si hubo error
