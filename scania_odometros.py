@@ -115,15 +115,22 @@ def extraer_odometros_scania() -> dict:
         for inp in inputs:
             print(f"  input type={inp.get_attribute('type')} id={inp.get_attribute('id')} name={inp.get_attribute('name')}")
 
-        # Campo usuario
-        campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
+        # El campo de email está dentro de un iframe — hay que entrar primero
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        print(f"Iframes: {len(iframes)}")
+        if iframes:
+            driver.switch_to.frame(iframes[0])
+            print("Entré al iframe")
+
+        # Campo usuario por name=email
+        campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[name='email'], input[type='text'], input[type='email']")))
         campo_usuario.click()
         time.sleep(0.5)
         campo_usuario.clear()
         campo_usuario.send_keys(SCANIA_USUARIO)
         time.sleep(1)
         val = campo_usuario.get_attribute('value')
-        print(f"Usuario ingresado: '{val[:10]}...' (len={len(val)})")
+        print(f"Usuario ingresado: '{val[:5]}...' (len={len(val)})")
 
         # Botón "Continue" — Scania usa ese texto, no submit genérico
         btn_clickeado = False
@@ -190,6 +197,11 @@ def extraer_odometros_scania() -> dict:
 
         print(f"Login enviado, esperando redirección...")
         time.sleep(12)
+        # Salir del iframe después del login
+        try:
+            driver.switch_to.default_content()
+        except:
+            pass
         print(f"Post-login URL: {driver.current_url}")
 
         # ── Aceptar cookies ────────────────────────────────────────────────
