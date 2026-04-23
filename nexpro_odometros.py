@@ -155,32 +155,59 @@ def extraer_odometros() -> dict:
         for url in urls_reportes:
             print(f"\nProbando: {url}")
             driver.get(url)
-            time.sleep(5)
+            time.sleep(8)
+
+            # Intentar desactivar paginación (mostrar todos los registros)
+            for sel_todos in ["select[id*='size']", "select[id*='length']", "select[name*='length']"]:
+                try:
+                    from selenium.webdriver.support.ui import Select
+                    sel_elem = driver.find_element(By.CSS_SELECTOR, sel_todos)
+                    select = Select(sel_elem)
+                    select.select_by_value("-1")
+                    time.sleep(4)
+                    print(f"  Paginación desactivada")
+                    break
+                except:
+                    pass
 
             tablas = driver.find_elements(By.TAG_NAME, "table")
             if not tablas:
-                print(f"  Sin tablas")
+                print(f"  Sin tablas — guardando HTML")
+                with open(f"diag_{url.split('/')[-1]}.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
                 continue
 
             print(f"  {len(tablas)} tabla(s)")
 
+            filas_totales = 0
             for tabla in tablas:
                 filas = tabla.find_elements(By.TAG_NAME, "tr")
-                for fila in filas[1:]:
+                filas_totales += len(filas)
+                for idx_fila, fila in enumerate(filas[1:]):
                     celdas = fila.find_elements(By.TAG_NAME, "td")
                     textos = [c.text.strip() for c in celdas]
+                    if idx_fila < 3:
+                        print(f"  DEBUG: {textos[:7]}")
                     for i, texto in enumerate(textos):
                         if es_patente(texto):
                             patente = normalizar_patente(texto)
-                            for j in range(i+1, min(i+8, len(textos))):
-                                if es_km(textos[j]):
-                                    km = int(textos[j].replace(".", "").replace(",", ""))
-                                    odometros[patente] = km
-                                    print(f"  ✅ {patente}: {km:,} km")
-                                    break
+                            # Tomar el valor numérico MÁS GRANDE (odómetro total > 10.000)
+                            mejor_km = None
+                            for j in range(i+1, min(i+10, len(textos))):
+                                t = textos[j].replace(".", "").replace(",", "").strip()
+                                if t.isdigit():
+                                    val = int(t)
+                                    if val > 10000:
+                                        if mejor_km is None or val > mejor_km:
+                                            mejor_km = val
+                            if mejor_km:
+                                odometros[patente] = mejor_km
+                                print(f"  ✅ {patente}: {mejor_km:,} km")
+
+            print(f"  Filas procesadas: {filas_totales}")
 
             if odometros:
-                print(f"Extracción exitosa.")
+                print(f"Extracción exitosa: {len(odometros)} vehículos")
                 break
 
         if not odometros:
