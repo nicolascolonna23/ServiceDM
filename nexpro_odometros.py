@@ -263,10 +263,18 @@ def actualizar_sheets(odometros: dict):
                 patente = normalizar_patente(fila[COL_PATENTE])
                 if patente in odometros:
                     from gspread.utils import rowcol_to_a1
-                    celda = rowcol_to_a1(idx, COL_KM_ACTUAL + 1)
-                    batch.append({"range": celda, "values": [[odometros[patente]]]})
-                    print(f"    ✅ {fila[COL_PATENTE]} → {odometros[patente]:,}")
-                    total += 1
+                    km_nexpro = odometros[patente]
+                    # Leer km actual que ya tiene el Sheet
+                    km_sheet_str = fila[COL_KM_ACTUAL].strip() if len(fila) > COL_KM_ACTUAL else ""
+                    km_sheet = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
+                    # Solo escribir si el valor de Nexpro es MAYOR al que ya está en el Sheet
+                    if km_nexpro > km_sheet:
+                        celda = rowcol_to_a1(idx, COL_KM_ACTUAL + 1)
+                        batch.append({"range": celda, "values": [[km_nexpro]]})
+                        print(f"    ✅ {fila[COL_PATENTE]} → {km_nexpro:,} km (antes: {km_sheet:,})")
+                        total += 1
+                    else:
+                        print(f"    ⏭️  {fila[COL_PATENTE]} → sin cambio (Sheet: {km_sheet:,} ≥ Nexpro: {km_nexpro:,})")
                 else:
                     no_encontrados.append(f"{nombre}: {fila[COL_PATENTE]}")
 
