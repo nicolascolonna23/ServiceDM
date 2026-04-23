@@ -96,13 +96,15 @@ def extraer_odometros_scania() -> dict:
             except:
                 pass
 
-        # Campo usuario
+        # Campo usuario — usar send_keys real (no JS) para que Continue funcione
+        from selenium.webdriver.common.keys import Keys
         campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='text'], input[type='email']")))
-        driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, SCANIA_USUARIO)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_usuario)
+        campo_usuario.click()
+        time.sleep(0.5)
+        campo_usuario.clear()
+        campo_usuario.send_keys(SCANIA_USUARIO)
         time.sleep(1)
-        print(f"Usuario ingresado")
+        print(f"Usuario ingresado: {campo_usuario.get_attribute('value')[:5]}...")
 
         # Botón "Continue" — Scania usa ese texto, no submit genérico
         btn_clickeado = False
@@ -136,18 +138,37 @@ def extraer_odometros_scania() -> dict:
         try:
             campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
         except:
-            # Segundo intento con más tiempo
             time.sleep(5)
             campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
 
-        driver.execute_script("arguments[0].value = arguments[1];", campo_pass, SCANIA_PASSWORD)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_pass)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
+        campo_pass.click()
+        time.sleep(0.5)
+        campo_pass.clear()
+        campo_pass.send_keys(SCANIA_PASSWORD)
         time.sleep(1)
         print(f"Contraseña ingresada")
 
-        btn_login = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "button[type='submit']")))
-        driver.execute_script("arguments[0].click();", btn_login)
+        # Botón login final
+        btn_login_clickeado = False
+        for sel_login in [
+            "//button[contains(text(),'Log in')]",
+            "//button[contains(text(),'Sign in')]",
+            "//button[contains(text(),'Iniciar')]",
+            "button[type='submit']",
+        ]:
+            try:
+                btn_login = driver.find_element(By.XPATH if sel_login.startswith("//") else By.CSS_SELECTOR, sel_login)
+                btn_login.click()
+                print(f"Botón login: {sel_login}")
+                btn_login_clickeado = True
+                break
+            except:
+                continue
+
+        if not btn_login_clickeado:
+            campo_pass.send_keys(Keys.RETURN)
+            print("Enter en contraseña")
+
         print(f"Login enviado, esperando redirección...")
         time.sleep(12)
         print(f"Post-login URL: {driver.current_url}")
