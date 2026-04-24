@@ -90,32 +90,29 @@ def obtener_token_selenium() -> str:
             except:
                 pass
 
-        # Campo usuario — usar ActionChains para simular escritura real
+        # Campo usuario — usar xdotool para escribir via teclado real del sistema
         campo_usuario = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[name='email']")))
-        actions = ActionChains(driver)
-        actions.click(campo_usuario)
-        actions.pause(0.5)
-        for char in SCANIA_USUARIO:
-            actions.send_keys(char)
-            actions.pause(0.03)
-        actions.perform()
-        time.sleep(1)
+        driver.execute_script("arguments[0].focus();", campo_usuario)
+        time.sleep(0.5)
+
+        # Método 1: xdotool type (simula teclado real a nivel del SO)
+        import subprocess
+        subprocess.run(["xdotool", "type", "--clearmodifiers", "--delay", "50", SCANIA_USUARIO])
+        time.sleep(0.5)
 
         val = campo_usuario.get_attribute('value')
-        print(f"Usuario ingresado: len={len(val)}")
+        print(f"Usuario ingresado (xdotool): len={len(val)}")
 
-        # Si no se escribió nada, intentar con JS nativo
+        # Método 2 fallback: clipboard paste
         if not val:
-            driver.execute_script("""
-                var el = arguments[0];
-                var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                setter.call(el, arguments[1]);
-                el.dispatchEvent(new Event('input', { bubbles: true }));
-                el.dispatchEvent(new Event('change', { bubbles: true }));
-            """, campo_usuario, SCANIA_USUARIO)
+            subprocess.run(["bash", "-c", f"echo -n '{SCANIA_USUARIO}' | xclip -selection clipboard"])
+            campo_usuario.click()
+            time.sleep(0.3)
+            from selenium.webdriver.common.keys import Keys
+            campo_usuario.send_keys(Keys.CONTROL, "v")
             time.sleep(0.5)
             val = campo_usuario.get_attribute('value')
-            print(f"Usuario via JS nativo: len={len(val)}")
+            print(f"Usuario via clipboard: len={len(val)}")
 
         # Botón Continue
         for sel in ["//button[contains(text(),'Continue')]", "//button[contains(text(),'Continuar')]", "button[type='submit']"]:
