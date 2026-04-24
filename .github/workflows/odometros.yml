@@ -52,10 +52,14 @@ jobs:
         run: python scania_odometros.py
 
       - name: Subir diagnóstico si hubo error
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: diagnostico-scania
           path: |
             diagnostico*.html
+            login_keycloak.png
+            after_user_input.png
+            after_continue.png
+            error*.png
             error*.html
