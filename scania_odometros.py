@@ -56,11 +56,7 @@ def normalizar_patente(texto: str) -> str:
 
 # ─── PASO 1: OBTENER TOKEN VIA SELENIUM ─────────────────────────────────────
 def obtener_token_selenium() -> str:
-    """
-    Hace login en Scania via Keycloak directo (sin portal web)
-    e intercepta el Bearer token.
-    """
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome con Xvfb...")
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome...")
 
     opciones = Options()
     opciones.add_argument("--no-sandbox")
@@ -75,166 +71,173 @@ def obtener_token_selenium() -> str:
     token  = None
 
     try:
-        # ── Login directo via Keycloak ─────────────────────────────────────
-        # Navegar directamente a la URL de login de Keycloak con el cliente correcto
-        LOGIN_KEYCLOAK = "https://mylogin.scania.com/auth/realms/fg-ext/protocol/openid-connect/auth?client_id=cs_fmp_fleetposition_app&redirect_uri=https%3A%2F%2Ffmp-fleetposition.cs.scania.com%2F&response_type=code&scope=openid"
-        
-        print(f"[{datetime.now().strftime('%H:%M:%S')}] Navegando a Keycloak login...")
-        driver.get(LOGIN_KEYCLOAK)
-        time.sleep(5)
-        print(f"URL: {driver.current_url}")
-        print(f"Título: {driver.title}")
+        # ── Login via my.scania.com ────────────────────────────────────────
+        print(f"Navegando a my.scania.com...")
+        driver.get("https://my.scania.com/start")
+        time.sleep(6)
+        driver.save_screenshot("s1_inicio.png")
+        print(f"URL: {driver.current_url} | Título: {driver.title}")
 
-        # Guardar screenshot para diagnóstico
-        driver.save_screenshot("login_keycloak.png")
-
-        # Aceptar cookies si aparecen
-        for sel in ["//button[contains(text(),'I accept')]", "//button[contains(text(),'Acepto')]", "button[id*='accept' i]"]:
+        # Aceptar cookies en mylogin.scania.com
+        for sel in ["//button[contains(text(),'I accept')]", "//button[contains(text(),'Acepto')]"]:
             try:
-                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
+                btn = driver.find_element(By.XPATH, sel)
                 driver.execute_script("arguments[0].click();", btn)
                 print(f"Cookies aceptadas")
-                time.sleep(2)
+                time.sleep(3)
                 break
             except:
                 pass
 
-        # Imprimir todos los inputs disponibles
-        inputs = driver.find_elements(By.TAG_NAME, "input")
-        print(f"Inputs en la página: {len(inputs)}")
-        for inp in inputs:
-            print(f"  type={inp.get_attribute('type')} id={inp.get_attribute('id')} name={inp.get_attribute('name')} class={inp.get_attribute('class')[:30] if inp.get_attribute('class') else ''}")
+        driver.save_screenshot("s2_post_cookies.png")
+        print(f"URL post-cookies: {driver.current_url}")
 
-        # Intentar escribir en el campo usuario con múltiples estrategias
-        campo_usuario = None
-        for sel in ["input[name='email']", "input[type='text']", "input[type='email']", "#username", "#email"]:
-            try:
-                campo_usuario = driver.find_element(By.CSS_SELECTOR, sel)
-                print(f"Campo encontrado: {sel}")
-                break
-            except:
-                continue
+        # Buscar el iframe de Keycloak que contiene el formulario
+        iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        print(f"Iframes: {len(iframes)}")
+        for i, iframe in enumerate(iframes):
+            src = iframe.get_attribute("src") or ""
+            print(f"  iframe[{i}] src={src[:80]}")
 
-        if campo_usuario:
-            # Hacer scroll al elemento y hacer click
-            driver.execute_script("arguments[0].scrollIntoView(true);", campo_usuario)
-            time.sleep(0.3)
-            
-            # Click via JavaScript para asegurar foco
-            driver.execute_script("arguments[0].click(); arguments[0].focus();", campo_usuario)
-            time.sleep(0.5)
-            
-            # Escribir via JavaScript disparando eventos de teclado individuales
-            script_escribir = """
-                var el = arguments[0];
-                var texto = arguments[1];
-                el.focus();
-                for (var i = 0; i < texto.length; i++) {
-                    var char = texto[i];
-                    var keyDown = new KeyboardEvent('keydown', {key: char, bubbles: true});
-                    var keyPress = new KeyboardEvent('keypress', {key: char, bubbles: true});
-                    var keyUp = new KeyboardEvent('keyup', {key: char, bubbles: true});
-                    el.dispatchEvent(keyDown);
-                    el.dispatchEvent(keyPress);
-                    // Modificar valor
-                    var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                    setter.call(el, el.value + char);
-                    el.dispatchEvent(new InputEvent('input', {bubbles: true, data: char}));
-                    el.dispatchEvent(keyUp);
+        # El formulario real está en la página principal (no iframe)
+        # pero el campo puede ser un web component — buscar en shadow DOM
+        campo_email = None
+
+        # Intentar encontrar el campo dentro del shadow DOM
+        campo_email = driver.execute_script("""
+            // Buscar recursivamente en shadow DOMs
+            function findInShadow(root, selector) {
+                var el = root.querySelector(selector);
+                if (el) return el;
+                var children = root.querySelectorAll('*');
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].shadowRoot) {
+                        var found = findInShadow(children[i].shadowRoot, selector);
+                        if (found) return found;
+                    }
                 }
+                return null;
+            }
+            return findInShadow(document, "input[name='email'], input[type='email'], #username, #email");
+        """)
+
+        if campo_email:
+            print(f"Campo email encontrado en shadow DOM")
+            driver.execute_script("arguments[0].focus();", campo_email)
+            time.sleep(0.3)
+            driver.execute_script("""
+                var el = arguments[0];
+                var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                setter.call(el, arguments[1]);
+                el.dispatchEvent(new Event('input', {bubbles: true}));
                 el.dispatchEvent(new Event('change', {bubbles: true}));
-                return el.value;
-            """
-            val = driver.execute_script(script_escribir, campo_usuario, SCANIA_USUARIO)
-            print(f"Usuario via KeyboardEvents: '{val[:10] if val else ''}' len={len(val) if val else 0}")
+            """, campo_email, SCANIA_USUARIO)
+            val = campo_email.get_attribute('value')
+            print(f"Email: len={len(val) if val else 0}")
+        else:
+            print("Campo email NO encontrado en shadow DOM")
+            # Listar todos los elementos interactivos
+            todos = driver.execute_script("""
+                var result = [];
+                document.querySelectorAll('input, button').forEach(function(el) {
+                    result.push(el.tagName + ' type=' + el.type + ' id=' + el.id + ' name=' + el.name);
+                });
+                return result;
+            """)
+            print(f"Elementos interactivos: {todos}")
 
-        # Tomar screenshot del estado actual
-        driver.save_screenshot("after_user_input.png")
+        driver.save_screenshot("s3_campo_email.png")
 
-        # Click en Continue
-        for sel in ["//button[contains(text(),'Continue')]", "//button[contains(text(),'Continuar')]", "button[type='submit']", "input[type='submit']"]:
+        # Botón Continue
+        for sel in ["//button[contains(text(),'Continue')]", "//button[contains(text(),'Continuar')]", "button[type='submit']"]:
             try:
                 btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
                 driver.execute_script("arguments[0].click();", btn)
-                print(f"Continue: {sel}")
+                print(f"Continue clickeado: {sel}")
                 break
             except:
                 continue
 
         time.sleep(8)
+        driver.save_screenshot("s4_post_continue.png")
         print(f"URL post-Continue: {driver.current_url}")
-        driver.save_screenshot("after_continue.png")
 
         # Campo contraseña
-        try:
-            campo_pass = wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']")))
-            driver.execute_script("arguments[0].click(); arguments[0].focus();", campo_pass)
-            time.sleep(0.3)
-            val_pass = driver.execute_script(script_escribir, campo_pass, SCANIA_PASSWORD)
-            print(f"Password: len={len(val_pass) if val_pass else 0}")
+        campo_pass = None
+        campo_pass = driver.execute_script("""
+            function findInShadow(root, selector) {
+                var el = root.querySelector(selector);
+                if (el) return el;
+                var children = root.querySelectorAll('*');
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].shadowRoot) {
+                        var found = findInShadow(children[i].shadowRoot, selector);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+            return findInShadow(document, "input[type='password']");
+        """)
 
-            # Login
-            for sel in ["//button[contains(text(),'Log in')]", "//button[contains(text(),'Sign in')]", "button[type='submit']"]:
-                try:
-                    btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
-                    driver.execute_script("arguments[0].click();", btn)
-                    print(f"Login: {sel}")
-                    break
-                except:
-                    continue
+        if campo_pass:
+            print(f"Campo password encontrado en shadow DOM")
+            driver.execute_script("""
+                var el = arguments[0];
+                var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                setter.call(el, arguments[1]);
+                el.dispatchEvent(new Event('input', {bubbles: true}));
+                el.dispatchEvent(new Event('change', {bubbles: true}));
+            """, campo_pass, SCANIA_PASSWORD)
+        else:
+            # Fallback: campo estándar
+            campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
+            campo_pass.send_keys(SCANIA_PASSWORD)
 
-            print(f"Esperando redirección...")
-            time.sleep(15)
-            print(f"URL final: {driver.current_url}")
+        time.sleep(0.5)
 
-        except Exception as e:
-            print(f"Error en contraseña: {e}")
-            driver.save_screenshot("error_pass.png")
-            raise
-
-        # ── Interceptar token de los logs de performance ───────────────────
-        print(f"Buscando token en logs...")
-        logs = driver.get_log("performance")
-        for entry in logs:
+        # Botón login
+        for sel in ["//button[contains(text(),'Log in')]", "//button[contains(text(),'Sign in')]", "button[type='submit']"]:
             try:
-                msg = json.loads(entry["message"])["message"]
-                if msg.get("method") == "Network.requestWillBeSent":
-                    req = msg.get("params", {}).get("request", {})
-                    headers = req.get("headers", {})
-                    url = req.get("url", "")
-                    auth = headers.get("Authorization") or headers.get("authorization", "")
-                    if auth.startswith("Bearer ") and ("fleetposition" in url or "scania" in url):
-                        token = auth.replace("Bearer ", "")
-                        print(f"✅ Token interceptado de {url[:60]}")
-                        break
+                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
+                driver.execute_script("arguments[0].click();", btn)
+                print(f"Login clickeado")
+                break
             except:
                 continue
 
-        if not token:
-            print("Token no encontrado en logs de red")
-            # Navegar al portal para generar más requests
-            driver.get("https://fmp-fleetposition.cs.scania.com/vehicles/vehicles-list")
-            time.sleep(8)
-            logs2 = driver.get_log("performance")
-            for entry in logs2:
+        print(f"Esperando redirección...")
+        time.sleep(15)
+        driver.save_screenshot("s5_post_login.png")
+        print(f"URL final: {driver.current_url}")
+
+        # ── Navegar al portal y capturar token ────────────────────────────
+        driver.get("https://fmp-fleetposition.cs.scania.com/vehicles/vehicles-list")
+        time.sleep(10)
+
+        for _ in range(2):
+            logs = driver.get_log("performance")
+            for entry in logs:
                 try:
                     msg = json.loads(entry["message"])["message"]
                     if msg.get("method") == "Network.requestWillBeSent":
                         req = msg.get("params", {}).get("request", {})
-                        headers = req.get("headers", {})
+                        auth = req.get("headers", {}).get("Authorization", "")
                         url = req.get("url", "")
-                        auth = headers.get("Authorization") or headers.get("authorization", "")
                         if auth.startswith("Bearer ") and "fleetposition" in url:
                             token = auth.replace("Bearer ", "")
-                            print(f"✅ Token interceptado (2do intento)")
+                            print(f"✅ Token interceptado ({len(token)} chars)")
                             break
                 except:
                     continue
+            if token:
+                break
+            time.sleep(5)
 
     except Exception as e:
         print(f"❌ Error: {e}")
         try:
-            driver.save_screenshot("error_scania.png")
+            driver.save_screenshot("error_final.png")
         except:
             pass
         raise
