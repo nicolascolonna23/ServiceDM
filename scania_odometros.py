@@ -123,17 +123,45 @@ def obtener_token_selenium() -> str:
 
         if campo_email:
             print(f"Campo email encontrado en shadow DOM")
-            driver.execute_script("arguments[0].focus();", campo_email)
-            time.sleep(0.3)
-            driver.execute_script("""
-                var el = arguments[0];
-                var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                setter.call(el, arguments[1]);
-                el.dispatchEvent(new Event('input', {bubbles: true}));
-                el.dispatchEvent(new Event('change', {bubbles: true}));
-            """, campo_email, SCANIA_USUARIO)
-            val = campo_email.get_attribute('value')
-            print(f"Email: len={len(val) if val else 0}")
+            # Para shadow DOM, ejecutar todo dentro del contexto correcto
+            val = driver.execute_script("""
+                function findAndFill(root, selector, value) {
+                    var el = root.querySelector(selector);
+                    if (el) {
+                        el.focus();
+                        // Simular escritura tecla por tecla
+                        for (var i = 0; i < value.length; i++) {
+                            var char = value[i];
+                            var inputEvent = new InputEvent('input', {
+                                bubbles: true,
+                                cancelable: true,
+                                data: char,
+                                inputType: 'insertText'
+                            });
+                            // Modificar el valor directamente en el contexto del elemento
+                            var descriptor = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value') ||
+                                             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                            if (descriptor && descriptor.set) {
+                                descriptor.set.call(el, el.value + char);
+                            }
+                            el.dispatchEvent(inputEvent);
+                        }
+                        el.dispatchEvent(new Event('change', {bubbles: true}));
+                        return el.value;
+                    }
+                    // Buscar en shadow roots
+                    var children = root.querySelectorAll('*');
+                    for (var i = 0; i < children.length; i++) {
+                        if (children[i].shadowRoot) {
+                            var result = findAndFill(children[i].shadowRoot, selector, value);
+                            if (result !== null) return result;
+                        }
+                    }
+                    return null;
+                }
+                return findAndFill(document, "input[name='email'], input[type='email'], input[type='text']", arguments[0]);
+            """, SCANIA_USUARIO)
+            print(f"Email ingresado: len={len(val) if val else 0}")
         else:
             print("Campo email NO encontrado en shadow DOM")
             # Listar todos los elementos interactivos
@@ -180,19 +208,36 @@ def obtener_token_selenium() -> str:
             return findInShadow(document, "input[type='password']");
         """)
 
-        if campo_pass:
-            print(f"Campo password encontrado en shadow DOM")
-            driver.execute_script("""
-                var el = arguments[0];
-                var setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
-                setter.call(el, arguments[1]);
-                el.dispatchEvent(new Event('input', {bubbles: true}));
-                el.dispatchEvent(new Event('change', {bubbles: true}));
-            """, campo_pass, SCANIA_PASSWORD)
-        else:
-            # Fallback: campo estándar
-            campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
-            campo_pass.send_keys(SCANIA_PASSWORD)
+        # Usar la misma función de shadow DOM para la contraseña
+        val_pass = driver.execute_script("""
+            function findAndFill(root, selector, value) {
+                var el = root.querySelector(selector);
+                if (el) {
+                    el.focus();
+                    for (var i = 0; i < value.length; i++) {
+                        var char = value[i];
+                        var descriptor = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value') ||
+                                         Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+                        if (descriptor && descriptor.set) {
+                            descriptor.set.call(el, el.value + char);
+                        }
+                        el.dispatchEvent(new InputEvent('input', {bubbles: true, data: char, inputType: 'insertText'}));
+                    }
+                    el.dispatchEvent(new Event('change', {bubbles: true}));
+                    return el.value.length;
+                }
+                var children = root.querySelectorAll('*');
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].shadowRoot) {
+                        var result = findAndFill(children[i].shadowRoot, selector, value);
+                        if (result !== null) return result;
+                    }
+                }
+                return null;
+            }
+            return findAndFill(document, "input[type='password']", arguments[0]);
+        """, SCANIA_PASSWORD)
+        print(f"Password ingresado: len={val_pass}")
 
         time.sleep(0.5)
 
