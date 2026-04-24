@@ -18,12 +18,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Google Chrome y Xvfb
+      - name: Instalar Chrome, Xvfb y herramientas
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.coxm/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable xvfb
+          sudo apt-get install -y google-chrome-stable xvfb xdotool xclip
 
       - name: Instalar dependencias Python
         run: pip install -r requirements.txt
@@ -42,7 +42,7 @@ jobs:
           echo "DISPLAY=:99" >> $GITHUB_ENV
           sleep 2
 
-      - name: Correr Scania (Selenium + Xvfb)
+      - name: Correr Scania
         env:
           SCANIA_USUARIO:           ${{ secrets.SCANIA_USUARIO }}
           SCANIA_PASSWORD:          ${{ secrets.SCANIA_PASSWORD }}
@@ -51,13 +51,11 @@ jobs:
           DISPLAY:                  ":99"
         run: python scania_odometros.py
 
-      - name: Subir diagnóstico siempre
-        if: always()
+      - name: Subir diagnóstico si hubo error
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: diagnostico-scania
           path: |
             diagnostico*.html
             error*.html
-            login_scania.html
-            login_scania.png
