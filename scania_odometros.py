@@ -56,238 +56,129 @@ def normalizar_patente(texto: str) -> str:
 
 # ─── PASO 1: OBTENER TOKEN VIA SELENIUM ─────────────────────────────────────
 def obtener_token_selenium() -> str:
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome...")
+    """Usa Playwright para login en Scania — maneja shadow DOM nativamente."""
+    from playwright.sync_api import sync_playwright
 
-    opciones = Options()
-    opciones.add_argument("--no-sandbox")
-    opciones.add_argument("--disable-dev-shm-usage")
-    opciones.add_argument("--window-size=1280,900")
-    opciones.add_argument("--disable-gpu")
-    opciones.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36")
-    opciones.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Iniciando Playwright...")
+    token = None
 
-    driver = webdriver.Chrome(options=opciones)
-    wait   = WebDriverWait(driver, 30)
-    token  = None
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+        )
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
+        )
+        page = context.new_page()
 
-    try:
-        # ── Login via my.scania.com ────────────────────────────────────────
-        print(f"Navegando a my.scania.com...")
-        driver.get("https://my.scania.com/start")
-        time.sleep(6)
-        driver.save_screenshot("s1_inicio.png")
-        print(f"URL: {driver.current_url} | Título: {driver.title}")
+        try:
+            # Interceptar requests para capturar el token
+            captured_token = []
+            def on_request(request):
+                auth = request.headers.get("authorization", "")
+                if auth.startswith("Bearer ") and "fleetposition" in request.url:
+                    if not captured_token:
+                        captured_token.append(auth.replace("Bearer ", ""))
+                        print(f"✅ Token interceptado de {request.url[:60]}")
 
-        # Aceptar cookies en mylogin.scania.com
-        for sel in ["//button[contains(text(),'I accept')]", "//button[contains(text(),'Acepto')]"]:
+            context.on("request", on_request)
+
+            # Login
+            print(f"Navegando a my.scania.com...")
+            page.goto("https://my.scania.com/start", wait_until="networkidle", timeout=30000)
+            print(f"URL: {page.url}")
+
+            # Aceptar cookies
             try:
-                btn = driver.find_element(By.XPATH, sel)
-                driver.execute_script("arguments[0].click();", btn)
-                print(f"Cookies aceptadas")
-                time.sleep(3)
-                break
+                page.click("text=I accept", timeout=5000)
+                print("Cookies aceptadas")
+                page.wait_for_timeout(2000)
             except:
                 pass
 
-        driver.save_screenshot("s2_post_cookies.png")
-        print(f"URL post-cookies: {driver.current_url}")
-
-        # Buscar el iframe de Keycloak que contiene el formulario
-        iframes = driver.find_elements(By.TAG_NAME, "iframe")
-        print(f"Iframes: {len(iframes)}")
-        for i, iframe in enumerate(iframes):
-            src = iframe.get_attribute("src") or ""
-            print(f"  iframe[{i}] src={src[:80]}")
-
-        # El formulario real está en la página principal (no iframe)
-        # pero el campo puede ser un web component — buscar en shadow DOM
-        campo_email = None
-
-        # Intentar encontrar el campo dentro del shadow DOM
-        campo_email = driver.execute_script("""
-            // Buscar recursivamente en shadow DOMs
-            function findInShadow(root, selector) {
-                var el = root.querySelector(selector);
-                if (el) return el;
-                var children = root.querySelectorAll('*');
-                for (var i = 0; i < children.length; i++) {
-                    if (children[i].shadowRoot) {
-                        var found = findInShadow(children[i].shadowRoot, selector);
-                        if (found) return found;
-                    }
-                }
-                return null;
-            }
-            return findInShadow(document, "input[name='email'], input[type='email'], #username, #email");
-        """)
-
-        if campo_email:
-            print(f"Campo email encontrado en shadow DOM")
-            # Para shadow DOM, ejecutar todo dentro del contexto correcto
-            val = driver.execute_script("""
-                function findAndFill(root, selector, value) {
-                    var el = root.querySelector(selector);
-                    if (el) {
-                        el.focus();
-                        // Simular escritura tecla por tecla
-                        for (var i = 0; i < value.length; i++) {
-                            var char = value[i];
-                            var inputEvent = new InputEvent('input', {
-                                bubbles: true,
-                                cancelable: true,
-                                data: char,
-                                inputType: 'insertText'
-                            });
-                            // Modificar el valor directamente en el contexto del elemento
-                            var descriptor = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value') ||
-                                             Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                            if (descriptor && descriptor.set) {
-                                descriptor.set.call(el, el.value + char);
-                            }
-                            el.dispatchEvent(inputEvent);
-                        }
-                        el.dispatchEvent(new Event('change', {bubbles: true}));
-                        return el.value;
-                    }
-                    // Buscar en shadow roots
-                    var children = root.querySelectorAll('*');
-                    for (var i = 0; i < children.length; i++) {
-                        if (children[i].shadowRoot) {
-                            var result = findAndFill(children[i].shadowRoot, selector, value);
-                            if (result !== null) return result;
-                        }
-                    }
-                    return null;
-                }
-                return findAndFill(document, "input[name='email'], input[type='email'], input[type='text']", arguments[0]);
-            """, SCANIA_USUARIO)
-            print(f"Email ingresado: len={len(val) if val else 0}")
-        else:
-            print("Campo email NO encontrado en shadow DOM")
-            # Listar todos los elementos interactivos
-            todos = driver.execute_script("""
-                var result = [];
-                document.querySelectorAll('input, button').forEach(function(el) {
-                    result.push(el.tagName + ' type=' + el.type + ' id=' + el.id + ' name=' + el.name);
-                });
-                return result;
-            """)
-            print(f"Elementos interactivos: {todos}")
-
-        driver.save_screenshot("s3_campo_email.png")
-
-        # Botón Continue
-        for sel in ["//button[contains(text(),'Continue')]", "//button[contains(text(),'Continuar')]", "button[type='submit']"]:
+            # Campo email — Playwright maneja shadow DOM con pierce selector
+            print("Buscando campo email...")
             try:
-                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
-                driver.execute_script("arguments[0].click();", btn)
-                print(f"Continue clickeado: {sel}")
-                break
-            except:
-                continue
-
-        time.sleep(8)
-        driver.save_screenshot("s4_post_continue.png")
-        print(f"URL post-Continue: {driver.current_url}")
-
-        # Campo contraseña
-        campo_pass = None
-        campo_pass = driver.execute_script("""
-            function findInShadow(root, selector) {
-                var el = root.querySelector(selector);
-                if (el) return el;
-                var children = root.querySelectorAll('*');
-                for (var i = 0; i < children.length; i++) {
-                    if (children[i].shadowRoot) {
-                        var found = findInShadow(children[i].shadowRoot, selector);
-                        if (found) return found;
-                    }
-                }
-                return null;
-            }
-            return findInShadow(document, "input[type='password']");
-        """)
-
-        # Usar la misma función de shadow DOM para la contraseña
-        val_pass = driver.execute_script("""
-            function findAndFill(root, selector, value) {
-                var el = root.querySelector(selector);
-                if (el) {
-                    el.focus();
-                    for (var i = 0; i < value.length; i++) {
-                        var char = value[i];
-                        var descriptor = Object.getOwnPropertyDescriptor(el.constructor.prototype, 'value') ||
-                                         Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                        if (descriptor && descriptor.set) {
-                            descriptor.set.call(el, el.value + char);
-                        }
-                        el.dispatchEvent(new InputEvent('input', {bubbles: true, data: char, inputType: 'insertText'}));
-                    }
-                    el.dispatchEvent(new Event('change', {bubbles: true}));
-                    return el.value.length;
-                }
-                var children = root.querySelectorAll('*');
-                for (var i = 0; i < children.length; i++) {
-                    if (children[i].shadowRoot) {
-                        var result = findAndFill(children[i].shadowRoot, selector, value);
-                        if (result !== null) return result;
-                    }
-                }
-                return null;
-            }
-            return findAndFill(document, "input[type='password']", arguments[0]);
-        """, SCANIA_PASSWORD)
-        print(f"Password ingresado: len={val_pass}")
-
-        time.sleep(0.5)
-
-        # Botón login
-        for sel in ["//button[contains(text(),'Log in')]", "//button[contains(text(),'Sign in')]", "button[type='submit']"]:
-            try:
-                btn = driver.find_element(By.XPATH if sel.startswith("//") else By.CSS_SELECTOR, sel)
-                driver.execute_script("arguments[0].click();", btn)
-                print(f"Login clickeado")
-                break
-            except:
-                continue
-
-        print(f"Esperando redirección...")
-        time.sleep(15)
-        driver.save_screenshot("s5_post_login.png")
-        print(f"URL final: {driver.current_url}")
-
-        # ── Navegar al portal y capturar token ────────────────────────────
-        driver.get("https://fmp-fleetposition.cs.scania.com/vehicles/vehicles-list")
-        time.sleep(10)
-
-        for _ in range(2):
-            logs = driver.get_log("performance")
-            for entry in logs:
+                # Playwright usa >> para shadow DOM piercing
+                email_field = page.locator("input[name='email']")
+                email_field.wait_for(timeout=10000)
+                email_field.fill(SCANIA_USUARIO)
+                val = email_field.input_value()
+                print(f"Email ingresado: len={len(val)}")
+            except Exception as e:
+                print(f"Error email: {e}")
+                # Intentar con pierce
                 try:
-                    msg = json.loads(entry["message"])["message"]
-                    if msg.get("method") == "Network.requestWillBeSent":
-                        req = msg.get("params", {}).get("request", {})
-                        auth = req.get("headers", {}).get("Authorization", "")
-                        url = req.get("url", "")
-                        if auth.startswith("Bearer ") and "fleetposition" in url:
-                            token = auth.replace("Bearer ", "")
-                            print(f"✅ Token interceptado ({len(token)} chars)")
-                            break
+                    page.evaluate(f"""
+                        const input = document.querySelector('input[name="email"]') ||
+                                      [...document.querySelectorAll('*')]
+                                          .map(el => el.shadowRoot)
+                                          .filter(Boolean)
+                                          .flatMap(sr => [...sr.querySelectorAll('input[name="email"]')])[0];
+                        if (input) {{
+                            input.focus();
+                            input.value = '{SCANIA_USUARIO}';
+                            input.dispatchEvent(new Event('input', {{bubbles: true}}));
+                            input.dispatchEvent(new Event('change', {{bubbles: true}}));
+                        }}
+                    """)
                 except:
-                    continue
-            if token:
-                break
-            time.sleep(5)
+                    pass
 
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        try:
-            driver.save_screenshot("error_final.png")
-        except:
-            pass
-        raise
-    finally:
-        driver.quit()
+            # Continue
+            try:
+                page.click("text=Continue", timeout=5000)
+                print("Continue clickeado")
+            except:
+                page.keyboard.press("Enter")
+            page.wait_for_timeout(6000)
+            print(f"URL post-Continue: {page.url}")
+
+            # Password
+            try:
+                pass_field = page.locator("input[type='password']")
+                pass_field.wait_for(timeout=10000)
+                pass_field.fill(SCANIA_PASSWORD)
+                print(f"Password ingresado")
+            except Exception as e:
+                print(f"Error password: {e}")
+
+            # Login
+            try:
+                page.click("text=Log in", timeout=3000)
+            except:
+                try:
+                    page.click("button[type='submit']", timeout=3000)
+                except:
+                    page.keyboard.press("Enter")
+
+            print("Esperando redirección...")
+            page.wait_for_timeout(12000)
+            print(f"URL final: {page.url}")
+
+            # Navegar al portal para disparar requests con token
+            if not captured_token:
+                print("Navegando al portal de flota...")
+                page.goto("https://fmp-fleetposition.cs.scania.com/vehicles/vehicles-list",
+                          wait_until="networkidle", timeout=30000)
+                page.wait_for_timeout(8000)
+
+            if captured_token:
+                token = captured_token[0]
+            else:
+                print("Token no capturado — guardando screenshot")
+                page.screenshot(path="debug_playwright.png")
+
+        except Exception as e:
+            print(f"❌ Error Playwright: {e}")
+            try:
+                page.screenshot(path="error_playwright.png")
+            except:
+                pass
+            raise
+        finally:
+            browser.close()
 
     if not token:
         raise Exception("No se pudo obtener el token")
