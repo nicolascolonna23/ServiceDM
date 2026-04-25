@@ -1,4 +1,4 @@
-name: Actualizar Odómetros (Nexpro + Scania)
+name: Actualizar Odómetros Nexpro
 
 on:
   schedule:
@@ -18,18 +18,15 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar Chrome y Xvfb
+      - name: Instalar Google Chrome
         run: |
           wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
           echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update
-          sudo apt-get install -y google-chrome-stable xvfb
+          sudo apt-get install -y google-chrome-stable
 
       - name: Instalar dependencias Python
         run: pip install -r requirements.txt
-
-      - name: Instalar Playwright browsers
-        run: playwright install chromium
 
       - name: Correr Nexpro (Iveco)
         env:
@@ -39,17 +36,11 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
         run: python nexpro_odometros.py
 
-      - name: Correr Scania (Playwright)
-        env:
-          SCANIA_USUARIO:           ${{ secrets.SCANIA_USUARIO }}
-          SCANIA_PASSWORD:          ${{ secrets.SCANIA_PASSWORD }}
-          SHEET_ID:                 ${{ secrets.SHEET_ID }}
-          GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: python scania_odometros.py
-
-      - name: Subir screenshots
-        if: always()
+      - name: Subir diagnóstico si hubo error
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: diagnostico-scania
-          path: "*.png"
+          name: diagnostico
+          path: |
+            diagnostico*.html
+            error*.html
