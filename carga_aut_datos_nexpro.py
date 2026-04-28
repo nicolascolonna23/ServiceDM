@@ -1,5 +1,5 @@
 # nexpro_telemetria.py
-# VERSION CORREGIDA / LECTURA REAL DE COLUMNAS VISIBLES
+# VERSION DEFINITIVA / DETECCION AUTOMATICA DE COLUMNAS
 
 import os
 import re
@@ -38,8 +38,24 @@ HOJA_DESTINO = "TELEMETRIA"
 
 
 # =====================================================
-# FECHAS
+# HELPERS
 # =====================================================
+
+def norm(txt):
+    txt = str(txt).lower().strip()
+    return ''.join(
+        c for c in unicodedata.normalize("NFD", txt)
+        if unicodedata.category(c) != "Mn"
+    )
+
+
+def num(txt):
+    txt = str(txt).strip().replace(".", "").replace(",", ".")
+    try:
+        return float(txt)
+    except:
+        return 0
+
 
 def obtener_mes_anterior():
     hoy = date.today()
@@ -48,46 +64,11 @@ def obtener_mes_anterior():
     ultimo_anterior = primero_actual - timedelta(days=1)
     primero_anterior = ultimo_anterior.replace(day=1)
 
-    desde = primero_anterior.strftime("%d/%m/%Y")
-    hasta = ultimo_anterior.strftime("%d/%m/%Y")
-    fecha_carga = ultimo_anterior.strftime("%d/%m/%Y")
-
-    return desde, hasta, fecha_carga
-
-
-# =====================================================
-# HELPERS
-# =====================================================
-
-def num(txt):
-    txt = str(txt).strip()
-    txt = txt.replace(".", "").replace(",", ".")
-    try:
-        return float(txt)
-    except:
-        return 0.0
-
-
-def norm(texto):
-    return ''.join(
-        c for c in unicodedata.normalize("NFD", texto.lower())
-        if unicodedata.category(c) != "Mn"
+    return (
+        primero_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y")
     )
-
-
-def click_text(driver, palabras):
-    botones = driver.find_elements(By.XPATH, "//*")
-
-    for b in botones:
-        try:
-            t = norm(b.text.strip())
-            if any(p in t for p in palabras):
-                driver.execute_script("arguments[0].click();", b)
-                return True
-        except:
-            pass
-
-    return False
 
 
 # =====================================================
@@ -97,6 +78,7 @@ def click_text(driver, palabras):
 def crear_driver():
 
     options = Options()
+
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -107,6 +89,27 @@ def crear_driver():
 
 
 # =====================================================
+# BOTONES
+# =====================================================
+
+def click_text(driver, palabras):
+
+    elementos = driver.find_elements(By.XPATH, "//*")
+
+    for e in elementos:
+        try:
+            texto = norm(e.text)
+
+            if any(p in texto for p in palabras):
+                driver.execute_script("arguments[0].click();", e)
+                return True
+        except:
+            pass
+
+    return False
+
+
+# =====================================================
 # EXTRAER
 # =====================================================
 
@@ -114,6 +117,8 @@ def extraer_tabla():
 
     desde, hasta, fecha_carga = obtener_mes_anterior()
 
+    print("NEXPRO TELEMETRIA")
+    print(datetime.now())
     print("Buscando:", desde, "->", hasta)
 
     driver = crear_driver()
@@ -133,14 +138,13 @@ def extraer_tabla():
             )
         )
 
-        driver.execute_script("arguments[0].value=arguments[1];", user, NEXPRO_USUARIO)
-
         passwd = wait.until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[type='password']")
             )
         )
 
+        driver.execute_script("arguments[0].value=arguments[1];", user, NEXPRO_USUARIO)
         driver.execute_script("arguments[0].value=arguments[1];", passwd, NEXPRO_PASSWORD)
 
         click_text(driver, ["ingresar", "login", "entrar"])
@@ -157,6 +161,7 @@ def extraer_tabla():
         inputs = driver.find_elements(By.TAG_NAME, "input")
 
         cajas = []
+
         for i in inputs:
             val = str(i.get_attribute("value") or "")
             if "/" in val:
@@ -164,67 +169,95 @@ def extraer_tabla():
 
         if len(cajas) >= 2:
 
-            driver.execute_script(
-                "arguments[0].value=arguments[1];",
-                cajas[0],
-                desde
-            )
-
-            driver.execute_script(
-                "arguments[0].value=arguments[1];",
-                cajas[1],
-                hasta
-            )
+            driver.execute_script("arguments[0].value=arguments[1];", cajas[0], desde)
+            driver.execute_script("arguments[0].value=arguments[1];", cajas[1], hasta)
 
         click_text(driver, ["visualizar", "buscar", "consultar"])
         time.sleep(15)
 
         # =================================================
-        # TABLA REAL
+        # BUSCAR TABLA CORRECTA
         # =================================================
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
+
+        print("Tablas encontradas:", len(tablas))
 
         for tabla in tablas:
 
             filas = tabla.find_elements(By.TAG_NAME, "tr")
 
-            for fila in filas:
+            headers = []
+            data_start = 0
 
-                celdas = fila.find_elements(By.TAG_NAME, "td")
+            for i, fila in enumerate(filas):
 
-                # SOLO celdas visibles con texto
-                textos = []
+                th = fila.find_elements(By.TAG_NAME, "th")
 
-                for c in celdas:
-                    try:
-                        if c.is_displayed():
-                            t = c.text.strip()
-                            if t != "":
-                                textos.append(t)
-                    except:
-                        pass
+                if th:
+                    headers = [norm(x.text) for x in th]
+                    data_start = i + 1
+                    break
 
-                # LA TABLA VISIBLE REAL TIENE 9 COLUMNAS
-                if len(textos) == 9:
+            if not headers:
+                continue
 
-                    dominio = textos[0].upper().strip()
+            # Detecta columnas automáticamente
+            idx_dominio = None
+            idx_km = None
+            idx_litros = None
+            idx_l100 = None
 
-                    if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
+            for i, h in enumerate(headers):
 
-                        litros = num(textos[3])   # Consumo total
-                        km = num(textos[4])       # KM Recorridos
-                        l100 = num(textos[8])     # Consumo c/100km
+                if "dominio" in h:
+                    idx_dominio = i
 
-                        filas_finales.append([
-                            fecha_carga,
-                            dominio,
-                            "",
-                            "",
-                            km,
-                            litros,
-                            l100
-                        ])
+                elif "km-recorridos" in h or "km recorridos" in h:
+                    idx_km = i
+
+                elif "consumo total" in h:
+                    idx_litros = i
+
+                elif "100km" in h:
+                    idx_l100 = i
+
+            if None in [idx_dominio, idx_km, idx_litros, idx_l100]:
+                continue
+
+            print("Tabla válida detectada")
+
+            for fila in filas[data_start:]:
+
+                tds = fila.find_elements(By.TAG_NAME, "td")
+                textos = [x.text.strip() for x in tds]
+
+                if len(textos) <= max(idx_dominio, idx_km, idx_litros, idx_l100):
+                    continue
+
+                dominio = textos[idx_dominio].upper().strip()
+
+                if not re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
+                    continue
+
+                km = num(textos[idx_km])
+                litros = num(textos[idx_litros])
+                l100 = num(textos[idx_l100])
+
+                if km <= 0:
+                    continue
+
+                filas_finales.append([
+                    fecha_carga,
+                    dominio,
+                    "",
+                    "",
+                    km,
+                    litros,
+                    l100
+                ])
+
+            break
 
         print("Filas detectadas:", len(filas_finales))
 
@@ -235,7 +268,7 @@ def extraer_tabla():
 
 
 # =====================================================
-# GOOGLE
+# GOOGLE SHEETS
 # =====================================================
 
 def conectar_sheet():
@@ -301,9 +334,6 @@ def subir(rows):
 # =====================================================
 
 if __name__ == "__main__":
-
-    print("NEXPRO TELEMETRIA")
-    print(datetime.now())
 
     filas = extraer_tabla()
     subir(filas)
