@@ -2,45 +2,99 @@ name: Actualizar Odómetros Nexpro
 
 on:
   schedule:
-    - cron: '0 19 * * 1-6'
+    # Todos los días - 10:00 AM Argentina (13:00 UTC)
+    - cron: '15 19 * * *'
+
   workflow_dispatch:
 
 jobs:
-  actualizar:
+  run:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Clonar repositorio
+      - name: Inicio
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar Python
+      - name: Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Instalar Google Chrome
+      - name: Instalar Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Instalar dependencias
         run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
+          pip install -r requirements.txt
 
-      - name: Instalar dependencias Python
-        run: pip install -r requirements.txt
-
-      - name: Correr Nexpro (Iveco)
+      - name: Ejecutar script
         env:
-          NEXPRO_USUARIO:           ${{ secrets.NEXPRO_USUARIO }}
-          NEXPRO_PASSWORD:          ${{ secrets.NEXPRO_PASSWORD }}
-          SHEET_ID_SERVICES:        ${{ secrets.SHEET_ID_SERVICES }}
-          GOOGLE_CREDENTIALS_JSON:  ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: python nexpro_odometros.py
+          NEXPRO_USUARIO: ${{ secrets.NEXPRO_USUARIO }}
+          NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
+          SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: python nexpro_odometros.py > salida.txt 2>&1
 
-      - name: Subir diagnóstico si hubo error
-        if: failure()
-        uses: actions/upload-artifact@v4
+      - name: Fin
+        if: always()
+        run: echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Mail éxito
+        if: success()
+        uses: dawidd6/action-send-mail@v3
         with:
-          name: diagnostico
-          path: |
-            diagnostico*.html
-            error*.html
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Odómetros Nexpro OK"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Nexpro
+          body: |
+            Estado: EXITOSO
+
+            Proceso:
+            nexpro_odometros.py
+
+            Hora Argentina:
+            $(TZ=America/Argentina/Buenos_Aires date)
+
+            Duración:
+            $((END_TIME - START_TIME)) segundos
+
+            Workflow:
+            ${{ github.workflow }}
+
+            Run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mail error
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Error Odómetros Nexpro"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Nexpro
+          body: |
+            Estado: FALLÓ
+
+            Proceso:
+            nexpro_odometros.py
+
+            Hora Argentina:
+            $(TZ=America/Argentina/Buenos_Aires date)
+
+            Duración:
+            $((END_TIME - START_TIME)) segundos
+
+            Revisar logs:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
