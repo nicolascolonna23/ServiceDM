@@ -1,6 +1,5 @@
 # carga_aut_datos_nexpro.py
-# VERSION COMPLETA CORREGIDA
-# LOGIN OK + HISTORICO UNIVERSAL + MES ANTERIOR + GOOGLE SHEETS
+# DEBUG HISTORICO DEFINITIVO
 
 import os
 import re
@@ -57,11 +56,11 @@ def obtener_mes_anterior():
     ultimo_anterior = primero_actual - timedelta(days=1)
     primero_anterior = ultimo_anterior.replace(day=1)
 
-    desde = primero_anterior.strftime("%d/%m/%Y")
-    hasta = ultimo_anterior.strftime("%d/%m/%Y")
-    fecha_carga = ultimo_anterior.strftime("%d/%m/%Y")
-
-    return desde, hasta, fecha_carga
+    return (
+        primero_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y")
+    )
 
 
 # =====================================================
@@ -71,7 +70,6 @@ def obtener_mes_anterior():
 def crear_driver():
 
     options = Options()
-
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -117,25 +115,36 @@ def login(driver):
 
 
 # =====================================================
-# HISTORICO + FILTRO FECHAS
+# DEBUG HISTORICO
 # =====================================================
 
 def aplicar_historico(driver, desde, hasta):
 
-    time.sleep(5)
+    time.sleep(8)
 
-    # Buscar Histórico en TODO el DOM
-    todos = driver.find_elements(By.XPATH, "//*")
+    candidatos = driver.find_elements(
+        By.XPATH,
+        "//button | //a | //span | //div[@role='button']"
+    )
+
+    print("Candidatos encontrados:", len(candidatos))
+
+    for i, e in enumerate(candidatos):
+        try:
+            txt = e.text.strip()
+            if txt:
+                print(i, "=>", txt)
+        except:
+            pass
 
     historico = None
 
-    for e in todos:
+    for e in candidatos:
         try:
             txt = e.text.strip().lower()
 
-            if "histor" in txt:
+            if "hist" in txt:
                 historico = e
-                print("Encontrado Histórico:", txt)
                 break
         except:
             pass
@@ -148,7 +157,7 @@ def aplicar_historico(driver, desde, hasta):
     print("Click Histórico")
     time.sleep(4)
 
-    # Buscar cajas fecha
+    # Buscar fechas
     inputs = driver.find_elements(By.TAG_NAME, "input")
 
     cajas = []
@@ -171,12 +180,15 @@ def aplicar_historico(driver, desde, hasta):
         cajas[0].send_keys(desde)
         cajas[1].send_keys(hasta)
 
-        print("Fechas seteadas:", desde, hasta)
+        print("Fechas cargadas:", desde, hasta)
 
-    # Buscar Visualizar
-    todos = driver.find_elements(By.XPATH, "//*")
+    # Buscar visualizar
+    candidatos = driver.find_elements(
+        By.XPATH,
+        "//button | //a | //span | //div[@role='button']"
+    )
 
-    for e in todos:
+    for e in candidatos:
         try:
             txt = e.text.strip().lower()
 
@@ -191,7 +203,7 @@ def aplicar_historico(driver, desde, hasta):
 
 
 # =====================================================
-# EXTRAER TABLA
+# EXTRAER
 # =====================================================
 
 def extraer_tabla():
@@ -208,17 +220,13 @@ def extraer_tabla():
 
     try:
 
-        # LOGIN
         login(driver)
 
-        # REPORTE
         driver.get(URL_REPORTE)
         time.sleep(8)
 
-        # HISTORICO
         aplicar_historico(driver, desde, hasta)
 
-        # TABLAS
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
         print("Tablas encontradas:", len(tablas))
@@ -246,13 +254,13 @@ def extraer_tabla():
                         l100 = num(textos[8])
 
                         filas_finales.append([
-                            fecha_carga,   # A
-                            dominio,       # B
-                            "",            # C
-                            "",            # D
-                            km,            # E
-                            litros,        # F
-                            l100           # G
+                            fecha_carga,
+                            dominio,
+                            "",
+                            "",
+                            km,
+                            litros,
+                            l100
                         ])
 
         print("Filas detectadas:", len(filas_finales))
@@ -285,10 +293,7 @@ def conectar_sheet():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file(
-        path,
-        scopes=scopes
-    )
+    creds = Credentials.from_service_account_file(path, scopes=scopes)
 
     client = gspread.authorize(creds)
 
