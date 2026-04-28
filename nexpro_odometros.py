@@ -16,19 +16,19 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
 import gspread
 from google.oauth2.service_account import Credentials
-
+ 
 # ─── CREDENCIALES DESDE VARIABLES DE ENTORNO (GitHub Secrets) ───────────────
 NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
 GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
-
+ 
 # Busca SHEET_ID_SERVICES primero; si no existe usa SHEET_ID como fallback
 _sheet_raw = os.environ.get("SHEET_ID_SERVICES") or os.environ.get("SHEET_ID", "")
 if not _sheet_raw:
     raise EnvironmentError("Falta el secret SHEET_ID_SERVICES (o SHEET_ID) en el workflow")
 _m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
 SHEET_ID = _m.group(1) if _m else _sheet_raw.strip()
-
+ 
 # ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 NEXPRO_URL = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
 PESTANAS = [
@@ -41,19 +41,19 @@ PESTANAS = [
 ]
 COL_PATENTE   = 0  # Columna A
 COL_KM_ACTUAL = 7  # Columna H
-
+ 
 # ─── HELPERS ────────────────────────────────────────────────────────────────
 def normalizar_patente(texto: str) -> str:
     return re.sub(r"\s+", "", str(texto)).upper().strip()
-
+ 
 def es_patente(texto: str) -> bool:
     t = normalizar_patente(texto)
     return bool(re.match(r'^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$', t))
-
+ 
 def es_km(texto: str) -> bool:
     t = texto.replace(".", "").replace(",", "").strip()
     return t.isdigit() and 1000 < int(t) < 5_000_000
-
+ 
 # ─── PASO 1: LOGIN Y EXTRACCIÓN ──────────────────────────────────────────────
 def extraer_odometros() -> dict:
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome headless...")
@@ -64,18 +64,18 @@ def extraer_odometros() -> dict:
     opciones.add_argument("--disable-gpu")
     opciones.add_argument("--window-size=1280,900")
     opciones.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36")
-
+ 
     driver = webdriver.Chrome(options=opciones)
     wait   = WebDriverWait(driver, 25)
     odometros = {}
-
+ 
     try:
         # --- Login ---
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Navegando al login...")
         driver.get(NEXPRO_URL)
         time.sleep(4)
         print(f"URL: {driver.current_url} | Título: {driver.title}")
-
+ 
         selectores_usuario = [
             "input[type='text']",
             "input[id*='user' i]",
@@ -93,9 +93,9 @@ def extraer_odometros() -> dict:
                 continue
         if not campo_usuario:
             raise Exception("No se encontró el campo usuario")
-
+ 
         campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
-
+ 
         driver.execute_script("arguments[0].value = '';", campo_usuario)
         driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, NEXPRO_USUARIO)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
@@ -107,7 +107,7 @@ def extraer_odometros() -> dict:
         driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
         time.sleep(0.5)
         print(f"Credenciales ingresadas via JavaScript")
-
+ 
         selectores_btn = [
             "input[type='submit']",
             "button[type='submit']",
@@ -125,12 +125,12 @@ def extraer_odometros() -> dict:
                 continue
         if not btn:
             raise Exception("No se encontró el botón de login")
-
+ 
         driver.execute_script("arguments[0].click();", btn)
         print(f"Login enviado, esperando redirección...")
         time.sleep(8)
         print(f"Post-login URL: {driver.current_url}")
-
+ 
         # --- Buscar sección de odómetros/flota ---
         urls_reportes = [
             "https://nexproconnect.net/Iveco/Unidades/UnidadesShowTable2.aspx",
@@ -140,12 +140,12 @@ def extraer_odometros() -> dict:
             "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx",
             "https://nexproconnect.net/Iveco/CAN/UnidadesCAN2.aspx",
         ]
-
+ 
         for url in urls_reportes:
             print(f"\nProbando: {url}")
             driver.get(url)
             time.sleep(8)
-
+ 
             from selenium.webdriver.support.ui import Select
             selectores_paginacion = [
                 "select",
@@ -181,14 +181,14 @@ def extraer_odometros() -> dict:
                     continue
                 if paginacion_desactivada:
                     break
-
+ 
             tablas = driver.find_elements(By.TAG_NAME, "table")
             if not tablas:
                 print(f"  Sin tablas — guardando HTML")
                 with open(f"diag_{url.split('/')[-1]}.html", "w", encoding="utf-8") as f:
                     f.write(driver.page_source)
                 continue
-
+ 
             print(f"  {len(tablas)} tabla(s)")
             filas_totales = 0
             for tabla in tablas:
@@ -215,14 +215,14 @@ def extraer_odometros() -> dict:
                                     odometros[patente] = mejor_km
                                     print(f"  ✅ {patente}: {mejor_km:,} km")
             print(f"  Filas procesadas: {filas_totales} | Acumulado: {len(odometros)} vehículos")
-
+ 
         print(f"\nExtracción completa: {len(odometros)} vehículos en total")
         if not odometros:
             print(f"\n⚠️  Sin datos. URL final: {driver.current_url}")
             with open("diagnostico.html", "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             print("HTML guardado: diagnostico.html")
-
+ 
     except Exception as e:
         print(f"\n❌ Error: {e}")
         with open("error.html", "w", encoding="utf-8") as f:
@@ -230,10 +230,10 @@ def extraer_odometros() -> dict:
         raise
     finally:
         driver.quit()
-
+ 
     print(f"\nTotal: {len(odometros)} vehículos extraídos")
     return odometros
-
+ 
 # ─── PASO 2: ACTUALIZAR SHEETS ───────────────────────────────────────────────
 def conectar_sheets():
     """
@@ -241,19 +241,19 @@ def conectar_sheets():
     Usa service_account_from_dict (el método más confiable de gspread).
     """
     creds_dict = json.loads(GOOGLE_CREDS)
-
+ 
     # Diagnóstico: mostrar qué cuenta y qué ID se está usando
     print(f"  Service account : {creds_dict.get('client_email', 'NO ENCONTRADO')}")
     print(f"  SHEET_ID        : '{SHEET_ID}'")
-
+ 
     # service_account_from_dict maneja scopes y refresh internamente
     gc = gspread.service_account_from_dict(creds_dict)
     return gc.open_by_key(SHEET_ID)
-
-
+ 
+ 
 def actualizar_sheets(odometros: dict):
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Conectando a Google Sheets...")
-
+ 
     sheet = None
     for intento in range(1, 4):
         try:
@@ -275,16 +275,16 @@ def actualizar_sheets(odometros: dict):
                 time.sleep(10)
             else:
                 raise
-
+ 
     total = 0
     no_encontrados = []
-
+ 
     for nombre in PESTANAS:
         try:
             ws    = sheet.worksheet(nombre)
             datos = ws.get_all_values()
             print(f"\n  📋 {nombre} ({len(datos)-1} filas)")
-
+ 
             batch = []
             for idx, fila in enumerate(datos[1:], start=2):
                 if not fila or not fila[COL_PATENTE].strip():
@@ -305,15 +305,15 @@ def actualizar_sheets(odometros: dict):
                         print(f"    ⏭️  {fila[COL_PATENTE]} → sin cambio (Sheet: {km_sheet:,} ≥ Nexpro: {km_nexpro:,})")
                 else:
                     no_encontrados.append(f"{nombre}: {fila[COL_PATENTE]}")
-
+ 
             if batch:
                 ws.batch_update(batch)
-
+ 
         except gspread.exceptions.WorksheetNotFound:
             print(f"  ❌ Pestaña '{nombre}' no encontrada")
         except Exception as e:
             print(f"  ❌ Error en '{nombre}': {e}")
-
+ 
     print(f"\n{'='*50}")
     print(f"✅ Actualizados: {total} vehículos")
     if no_encontrados:
@@ -321,14 +321,14 @@ def actualizar_sheets(odometros: dict):
         for p in no_encontrados[:15]:
             print(f"   - {p}")
     print(f"{'='*50}")
-
+ 
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print(f"\n{'='*50}")
     print(f"  NEXPRO → GOOGLE SHEETS")
     print(f"  {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
     print(f"{'='*50}")
-
+ 
     odometros = extraer_odometros()
     if odometros:
         actualizar_sheets(odometros)
