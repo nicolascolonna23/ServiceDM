@@ -1,6 +1,8 @@
 # carga_aut_datos_nexpro.py
-# VERSION FINAL
-# LOGIN OK + HISTORICO OK + FECHAS VISIBLES + SHEETS
+# VERSION BOOST COMPLETA
+# CARGA:
+# 1) TELEMETRIA
+# 2) DATOS UNIDADES
 
 import os
 import re
@@ -16,8 +18,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 
 
 # =====================================================
@@ -33,9 +33,11 @@ m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
 SHEET_ID = m.group(1) if m else _sheet_raw.strip()
 
 URL_LOGIN = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
-URL_REPORTE = "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx"
+URL_CONSUMO = "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx"
+URL_PERFORMANCE = "https://nexproconnect.net/Iveco/Reportes/Scoring_UnidadesIveco.aspx"
 
-HOJA_DESTINO = "TELEMETRIA"
+HOJA_TELEMETRIA = "TELEMETRIA"
+HOJA_UNIDADES = "DATOS UNIDADES"
 
 
 # =====================================================
@@ -72,6 +74,7 @@ def obtener_mes_anterior():
 def crear_driver():
 
     options = Options()
+
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -87,25 +90,11 @@ def crear_driver():
 
 def login(driver):
 
-    wait = WebDriverWait(driver, 30)
-
     driver.get(URL_LOGIN)
     time.sleep(5)
 
-    user = wait.until(
-        EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[type='text']")
-        )
-    )
-
-    pwd = wait.until(
-        EC.presence_of_element_located(
-            (By.CSS_SELECTOR, "input[type='password']")
-        )
-    )
-
-    driver.execute_script("arguments[0].value='';", user)
-    driver.execute_script("arguments[0].value='';", pwd)
+    user = driver.find_element(By.CSS_SELECTOR, "input[type='text']")
+    pwd = driver.find_element(By.CSS_SELECTOR, "input[type='password']")
 
     user.send_keys(NEXPRO_USUARIO)
     pwd.send_keys(NEXPRO_PASSWORD)
@@ -113,46 +102,42 @@ def login(driver):
 
     time.sleep(8)
 
-    print("URL POST LOGIN:", driver.current_url)
+    print("LOGIN OK")
 
 
 # =====================================================
-# HISTORICO + FECHAS
+# CLICK TEXTO UNIVERSAL
 # =====================================================
 
-def aplicar_historico(driver, desde, hasta):
+def click_texto(driver, texto):
 
-    time.sleep(8)
-
-    candidatos = driver.find_elements(
+    elems = driver.find_elements(
         By.XPATH,
-        "//button | //a | //span | //div[@role='button']"
+        "//button | //a | //span | //div"
     )
 
-    historico = None
-
-    for e in candidatos:
+    for e in elems:
         try:
-            txt = e.text.strip().lower()
-
-            if "hist" in txt:
-                historico = e
-                print("Encontrado Histórico:", txt)
-                break
+            if texto.lower() in e.text.lower():
+                driver.execute_script("arguments[0].click();", e)
+                return True
         except:
             pass
 
-    if historico is None:
-        raise Exception("No encontró Histórico")
+    return False
 
-    driver.execute_script("arguments[0].click();", historico)
 
-    print("Click Histórico")
+# =====================================================
+# FILTRO HISTORICO CONSUMO
+# =====================================================
+
+def filtrar_consumo(driver, desde, hasta):
+
+    driver.get(URL_CONSUMO)
+    time.sleep(8)
+
+    click_texto(driver, "Histórico")
     time.sleep(4)
-
-    # ==========================================
-    # INPUTS FECHA VISIBLES
-    # ==========================================
 
     inputs = driver.find_elements(By.TAG_NAME, "input")
 
@@ -160,134 +145,123 @@ def aplicar_historico(driver, desde, hasta):
 
     for i in inputs:
         try:
-            val = str(i.get_attribute("value") or "")
-            visible = i.is_displayed()
-            enabled = i.is_enabled()
-
-            if "/" in val and visible and enabled:
+            val = i.get_attribute("value")
+            if "/" in str(val) and i.is_displayed():
                 fechas.append(i)
         except:
             pass
 
-    print("Fechas utilizables:", len(fechas))
+    driver.execute_script("arguments[0].value=arguments[1];", fechas[0], desde)
+    driver.execute_script("arguments[0].value=arguments[1];", fechas[1], hasta)
 
-    if len(fechas) < 2:
-        raise Exception("No encontró inputs fecha editables")
-
-    driver.execute_script(
-        "arguments[0].removeAttribute('readonly');",
-        fechas[0]
-    )
-
-    driver.execute_script(
-        "arguments[0].removeAttribute('readonly');",
-        fechas[1]
-    )
-
-    driver.execute_script(
-        "arguments[0].value=arguments[1];",
-        fechas[0],
-        desde
-    )
-
-    driver.execute_script(
-        "arguments[0].value=arguments[1];",
-        fechas[1],
-        hasta
-    )
-
-    print("Fechas seteadas:", desde, hasta)
-
-    # ==========================================
-    # VISUALIZAR
-    # ==========================================
-
-    candidatos = driver.find_elements(
-        By.XPATH,
-        "//button | //a | //span | //div[@role='button']"
-    )
-
-    for e in candidatos:
-        try:
-            txt = e.text.strip().lower()
-
-            if "visualizar" in txt:
-                driver.execute_script("arguments[0].click();", e)
-                print("Click Visualizar")
-                break
-        except:
-            pass
+    click_texto(driver, "Visualizar")
 
     time.sleep(12)
 
 
 # =====================================================
-# EXTRAER
+# EXTRAER TELEMETRIA
 # =====================================================
 
-def extraer_tabla():
+def extraer_telemetria(driver, fecha):
 
-    desde, hasta, fecha_carga = obtener_mes_anterior()
+    filas = []
 
-    print("NEXPRO TELEMETRIA")
-    print(datetime.now())
-    print("Buscando:", desde, "->", hasta)
+    tablas = driver.find_elements(By.TAG_NAME, "table")
 
-    driver = crear_driver()
+    for tabla in tablas:
 
-    filas_finales = []
+        trs = tabla.find_elements(By.TAG_NAME, "tr")
 
-    try:
+        for tr in trs:
 
-        login(driver)
+            tds = tr.find_elements(By.TAG_NAME, "td")
+            vals = [x.text.strip() for x in tds if x.text.strip()]
 
-        driver.get(URL_REPORTE)
-        time.sleep(8)
+            if len(vals) >= 9:
 
-        aplicar_historico(driver, desde, hasta)
+                dominio = vals[0].upper()
 
-        tablas = driver.find_elements(By.TAG_NAME, "table")
+                if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
 
-        print("Tablas encontradas:", len(tablas))
+                    litros = num(vals[3])
+                    km = num(vals[4])
+                    ralenti = num(vals[6])
+                    l100 = num(vals[8])
 
-        for tabla in tablas:
+                    filas.append({
+                        "fecha": fecha,
+                        "dominio": dominio,
+                        "km": km,
+                        "litros": litros,
+                        "ralenti": ralenti,
+                        "l100": l100
+                    })
 
-            filas = tabla.find_elements(By.TAG_NAME, "tr")
+    print("TELEMETRIA:", len(filas))
+    return filas
 
-            for fila in filas:
 
-                celdas = fila.find_elements(By.TAG_NAME, "td")
-                textos = [x.text.strip() for x in celdas if x.text.strip()]
+# =====================================================
+# PERFORMANCE
+# =====================================================
 
-                if len(textos) >= 9:
+def filtrar_performance(driver, desde, hasta):
 
-                    dominio = textos[0].upper().strip()
+    driver.get(URL_PERFORMANCE)
+    time.sleep(8)
 
-                    if re.match(
-                        r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$",
-                        dominio
-                    ):
+    inputs = driver.find_elements(By.TAG_NAME, "input")
 
-                        litros = num(textos[3])
-                        km = num(textos[4])
-                        l100 = num(textos[8])
+    fechas = []
 
-                        filas_finales.append([
-                            fecha_carga,
-                            dominio,
-                            "",
-                            "",
-                            km,
-                            litros,
-                            l100
-                        ])
+    for i in inputs:
+        try:
+            val = i.get_attribute("value")
+            if "/" in str(val) and i.is_displayed():
+                fechas.append(i)
+        except:
+            pass
 
-        print("Filas detectadas:", len(filas_finales))
+    driver.execute_script("arguments[0].value=arguments[1];", fechas[0], desde)
+    driver.execute_script("arguments[0].value=arguments[1];", fechas[1], hasta)
 
-        return filas_finales
+    click_texto(driver, "Buscar")
 
-    finally:
-        driver.quit()
+    time.sleep(12)
+
+
+def extraer_performance(driver):
+
+    datos = {}
+
+    tablas = driver.find_elements(By.TAG_NAME, "table")
+
+    for tabla in tablas:
+
+        trs = tabla.find_elements(By.TAG_NAME, "tr")
+
+        for tr in trs:
+
+            tds = tr.find_elements(By.TAG_NAME, "td")
+            vals = [x.text.strip() for x in tds if x.text.strip()]
+
+            if len(vals) >= 20:
+
+                dominio = vals[2].upper()
+
+                if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
+
+                    hs_motor = vals[14]
+                    co2 = num(vals[17])
+
+                    datos[dominio] = {
+                        "hs_motor": hs_motor,
+                        "co2": co2
+                    }
+
+    print("PERFORMANCE:", len(datos))
+    return datos
 
 
 # =====================================================
@@ -298,12 +272,7 @@ def conectar_sheet():
 
     creds_dict = json.loads(GOOGLE_CREDS)
 
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".json",
-        delete=False
-    ) as f:
-
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(creds_dict, f)
         path = f.name
 
@@ -312,10 +281,7 @@ def conectar_sheet():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file(
-        path,
-        scopes=scopes
-    )
+    creds = Credentials.from_service_account_file(path, scopes=scopes)
 
     client = gspread.authorize(creds)
 
@@ -324,7 +290,7 @@ def conectar_sheet():
     return client.open_by_key(SHEET_ID)
 
 
-def ya_existe_mes(ws, fecha):
+def existe_fecha(ws, fecha):
 
     col = ws.col_values(1)
 
@@ -335,24 +301,74 @@ def ya_existe_mes(ws, fecha):
     return False
 
 
-def subir(rows):
+# =====================================================
+# SUBIR TELEMETRIA
+# =====================================================
 
-    if not rows:
-        print("Sin datos para subir.")
+def subir_telemetria(sheet, datos):
+
+    ws = sheet.worksheet(HOJA_TELEMETRIA)
+
+    if existe_fecha(ws, datos[0]["fecha"]):
+        print("TELEMETRIA YA EXISTE")
         return
 
-    fecha = rows[0][0]
+    rows = []
 
-    sh = conectar_sheet()
-    ws = sh.worksheet(HOJA_DESTINO)
-
-    if ya_existe_mes(ws, fecha):
-        print("Ese mes ya existe.")
-        return
+    for x in datos:
+        rows.append([
+            x["fecha"],
+            x["dominio"],
+            "",
+            "",
+            x["km"],
+            x["litros"],
+            x["l100"]
+        ])
 
     ws.append_rows(rows, value_input_option="USER_ENTERED")
 
-    print("Subidas:", len(rows), "filas")
+    print("TELEMETRIA SUBIDA")
+
+
+# =====================================================
+# SUBIR DATOS UNIDADES
+# =====================================================
+
+def subir_unidades(sheet, telemetria, perf):
+
+    ws = sheet.worksheet(HOJA_UNIDADES)
+
+    fecha = telemetria[0]["fecha"]
+
+    if existe_fecha(ws, fecha):
+        print("DATOS UNIDADES YA EXISTE")
+        return
+
+    rows = []
+
+    for x in telemetria:
+
+        dom = x["dominio"]
+
+        hs_motor = ""
+        co2 = ""
+
+        if dom in perf:
+            hs_motor = perf[dom]["hs_motor"]
+            co2 = perf[dom]["co2"]
+
+        rows.append([
+            fecha,
+            dom,
+            hs_motor,
+            x["ralenti"],
+            co2
+        ])
+
+    ws.append_rows(rows, value_input_option="USER_ENTERED")
+
+    print("DATOS UNIDADES SUBIDA")
 
 
 # =====================================================
@@ -361,5 +377,32 @@ def subir(rows):
 
 if __name__ == "__main__":
 
-    filas = extraer_tabla()
-    subir(filas)
+    desde, hasta, fecha = obtener_mes_anterior()
+
+    print("NEXPRO BOOST")
+    print(datetime.now())
+    print(desde, hasta)
+
+    driver = crear_driver()
+
+    try:
+
+        login(driver)
+
+        # consumo
+        filtrar_consumo(driver, desde, hasta)
+        telemetria = extraer_telemetria(driver, fecha)
+
+        # performance
+        filtrar_performance(driver, desde, hasta)
+        perf = extraer_performance(driver)
+
+    finally:
+        driver.quit()
+
+    sh = conectar_sheet()
+
+    subir_telemetria(sh, telemetria)
+    subir_unidades(sh, telemetria, perf)
+
+    print("PROCESO FINALIZADO")
