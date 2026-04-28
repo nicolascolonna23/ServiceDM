@@ -1,6 +1,6 @@
 # carga_aut_datos_nexpro.py
-# VERSION DEFINITIVA
-# LOGIN + HISTORICO REAL + MES ANTERIOR + GOOGLE SHEETS
+# VERSION CORREGIDA DEFINITIVA
+# FIX: botón Histórico no detectable por texto exacto
 
 import os
 import re
@@ -58,11 +58,11 @@ def obtener_mes_anterior():
     ultimo_anterior = primero_actual - timedelta(days=1)
     primero_anterior = ultimo_anterior.replace(day=1)
 
-    desde = primero_anterior.strftime("%d/%m/%Y")
-    hasta = ultimo_anterior.strftime("%d/%m/%Y")
-    fecha_carga = ultimo_anterior.strftime("%d/%m/%Y")
-
-    return desde, hasta, fecha_carga
+    return (
+        primero_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y"),
+        ultimo_anterior.strftime("%d/%m/%Y")
+    )
 
 
 # =====================================================
@@ -118,63 +118,73 @@ def login(driver):
 
 
 # =====================================================
-# HISTORICO REAL
+# CLICK HISTORICO ROBUSTO
 # =====================================================
 
 def aplicar_historico(driver, desde, hasta):
 
     wait = WebDriverWait(driver, 30)
 
-    # Click Histórico
-    historico = wait.until(
-        EC.element_to_be_clickable(
-            (
-                By.XPATH,
-                "//button[contains(.,'Histórico') or contains(.,'Historico')]"
-            )
-        )
-    )
+    time.sleep(5)
+
+    botones = driver.find_elements(By.TAG_NAME, "button")
+
+    print("Botones encontrados:")
+    for b in botones:
+        try:
+            print("-", b.text.strip())
+        except:
+            pass
+
+    historico = None
+
+    for b in botones:
+        txt = b.text.lower().strip()
+
+        if "histor" in txt:
+            historico = b
+            break
+
+    if historico is None:
+        raise Exception("No encontró botón Histórico")
 
     driver.execute_script("arguments[0].click();", historico)
 
-    print("Click en Histórico")
-    time.sleep(3)
+    print("Click Histórico")
+    time.sleep(4)
 
-    # Esperar modal y buscar inputs fecha
-    cajas = wait.until(
-        EC.presence_of_all_elements_located(
-            (
-                By.XPATH,
-                "//input[contains(@value,'/')]"
-            )
-        )
-    )
+    # cajas fecha popup
+    cajas = driver.find_elements(By.TAG_NAME, "input")
 
-    if len(cajas) >= 2:
+    fechas = []
 
-        driver.execute_script("arguments[0].value='';", cajas[0])
-        driver.execute_script("arguments[0].value='';", cajas[1])
+    for c in cajas:
+        val = str(c.get_attribute("value") or "")
+        if "/" in val:
+            fechas.append(c)
 
-        cajas[0].send_keys(desde)
-        cajas[1].send_keys(hasta)
+    print("Cajas fecha:", len(fechas))
 
-        print("Fechas cargadas:", desde, hasta)
+    if len(fechas) >= 2:
 
-    time.sleep(1)
+        driver.execute_script("arguments[0].value='';", fechas[0])
+        driver.execute_script("arguments[0].value='';", fechas[1])
 
-    # Click Visualizar modal
-    visualizar = wait.until(
-        EC.element_to_be_clickable(
-            (
-                By.XPATH,
-                "//button[contains(.,'Visualizar')]"
-            )
-        )
-    )
+        fechas[0].send_keys(desde)
+        fechas[1].send_keys(hasta)
 
-    driver.execute_script("arguments[0].click();", visualizar)
+        print("Fechas seteadas:", desde, hasta)
 
-    print("Click en Visualizar")
+    # visualizar popup
+    botones = driver.find_elements(By.TAG_NAME, "button")
+
+    for b in botones:
+        txt = b.text.lower().strip()
+
+        if "visualizar" in txt:
+            driver.execute_script("arguments[0].click();", b)
+            print("Click Visualizar")
+            break
 
     time.sleep(12)
 
@@ -204,7 +214,6 @@ def extraer_tabla():
 
         aplicar_historico(driver, desde, hasta)
 
-        # TABLAS
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
         print("Tablas encontradas:", len(tablas))
