@@ -1,22 +1,14 @@
-name: Automatizaciones Nexpro
+name: Carga datos Nexpro
 
 on:
   schedule:
-    # Carga datos Nexpro → día 1 de cada mes 10:00 UTC
-    - cron: '0 10 1 * *'
-
-    # Odómetros → lunes a sábado 13:00 UTC
-    - cron: '0 13 * * 1-6'
+    # Día 1 de cada mes - 06:00 AM Argentina (09:00 UTC)
+    - cron: '0 9 1 * *'
 
   workflow_dispatch:
 
 jobs:
-
-# ==========================================================
-# JOB 1 - CARGA DATOS NEXPRO
-# ==========================================================
-  carga_datos:
-    if: github.event.schedule == '0 10 1 * *' || github.event_name == 'workflow_dispatch'
+  run:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,7 +24,8 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: pip install selenium gspread google-auth
+        run: |
+          pip install selenium gspread google-auth
 
       - name: Instalar Chrome
         uses: browser-actions/setup-chrome@v1
@@ -73,6 +66,9 @@ jobs:
             Duración:
             $((END_TIME - START_TIME)) segundos
 
+            Workflow:
+            ${{ github.workflow }}
+
             Run:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
@@ -93,97 +89,6 @@ jobs:
 
             Proceso:
             carga_aut_datos_nexpro.py
-
-            Hora Argentina:
-            $(TZ=America/Argentina/Buenos_Aires date)
-
-            Duración:
-            $((END_TIME - START_TIME)) segundos
-
-            Revisar logs:
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-# ==========================================================
-# JOB 2 - ODOMETROS
-# ==========================================================
-  odometros:
-    if: github.event.schedule == '0 13 * * 1-6' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Inicio
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
-
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Instalar Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Instalar dependencias
-        run: pip install -r requirements.txt
-
-      - name: Ejecutar Nexpro
-        env:
-          NEXPRO_USUARIO: ${{ secrets.NEXPRO_USUARIO }}
-          NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
-          SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: python nexpro_odometros.py > salida.txt 2>&1
-
-      - name: Fin
-        if: always()
-        run: echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
-
-      - name: Mail éxito
-        if: success()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.EMAIL_FROM }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ Odómetros Nexpro OK"
-          to: ${{ secrets.EMAIL_FROM }}
-          from: GitHub Nexpro
-          body: |
-            Estado: EXITOSO
-
-            Proceso:
-            nexpro_odometros.py
-
-            Hora Argentina:
-            $(TZ=America/Argentina/Buenos_Aires date)
-
-            Duración:
-            $((END_TIME - START_TIME)) segundos
-
-            Run:
-            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-      - name: Mail error
-        if: failure()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 465
-          secure: true
-          username: ${{ secrets.EMAIL_FROM }}
-          password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "❌ Error Odómetros Nexpro"
-          to: ${{ secrets.EMAIL_FROM }}
-          from: GitHub Nexpro
-          body: |
-            Estado: FALLÓ
-
-            Proceso:
-            nexpro_odometros.py
 
             Hora Argentina:
             $(TZ=America/Argentina/Buenos_Aires date)
