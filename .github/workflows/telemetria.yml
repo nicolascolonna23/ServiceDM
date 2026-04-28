@@ -1,15 +1,28 @@
-name: Carga datos Nexpro
+name: Automatizaciones Nexpro
 
 on:
   schedule:
+    # Carga datos Nexpro → día 1 de cada mes 10:00 UTC
     - cron: '0 10 1 * *'
+
+    # Odómetros → lunes a sábado 13:00 UTC
+    - cron: '0 13 * * 1-6'
+
   workflow_dispatch:
 
 jobs:
-  run:
+
+# ==========================================================
+# JOB 1 - CARGA DATOS NEXPRO
+# ==========================================================
+  carga_datos:
+    if: github.event.schedule == '0 10 1 * *' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
 
     steps:
+      - name: Inicio
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -19,8 +32,7 @@ jobs:
           python-version: '3.11'
 
       - name: Instalar dependencias
-        run: |
-          pip install selenium gspread google-auth
+        run: pip install selenium gspread google-auth
 
       - name: Instalar Chrome
         uses: browser-actions/setup-chrome@v1
@@ -31,61 +43,11 @@ jobs:
           NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
           SHEET_ID: ${{ secrets.SHEET_ID }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: python carga_aut_datos_nexpro.py
+        run: python carga_aut_datos_nexpro.py > salida.txt 2>&1
 
-        name: Actualizar Odómetros Nexpro
-
-on:
-  schedule:
-    - cron: '0 13 * * 1-6'
-  workflow_dispatch:
-
-jobs:
-  actualizar:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Inicio
-        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
-
-      - name: Clonar repositorio
-        uses: actions/checkout@v4
-
-      - name: Instalar Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-
-      - name: Instalar Google Chrome
-        run: |
-          wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-stable
-
-      - name: Instalar dependencias
-        run: pip install -r requirements.txt
-
-      - name: Ejecutar Nexpro
-        env:
-          NEXPRO_USUARIO: ${{ secrets.NEXPRO_USUARIO }}
-          NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
-          SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
-          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: |
-          python nexpro_odometros.py > salida.txt 2>&1
-
-      - name: Fin OK
-        if: success()
-        run: |
-          echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
-          echo "STATUS=OK" >> $GITHUB_ENV
-
-      - name: Fin ERROR
-        if: failure()
-        run: |
-          echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
-          echo "STATUS=ERROR" >> $GITHUB_ENV
+      - name: Fin
+        if: always()
+        run: echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
 
       - name: Mail éxito
         if: success()
@@ -96,23 +58,20 @@ jobs:
           secure: true
           username: ${{ secrets.EMAIL_FROM }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "✅ Nexpro actualizado correctamente"
+          subject: "✅ Carga datos Nexpro OK"
           to: ${{ secrets.EMAIL_FROM }}
           from: GitHub Nexpro
           body: |
             Estado: EXITOSO
+
+            Proceso:
+            carga_aut_datos_nexpro.py
 
             Hora Argentina:
             $(TZ=America/Argentina/Buenos_Aires date)
 
             Duración:
             $((END_TIME - START_TIME)) segundos
-
-            Cantidad de unidades:
-            Revisar salida.txt
-
-            Workflow:
-            ${{ github.workflow }}
 
             Run:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -126,11 +85,14 @@ jobs:
           secure: true
           username: ${{ secrets.EMAIL_FROM }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "❌ Error en Nexpro"
+          subject: "❌ Error carga datos Nexpro"
           to: ${{ secrets.EMAIL_FROM }}
           from: GitHub Nexpro
           body: |
             Estado: FALLÓ
+
+            Proceso:
+            carga_aut_datos_nexpro.py
 
             Hora Argentina:
             $(TZ=America/Argentina/Buenos_Aires date)
@@ -138,11 +100,96 @@ jobs:
             Duración:
             $((END_TIME - START_TIME)) segundos
 
-            Error real:
-            Revisar logs del run.
+            Revisar logs:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-            Workflow:
-            ${{ github.workflow }}
+# ==========================================================
+# JOB 2 - ODOMETROS
+# ==========================================================
+  odometros:
+    if: github.event.schedule == '0 13 * * 1-6' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Inicio
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Ejecutar Nexpro
+        env:
+          NEXPRO_USUARIO: ${{ secrets.NEXPRO_USUARIO }}
+          NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
+          SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+        run: python nexpro_odometros.py > salida.txt 2>&1
+
+      - name: Fin
+        if: always()
+        run: echo "END_TIME=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Mail éxito
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Odómetros Nexpro OK"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Nexpro
+          body: |
+            Estado: EXITOSO
+
+            Proceso:
+            nexpro_odometros.py
+
+            Hora Argentina:
+            $(TZ=America/Argentina/Buenos_Aires date)
+
+            Duración:
+            $((END_TIME - START_TIME)) segundos
 
             Run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mail error
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Error Odómetros Nexpro"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Nexpro
+          body: |
+            Estado: FALLÓ
+
+            Proceso:
+            nexpro_odometros.py
+
+            Hora Argentina:
+            $(TZ=America/Argentina/Buenos_Aires date)
+
+            Duración:
+            $((END_TIME - START_TIME)) segundos
+
+            Revisar logs:
             https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
