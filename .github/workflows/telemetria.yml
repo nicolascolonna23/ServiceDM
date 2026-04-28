@@ -1,4 +1,4 @@
-name: Telemetria Nexpro
+name: Carga datos Nexpro
 
 on:
   schedule:
@@ -31,4 +31,4 @@ jobs:
           NEXPRO_PASSWORD: ${{ secrets.NEXPRO_PASSWORD }}
           SHEET_ID: ${{ secrets.SHEET_ID }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-        run: python nexpro_telemetria.py
+        run: python carga_aut_datos_nexpro.py
