@@ -21,11 +21,12 @@ from google.oauth2.service_account import Credentials
 NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
 GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
+SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
 
 # FIX: parsear SHEET_ID tanto si es URL completa como si es solo el ID
-_sheet_raw = os.environ["SHEET_ID"]
+_sheet_raw = os.environ["SHEET_ID_SERVICES"]
 _m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
-SHEET_ID = _m.group(1) if _m else _sheet_raw.strip()
+SHEET_ID_SERVICES = _m.group(1) if _m else _sheet_raw.strip()
 
 # ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 NEXPRO_URL = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
@@ -242,11 +243,11 @@ def conectar_sheets():
 
     # Diagnóstico: mostrar qué cuenta y qué ID se está usando
     print(f"  Service account : {creds_dict.get('client_email', 'NO ENCONTRADO')}")
-    print(f"  SHEET_ID        : '{SHEET_ID}'")
+    print(f"  SHEET_ID_SERVICES        : '{SHEET_ID_SERVICES}'")
 
     # service_account_from_dict maneja scopes y refresh internamente
     gc = gspread.service_account_from_dict(creds_dict)
-    return gc.open_by_key(SHEET_ID)
+    return gc.open_by_key(SHEET_ID_SERVICES)
 
 
 def actualizar_sheets(odometros: dict):
