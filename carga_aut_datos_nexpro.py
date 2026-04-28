@@ -110,21 +110,43 @@ def extraer_tabla():
 
         print("Abriendo login...")
 
-        user = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']"))
-        )
+       user = wait.until(
+    EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']"))
+)
 
-        driver.execute_script("arguments[0].scrollIntoView(true);", user)
-        user.clear()
-        user.send_keys(NEXPRO_USUARIO)
+driver.execute_script("arguments[0].value='';", user)
+driver.execute_script(
+    "arguments[0].value=arguments[1];",
+    user,
+    NEXPRO_USUARIO
+)
 
-        passwd = wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='password']"))
-        )
+driver.execute_script(
+    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
+    user
+)
 
-        passwd.clear()
-        passwd.send_keys(NEXPRO_PASSWORD)
+driver.execute_script(
+    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+    user
+)
 
+     driver.execute_script("arguments[0].value='';", passwd)
+driver.execute_script(
+    "arguments[0].value=arguments[1];",
+    passwd,
+    NEXPRO_PASSWORD
+)
+
+driver.execute_script(
+    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
+    passwd
+)
+
+driver.execute_script(
+    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+    passwd
+)
         time.sleep(1)
 
         selectores = [
