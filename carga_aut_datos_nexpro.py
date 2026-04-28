@@ -22,12 +22,12 @@ from selenium.webdriver.support import expected_conditions as EC
 # VARIABLES
 # =====================================================
 
-NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
+NEXPRO_USUARIO = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
-SHEET_ID        = os.environ["SHEET_ID"]
-GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
+SHEET_ID = os.environ["SHEET_ID"]
+GOOGLE_CREDS = os.environ["GOOGLE_CREDENTIALS_JSON"]
 
-URL_LOGIN   = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
+URL_LOGIN = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
 URL_REPORTE = "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx"
 
 HOJA_DESTINO = "TELEMETRIA"
@@ -38,7 +38,6 @@ HOJA_DESTINO = "TELEMETRIA"
 # =====================================================
 
 def obtener_mes_anterior():
-
     hoy = date.today()
 
     primero_actual = hoy.replace(day=1)
@@ -69,7 +68,6 @@ def num(txt):
 # =====================================================
 
 def crear_driver():
-
     options = Options()
 
     options.add_argument("--headless=new")
@@ -90,9 +88,9 @@ def extraer_tabla():
 
     desde, hasta, fecha_carga = obtener_mes_anterior()
 
-    print("="*50)
+    print("=" * 50)
     print("Buscando:", desde, "->", hasta)
-    print("="*50)
+    print("=" * 50)
 
     driver = crear_driver()
     wait = WebDriverWait(driver, 30)
@@ -101,54 +99,62 @@ def extraer_tabla():
 
     try:
 
-        # =================================================
-        # LOGIN ROBUSTO
-        # =================================================
+        # =============================================
+        # LOGIN
+        # =============================================
 
         driver.get(URL_LOGIN)
         time.sleep(5)
 
         print("Abriendo login...")
 
-       user = wait.until(
-    EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']"))
-)
+        # Usuario
+        user = wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[type='text']")
+            )
+        )
 
-driver.execute_script("arguments[0].value='';", user)
-driver.execute_script(
-    "arguments[0].value=arguments[1];",
-    user,
-    NEXPRO_USUARIO
-)
+        driver.execute_script("arguments[0].value='';", user)
+        driver.execute_script(
+            "arguments[0].value=arguments[1];",
+            user,
+            NEXPRO_USUARIO
+        )
+        driver.execute_script(
+            "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
+            user
+        )
+        driver.execute_script(
+            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+            user
+        )
 
-driver.execute_script(
-    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
-    user
-)
+        # Password
+        passwd = wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[type='password']")
+            )
+        )
 
-driver.execute_script(
-    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-    user
-)
+        driver.execute_script("arguments[0].value='';", passwd)
+        driver.execute_script(
+            "arguments[0].value=arguments[1];",
+            passwd,
+            NEXPRO_PASSWORD
+        )
+        driver.execute_script(
+            "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
+            passwd
+        )
+        driver.execute_script(
+            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+            passwd
+        )
 
-     driver.execute_script("arguments[0].value='';", passwd)
-driver.execute_script(
-    "arguments[0].value=arguments[1];",
-    passwd,
-    NEXPRO_PASSWORD
-)
-
-driver.execute_script(
-    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
-    passwd
-)
-
-driver.execute_script(
-    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-    passwd
-)
         time.sleep(1)
 
+        # Buscar botón login
         selectores = [
             "input[type='submit']",
             "button[type='submit']",
@@ -174,6 +180,7 @@ driver.execute_script(
 
                 if boton:
                     break
+
             except:
                 pass
 
@@ -191,16 +198,16 @@ driver.execute_script(
         print("Login enviado...")
         time.sleep(8)
 
-        print("URL:", driver.current_url)
+        print("URL actual:", driver.current_url)
 
-        # =================================================
+        # =============================================
         # REPORTE
-        # =================================================
+        # =============================================
 
         driver.get(URL_REPORTE)
         time.sleep(7)
 
-        # HISTORICO
+        # Histórico
         botones = driver.find_elements(By.TAG_NAME, "button")
 
         for b in botones:
@@ -210,7 +217,7 @@ driver.execute_script(
 
         time.sleep(3)
 
-        # FECHAS
+        # Fechas
         inputs = driver.find_elements(By.TAG_NAME, "input")
 
         cajas = []
@@ -231,7 +238,7 @@ driver.execute_script(
 
         time.sleep(2)
 
-        # VISUALIZAR
+        # Visualizar
         botones = driver.find_elements(By.TAG_NAME, "button")
 
         for b in botones:
@@ -242,9 +249,9 @@ driver.execute_script(
         print("Esperando tabla...")
         time.sleep(8)
 
-        # =================================================
+        # =============================================
         # TABLA
-        # =================================================
+        # =============================================
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
@@ -264,17 +271,17 @@ driver.execute_script(
                     if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
 
                         litros = num(textos[3])
-                        km     = num(textos[4])
-                        l100   = num(textos[7])
+                        km = num(textos[4])
+                        l100 = num(textos[7])
 
                         filas_finales.append([
-                            fecha_carga,
-                            dominio,
-                            "",
-                            "",
-                            km,
-                            litros,
-                            l100
+                            fecha_carga,   # A
+                            dominio,       # B
+                            "",            # C
+                            "",            # D
+                            km,            # E
+                            litros,        # F
+                            l100           # G
                         ])
 
         print("Filas detectadas:", len(filas_finales))
