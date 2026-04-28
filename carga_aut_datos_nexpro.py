@@ -1,20 +1,19 @@
 # carga_aut_datos_nexpro.py
-# SCRIPT DIAGNOSTICO DEFINITIVO - GITHUB ACTIONS
-# OBJETIVO:
-# 1) Login
-# 2) Ir reporte
-# 3) Click botones
-# 4) Guardar screenshot
-# 5) Guardar HTML
-# 6) Mostrar que existe realmente en DOM
+# VERSION COMPLETA - LOGIN REAL + SCRAPE + GOOGLE SHEETS
 
 import os
 import re
+import json
 import time
-from datetime import datetime
+import tempfile
+from datetime import datetime, date, timedelta
+
+import gspread
+from google.oauth2.service_account import Credentials
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -26,9 +25,43 @@ from selenium.webdriver.support import expected_conditions as EC
 
 NEXPRO_USUARIO = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
+GOOGLE_CREDS = os.environ["GOOGLE_CREDENTIALS_JSON"]
+
+_sheet_raw = os.environ["SHEET_ID"]
+m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
+SHEET_ID = m.group(1) if m else _sheet_raw.strip()
 
 URL_LOGIN = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
 URL_REPORTE = "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx"
+
+HOJA_DESTINO = "TELEMETRIA"
+
+
+# =====================================================
+# HELPERS
+# =====================================================
+
+def num(txt):
+    txt = str(txt).strip().replace(".", "").replace(",", ".")
+    try:
+        return float(txt)
+    except:
+        return 0.0
+
+
+def obtener_mes_anterior():
+
+    hoy = date.today()
+
+    primero_actual = hoy.replace(day=1)
+    ultimo_anterior = primero_actual - timedelta(days=1)
+    primero_anterior = ultimo_anterior.replace(day=1)
+
+    desde = primero_anterior.strftime("%d/%m/%Y")
+    hasta = ultimo_anterior.strftime("%d/%m/%Y")
+    fecha = ultimo_anterior.strftime("%d/%m/%Y")
+
+    return desde, hasta, fecha
 
 
 # =====================================================
@@ -43,97 +76,21 @@ def crear_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,3000")
+    options.add_argument("--window-size=1920,1400")
 
-    driver = webdriver.Chrome(options=options)
-
-    return driver
+    return webdriver.Chrome(options=options)
 
 
 # =====================================================
-# HELPERS
+# LOGIN REAL
 # =====================================================
 
-def click_por_texto(driver, palabras):
+def login(driver):
 
-    elems = driver.find_elements(By.XPATH, "//*")
-
-    for e in elems:
-        try:
-            txt = e.text.strip().lower()
-
-            if any(p in txt for p in palabras):
-                driver.execute_script("arguments[0].click();", e)
-                print("CLICK:", txt[:80])
-                return True
-
-        except:
-            pass
-
-    return False
-
-
-def guardar_archivos(driver, nombre):
-
-    png = f"{nombre}.png"
-    html = f"{nombre}.html"
-
-    driver.save_screenshot(png)
-
-    with open(html, "w", encoding="utf-8") as f:
-        f.write(driver.page_source)
-
-    print("Guardado:", png)
-    print("Guardado:", html)
-
-
-def resumen_dom(driver):
-
-    tablas = driver.find_elements(By.TAG_NAME, "table")
-    iframes = driver.find_elements(By.TAG_NAME, "iframe")
-    divs = driver.find_elements(By.TAG_NAME, "div")
-    buttons = driver.find_elements(By.TAG_NAME, "button")
-    trs = driver.find_elements(By.TAG_NAME, "tr")
-
-    print("=" * 50)
-    print("RESUMEN DOM")
-    print("Tables :", len(tablas))
-    print("Iframes:", len(iframes))
-    print("Divs   :", len(divs))
-    print("Buttons:", len(buttons))
-    print("TR rows:", len(trs))
-    print("=" * 50)
-
-    print("BOTONES VISIBLES:")
-    for b in buttons[:20]:
-        try:
-            t = b.text.strip()
-            if t:
-                print("-", t)
-        except:
-            pass
-
-
-# =====================================================
-# MAIN
-# =====================================================
-
-driver = crear_driver()
-wait = WebDriverWait(driver, 30)
-
-try:
-
-    print("NEXPRO DIAGNOSTICO")
-    print(datetime.now())
-
-    # =============================================
-    # LOGIN
-    # =============================================
+    wait = WebDriverWait(driver, 30)
 
     driver.get(URL_LOGIN)
     time.sleep(5)
-
-    guardar_archivos(driver, "01_login")
 
     user = wait.until(
         EC.presence_of_element_located(
@@ -147,87 +104,210 @@ try:
         )
     )
 
-    driver.execute_script(
-        "arguments[0].value=arguments[1];",
-        user,
-        NEXPRO_USUARIO
-    )
+    user.clear()
+    user.send_keys(NEXPRO_USUARIO)
 
-    driver.execute_script(
-        "arguments[0].value=arguments[1];",
-        pwd,
-        NEXPRO_PASSWORD
-    )
-
-    click_por_texto(driver, ["ingresar", "login", "entrar"])
+    pwd.clear()
+    pwd.send_keys(NEXPRO_PASSWORD)
+    pwd.send_keys(Keys.ENTER)
 
     time.sleep(8)
 
     print("URL POST LOGIN:", driver.current_url)
 
-    guardar_archivos(driver, "02_post_login")
 
-    # =============================================
-    # REPORTE
-    # =============================================
+# =====================================================
+# EXTRAER
+# =====================================================
 
-    driver.get(URL_REPORTE)
-    time.sleep(10)
+def extraer_tabla():
 
-    print("URL REPORTE:", driver.current_url)
+    desde, hasta, fecha_carga = obtener_mes_anterior()
 
-    guardar_archivos(driver, "03_reporte_inicial")
-    resumen_dom(driver)
+    print("NEXPRO TELEMETRIA")
+    print(datetime.now())
+    print("Buscando:", desde, "->", hasta)
 
-    # =============================================
-    # HISTORICO
-    # =============================================
+    driver = crear_driver()
+    wait = WebDriverWait(driver, 30)
 
-    click_por_texto(driver, ["historico"])
-    time.sleep(5)
+    filas_finales = []
 
-    guardar_archivos(driver, "04_post_historico")
-    resumen_dom(driver)
+    try:
 
-    # =============================================
-    # VISUALIZAR
-    # =============================================
+        # LOGIN
+        login(driver)
 
-    click_por_texto(driver, ["visualizar", "buscar", "consultar"])
-    time.sleep(15)
+        # REPORTE
+        driver.get(URL_REPORTE)
+        time.sleep(8)
 
-    guardar_archivos(driver, "05_post_visualizar")
-    resumen_dom(driver)
+        print("URL REPORTE:", driver.current_url)
 
-    # =============================================
-    # IFRAMES
-    # =============================================
+        # Buscar inputs fecha
+        inputs = driver.find_elements(By.TAG_NAME, "input")
 
-    iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        cajas = []
 
-    print("Analizando iframes:", len(iframes))
+        for i in inputs:
+            val = str(i.get_attribute("value") or "")
+            if "/" in val:
+                cajas.append(i)
 
-    for i in range(len(iframes)):
+        if len(cajas) >= 2:
 
-        try:
-            driver.switch_to.default_content()
+            driver.execute_script(
+                "arguments[0].removeAttribute('readonly');",
+                cajas[0]
+            )
 
-            frames = driver.find_elements(By.TAG_NAME, "iframe")
-            driver.switch_to.frame(frames[i])
+            driver.execute_script(
+                "arguments[0].removeAttribute('readonly');",
+                cajas[1]
+            )
 
-            print("Dentro iframe", i)
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[0],
+                desde
+            )
 
-            guardar_archivos(driver, f"iframe_{i}")
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[1],
+                hasta
+            )
 
-            tablas = driver.find_elements(By.TAG_NAME, "table")
-            print("Tables iframe:", len(tablas))
+        # Buscar botón Visualizar / Buscar
+        botones = driver.find_elements(By.TAG_NAME, "button")
 
-        except Exception as e:
-            print("Iframe error:", i, str(e))
+        for b in botones:
+            txt = b.text.lower().strip()
 
-    driver.switch_to.default_content()
+            if any(x in txt for x in ["visualizar", "buscar", "consultar"]):
+                driver.execute_script("arguments[0].click();", b)
+                break
 
-    print("DIAGNOSTICO FINALIZADO")
+        time.sleep(15)
 
-finally:
-    driver.quit()
+        # =================================================
+        # TABLAS
+        # =================================================
+
+        tablas = driver.find_elements(By.TAG_NAME, "table")
+
+        print("Tablas encontradas:", len(tablas))
+
+        for tabla in tablas:
+
+            filas = tabla.find_elements(By.TAG_NAME, "tr")
+
+            for fila in filas:
+
+                celdas = fila.find_elements(By.TAG_NAME, "td")
+                textos = [x.text.strip() for x in celdas if x.text.strip() != ""]
+
+                if len(textos) >= 9:
+
+                    dominio = textos[0].upper().strip()
+
+                    if re.match(
+                        r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$",
+                        dominio
+                    ):
+
+                        litros = num(textos[3])
+                        km = num(textos[4])
+                        l100 = num(textos[8])
+
+                        filas_finales.append([
+                            fecha_carga,
+                            dominio,
+                            "",
+                            "",
+                            km,
+                            litros,
+                            l100
+                        ])
+
+        print("Filas detectadas:", len(filas_finales))
+
+        return filas_finales
+
+    finally:
+        driver.quit()
+
+
+# =====================================================
+# GOOGLE SHEETS
+# =====================================================
+
+def conectar_sheet():
+
+    creds_dict = json.loads(GOOGLE_CREDS)
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".json",
+        delete=False
+    ) as f:
+
+        json.dump(creds_dict, f)
+        path = f.name
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = Credentials.from_service_account_file(
+        path,
+        scopes=scopes
+    )
+
+    client = gspread.authorize(creds)
+
+    os.unlink(path)
+
+    return client.open_by_key(SHEET_ID)
+
+
+def ya_existe_mes(ws, fecha):
+
+    col = ws.col_values(1)
+
+    for x in col:
+        if fecha in str(x):
+            return True
+
+    return False
+
+
+def subir(rows):
+
+    if not rows:
+        print("Sin datos para subir.")
+        return
+
+    fecha = rows[0][0]
+
+    sh = conectar_sheet()
+    ws = sh.worksheet(HOJA_DESTINO)
+
+    if ya_existe_mes(ws, fecha):
+        print("Ese mes ya existe.")
+        return
+
+    ws.append_rows(rows, value_input_option="USER_ENTERED")
+
+    print("Subidas:", len(rows), "filas")
+
+
+# =====================================================
+# MAIN
+# =====================================================
+
+if __name__ == "__main__":
+
+    filas = extraer_tabla()
+    subir(filas)
