@@ -21,7 +21,7 @@ from google.oauth2.service_account import Credentials
 NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
 GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
-SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
+SHEET_ID_SERVICES    = os.environ["SHEET_ID_SERVICES"]
 
 # FIX: parsear SHEET_ID tanto si es URL completa como si es solo el ID
 _sheet_raw = os.environ["SHEET_ID_SERVICES"]
