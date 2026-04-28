@@ -1,5 +1,5 @@
 # nexpro_telemetria.py
-# VERSION DEFINITIVA / DETECCION AUTOMATICA DE COLUMNAS
+# VERSION DEFINITIVA / TABLA AJAX + IFRAME + HTML DINAMICO
 
 import os
 import re
@@ -83,20 +83,20 @@ def crear_driver():
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1800,1400")
+    options.add_argument("--window-size=1920,2200")
 
     return webdriver.Chrome(options=options)
 
 
 # =====================================================
-# BOTONES
+# CLICK POR TEXTO
 # =====================================================
 
 def click_text(driver, palabras):
 
-    elementos = driver.find_elements(By.XPATH, "//*")
+    elems = driver.find_elements(By.XPATH, "//*")
 
-    for e in elementos:
+    for e in elems:
         try:
             texto = norm(e.text)
 
@@ -107,6 +107,39 @@ def click_text(driver, palabras):
             pass
 
     return False
+
+
+# =====================================================
+# BUSCAR TABLAS EN TODO EL DOM
+# =====================================================
+
+def obtener_tablas(driver):
+
+    tablas = driver.find_elements(By.TAG_NAME, "table")
+
+    if tablas:
+        return tablas
+
+    # buscar en iframes
+    iframes = driver.find_elements(By.TAG_NAME, "iframe")
+
+    for i in range(len(iframes)):
+        try:
+            driver.switch_to.default_content()
+            frames = driver.find_elements(By.TAG_NAME, "iframe")
+            driver.switch_to.frame(frames[i])
+
+            tablas = driver.find_elements(By.TAG_NAME, "table")
+
+            if tablas:
+                print("Tabla encontrada dentro de iframe:", i)
+                return tablas
+
+        except:
+            pass
+
+    driver.switch_to.default_content()
+    return []
 
 
 # =====================================================
@@ -148,11 +181,12 @@ def extraer_tabla():
         driver.execute_script("arguments[0].value=arguments[1];", passwd, NEXPRO_PASSWORD)
 
         click_text(driver, ["ingresar", "login", "entrar"])
+
         time.sleep(8)
 
         # REPORTE
         driver.get(URL_REPORTE)
-        time.sleep(8)
+        time.sleep(10)
 
         click_text(driver, ["historico"])
         time.sleep(4)
@@ -169,17 +203,28 @@ def extraer_tabla():
 
         if len(cajas) >= 2:
 
-            driver.execute_script("arguments[0].value=arguments[1];", cajas[0], desde)
-            driver.execute_script("arguments[0].value=arguments[1];", cajas[1], hasta)
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[0],
+                desde
+            )
+
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[1],
+                hasta
+            )
 
         click_text(driver, ["visualizar", "buscar", "consultar"])
-        time.sleep(15)
+
+        print("Esperando carga AJAX...")
+        time.sleep(20)
 
         # =================================================
-        # BUSCAR TABLA CORRECTA
+        # TABLAS
         # =================================================
 
-        tablas = driver.find_elements(By.TAG_NAME, "table")
+        tablas = obtener_tablas(driver)
 
         print("Tablas encontradas:", len(tablas))
 
@@ -187,77 +232,30 @@ def extraer_tabla():
 
             filas = tabla.find_elements(By.TAG_NAME, "tr")
 
-            headers = []
-            data_start = 0
-
-            for i, fila in enumerate(filas):
-
-                th = fila.find_elements(By.TAG_NAME, "th")
-
-                if th:
-                    headers = [norm(x.text) for x in th]
-                    data_start = i + 1
-                    break
-
-            if not headers:
-                continue
-
-            # Detecta columnas automáticamente
-            idx_dominio = None
-            idx_km = None
-            idx_litros = None
-            idx_l100 = None
-
-            for i, h in enumerate(headers):
-
-                if "dominio" in h:
-                    idx_dominio = i
-
-                elif "km-recorridos" in h or "km recorridos" in h:
-                    idx_km = i
-
-                elif "consumo total" in h:
-                    idx_litros = i
-
-                elif "100km" in h:
-                    idx_l100 = i
-
-            if None in [idx_dominio, idx_km, idx_litros, idx_l100]:
-                continue
-
-            print("Tabla válida detectada")
-
-            for fila in filas[data_start:]:
+            for fila in filas:
 
                 tds = fila.find_elements(By.TAG_NAME, "td")
-                textos = [x.text.strip() for x in tds]
+                textos = [x.text.strip() for x in tds if x.text.strip() != ""]
 
-                if len(textos) <= max(idx_dominio, idx_km, idx_litros, idx_l100):
-                    continue
+                if len(textos) >= 9:
 
-                dominio = textos[idx_dominio].upper().strip()
+                    dominio = textos[0].upper().strip()
 
-                if not re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
-                    continue
+                    if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
 
-                km = num(textos[idx_km])
-                litros = num(textos[idx_litros])
-                l100 = num(textos[idx_l100])
+                        litros = num(textos[3])
+                        km = num(textos[4])
+                        l100 = num(textos[8])
 
-                if km <= 0:
-                    continue
-
-                filas_finales.append([
-                    fecha_carga,
-                    dominio,
-                    "",
-                    "",
-                    km,
-                    litros,
-                    l100
-                ])
-
-            break
+                        filas_finales.append([
+                            fecha_carga,
+                            dominio,
+                            "",
+                            "",
+                            km,
+                            litros,
+                            l100
+                        ])
 
         print("Filas detectadas:", len(filas_finales))
 
