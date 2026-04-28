@@ -1,5 +1,5 @@
 # nexpro_telemetria.py
-# VERSION CORREGIDA / LOGIN ROBUSTO / GITHUB ACTIONS
+# VERSION CORREGIDA / MAPEO REAL DE COLUMNAS NEXPRO
 
 import os
 import re
@@ -60,63 +60,51 @@ def obtener_mes_anterior():
 # =====================================================
 
 def num(txt):
-    txt = str(txt).strip().replace(".", "").replace(",", ".")
+    txt = str(txt).strip()
+    txt = txt.replace(".", "").replace(",", ".")
     try:
         return float(txt)
     except:
-        return 0
+        return 0.0
 
 
 def norm(texto):
     return ''.join(
-        c for c in unicodedata.normalize('NFD', texto.lower())
-        if unicodedata.category(c) != 'Mn'
+        c for c in unicodedata.normalize("NFD", texto.lower())
+        if unicodedata.category(c) != "Mn"
     )
 
 
 def click_historico(driver):
-    """Busca el link/boton Historico en cualquier tipo de elemento."""
-    # Primero intenta por texto exacto en cualquier tag
-    for xpath in [
-        "//*[normalize-space(text())='Histórico']",
-        "//*[normalize-space(text())='Historico']",
-        "//*[contains(normalize-space(text()),'ist') and contains(normalize-space(text()),'rico')]",
-    ]:
+
+    xpaths = [
+        "//*[contains(text(),'Histórico')]",
+        "//*[contains(text(),'Historico')]"
+    ]
+
+    for xp in xpaths:
         try:
-            elems = driver.find_elements(By.XPATH, xpath)
+            elems = driver.find_elements(By.XPATH, xp)
             if elems:
-                print("  Histórico encontrado:", elems[0].tag_name, elems[0].text)
                 driver.execute_script("arguments[0].click();", elems[0])
                 return True
         except:
             pass
 
-    # Fallback: busca en todos los elementos clickeables
-    try:
-        todos = driver.find_elements(By.XPATH, "//*[@href or @onclick or @ng-click]")
-        for e in todos:
-            t = norm(e.text.strip())
-            if "historico" in t or "historic" in t:
-                print("  Histórico fallback:", e.tag_name, e.text)
-                driver.execute_script("arguments[0].click();", e)
-                return True
-    except:
-        pass
-
-    print("  Histórico NO encontrado")
     return False
 
 
 def click_visualizar(driver):
-    """Busca el boton Buscar/Visualizar."""
+
     botones = driver.find_elements(By.TAG_NAME, "button")
-    print("  Botones:", [b.text.strip() for b in botones])
+
     for b in botones:
-        if any(p in norm(b.text) for p in ["visualizar", "buscar", "consultar"]):
-            print("  Click en:", b.text.strip())
+        t = norm(b.text)
+
+        if any(x in t for x in ["visualizar", "buscar", "consultar"]):
             driver.execute_script("arguments[0].click();", b)
             return True
-    print("  Botón Visualizar/Buscar NO encontrado")
+
     return False
 
 
@@ -125,6 +113,7 @@ def click_visualizar(driver):
 # =====================================================
 
 def crear_driver():
+
     options = Options()
 
     options.add_argument("--headless=new")
@@ -156,14 +145,9 @@ def extraer_tabla():
 
     try:
 
-        # =============================================
         # LOGIN
-        # =============================================
-
         driver.get(URL_LOGIN)
         time.sleep(5)
-
-        print("Abriendo login...")
 
         user = wait.until(
             EC.presence_of_element_located(
@@ -171,10 +155,7 @@ def extraer_tabla():
             )
         )
 
-        driver.execute_script("arguments[0].value='';", user)
         driver.execute_script("arguments[0].value=arguments[1];", user, NEXPRO_USUARIO)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", user)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", user)
 
         passwd = wait.until(
             EC.presence_of_element_located(
@@ -182,63 +163,26 @@ def extraer_tabla():
             )
         )
 
-        driver.execute_script("arguments[0].value='';", passwd)
         driver.execute_script("arguments[0].value=arguments[1];", passwd, NEXPRO_PASSWORD)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", passwd)
-        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", passwd)
 
-        time.sleep(1)
-
-        selectores = [
-            "input[type='submit']",
-            "button[type='submit']",
-            "button",
-            "input"
-        ]
-
-        boton = None
-
-        for sel in selectores:
-            try:
-                elems = driver.find_elements(By.CSS_SELECTOR, sel)
-                for e in elems:
-                    txt = ((e.text or "") + " " + str(e.get_attribute("value") or "")).lower()
-                    if any(x in txt for x in ["ingresar", "login", "entrar", "acceder"]):
-                        boton = e
-                        break
-                if boton:
-                    break
-            except:
-                pass
-
-        if not boton:
-            boton = wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
-                )
+        boton = wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
             )
+        )
 
-        driver.execute_script("arguments[0].scrollIntoView(true);", boton)
-        time.sleep(1)
         driver.execute_script("arguments[0].click();", boton)
 
-        print("Login enviado...")
         time.sleep(8)
 
-        print("URL actual:", driver.current_url)
-
-        # =============================================
         # REPORTE
-        # =============================================
-
         driver.get(URL_REPORTE)
         time.sleep(8)
 
-        print("--- Buscando Historico ---")
         click_historico(driver)
         time.sleep(4)
 
-        # Fechas
+        # FECHAS
         inputs = driver.find_elements(By.TAG_NAME, "input")
         cajas = []
 
@@ -247,51 +191,71 @@ def extraer_tabla():
             if "/" in val and len(val) < 20:
                 cajas.append(i)
 
-        print("Cajas encontradas:", len(cajas),
-              [i.get_attribute("value") for i in cajas])
-
         if len(cajas) >= 2:
+
             for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
-                driver.execute_script("arguments[0].removeAttribute('readonly');", caja)
-                driver.execute_script("arguments[0].value='';", caja)
-                driver.execute_script("arguments[0].value=arguments[1];", caja, valor)
-                driver.execute_script("arguments[0].dispatchEvent(new Event('input',{bubbles:true}));", caja)
-                driver.execute_script("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", caja)
-            print("Fechas seteadas:", desde, "->", hasta)
-        else:
-            print("No se encontraron cajas de fecha")
+
+                driver.execute_script(
+                    "arguments[0].removeAttribute('readonly');",
+                    caja
+                )
+
+                driver.execute_script(
+                    "arguments[0].value=arguments[1];",
+                    caja,
+                    valor
+                )
+
+                driver.execute_script(
+                    "arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",
+                    caja
+                )
 
         time.sleep(2)
 
-        print("--- Buscando Visualizar/Buscar ---")
         click_visualizar(driver)
 
-        print("Esperando tabla...")
         time.sleep(15)
 
-        # =============================================
+        # =================================================
         # TABLA
-        # =============================================
+        # =================================================
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
-        print("Cantidad tablas:", len(tablas))
 
         for tabla in tablas:
+
             filas = tabla.find_elements(By.TAG_NAME, "tr")
 
             for fila in filas:
+
                 celdas = fila.find_elements(By.TAG_NAME, "td")
                 textos = [c.text.strip() for c in celdas]
 
-                # Columnas Nexpro: [0]dominio [1]combustible [2]unidad
-                # [3]litros [4]km [5]consumo_medio [6]ralenti [7]pct_ralenti [8]l100km
+                # TABLA REAL NEXPRO:
+                # 0 Dominio
+                # 1 Tipo combustible
+                # 2 Unidad
+                # 3 Consumo total
+                # 4 KM Recorridos
+                # 5 Consumo medio
+                # 6 Consumo ralenti
+                # 7 % ralenti
+                # 8 Consumo c/100km
+
                 if len(textos) >= 9:
+
                     dominio = textos[0].upper().strip()
 
                     if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
-                        litros = num(textos[3])
-                        km = num(textos[4])
-                        l100 = num(textos[8])
+
+                        litros = num(textos[3])   # consumo total
+                        km = num(textos[4])       # km recorridos
+                        l100 = num(textos[8])     # consumo c/100km
+
+                        # filtrar filas basura
+                        if km <= 0:
+                            continue
 
                         filas_finales.append([
                             fecha_carga,
@@ -319,7 +283,12 @@ def conectar_sheet():
 
     creds_dict = json.loads(GOOGLE_CREDS)
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".json",
+        delete=False
+    ) as f:
+
         json.dump(creds_dict, f)
         path = f.name
 
@@ -329,7 +298,9 @@ def conectar_sheet():
     ]
 
     creds = Credentials.from_service_account_file(path, scopes=scopes)
+
     client = gspread.authorize(creds)
+
     os.unlink(path)
 
     return client.open_by_key(SHEET_ID)
@@ -384,5 +355,4 @@ if __name__ == "__main__":
     print(datetime.now())
 
     filas = extraer_tabla()
-
     subir(filas)
