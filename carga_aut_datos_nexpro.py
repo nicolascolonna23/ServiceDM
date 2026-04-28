@@ -1,6 +1,6 @@
 # carga_aut_datos_nexpro.py
-# VERSION CORREGIDA DEFINITIVA
-# FIX: botón Histórico no detectable por texto exacto
+# VERSION COMPLETA CORREGIDA
+# LOGIN OK + HISTORICO UNIVERSAL + MES ANTERIOR + GOOGLE SHEETS
 
 import os
 import re
@@ -51,18 +51,17 @@ def num(txt):
 
 
 def obtener_mes_anterior():
-
     hoy = date.today()
 
     primero_actual = hoy.replace(day=1)
     ultimo_anterior = primero_actual - timedelta(days=1)
     primero_anterior = ultimo_anterior.replace(day=1)
 
-    return (
-        primero_anterior.strftime("%d/%m/%Y"),
-        ultimo_anterior.strftime("%d/%m/%Y"),
-        ultimo_anterior.strftime("%d/%m/%Y")
-    )
+    desde = primero_anterior.strftime("%d/%m/%Y")
+    hasta = ultimo_anterior.strftime("%d/%m/%Y")
+    fecha_carga = ultimo_anterior.strftime("%d/%m/%Y")
+
+    return desde, hasta, fecha_carga
 
 
 # =====================================================
@@ -118,79 +117,81 @@ def login(driver):
 
 
 # =====================================================
-# CLICK HISTORICO ROBUSTO
+# HISTORICO + FILTRO FECHAS
 # =====================================================
 
 def aplicar_historico(driver, desde, hasta):
 
-    wait = WebDriverWait(driver, 30)
-
     time.sleep(5)
 
-    botones = driver.find_elements(By.TAG_NAME, "button")
-
-    print("Botones encontrados:")
-    for b in botones:
-        try:
-            print("-", b.text.strip())
-        except:
-            pass
+    # Buscar Histórico en TODO el DOM
+    todos = driver.find_elements(By.XPATH, "//*")
 
     historico = None
 
-    for b in botones:
-        txt = b.text.lower().strip()
+    for e in todos:
+        try:
+            txt = e.text.strip().lower()
 
-        if "histor" in txt:
-            historico = b
-            break
+            if "histor" in txt:
+                historico = e
+                print("Encontrado Histórico:", txt)
+                break
+        except:
+            pass
 
     if historico is None:
-        raise Exception("No encontró botón Histórico")
+        raise Exception("No encontró Histórico")
 
     driver.execute_script("arguments[0].click();", historico)
 
     print("Click Histórico")
     time.sleep(4)
 
-    # cajas fecha popup
-    cajas = driver.find_elements(By.TAG_NAME, "input")
+    # Buscar cajas fecha
+    inputs = driver.find_elements(By.TAG_NAME, "input")
 
-    fechas = []
+    cajas = []
 
-    for c in cajas:
-        val = str(c.get_attribute("value") or "")
+    for i in inputs:
+        val = str(i.get_attribute("value") or "")
         if "/" in val:
-            fechas.append(c)
+            cajas.append(i)
 
-    print("Cajas fecha:", len(fechas))
+    print("Cajas fecha:", len(cajas))
 
-    if len(fechas) >= 2:
+    if len(cajas) >= 2:
 
-        driver.execute_script("arguments[0].value='';", fechas[0])
-        driver.execute_script("arguments[0].value='';", fechas[1])
+        driver.execute_script("arguments[0].removeAttribute('readonly');", cajas[0])
+        driver.execute_script("arguments[0].removeAttribute('readonly');", cajas[1])
 
-        fechas[0].send_keys(desde)
-        fechas[1].send_keys(hasta)
+        driver.execute_script("arguments[0].value='';", cajas[0])
+        driver.execute_script("arguments[0].value='';", cajas[1])
+
+        cajas[0].send_keys(desde)
+        cajas[1].send_keys(hasta)
 
         print("Fechas seteadas:", desde, hasta)
 
-    # visualizar popup
-    botones = driver.find_elements(By.TAG_NAME, "button")
+    # Buscar Visualizar
+    todos = driver.find_elements(By.XPATH, "//*")
 
-    for b in botones:
-        txt = b.text.lower().strip()
+    for e in todos:
+        try:
+            txt = e.text.strip().lower()
 
-        if "visualizar" in txt:
-            driver.execute_script("arguments[0].click();", b)
-            print("Click Visualizar")
-            break
+            if "visualizar" in txt:
+                driver.execute_script("arguments[0].click();", e)
+                print("Click Visualizar")
+                break
+        except:
+            pass
 
     time.sleep(12)
 
 
 # =====================================================
-# EXTRAER
+# EXTRAER TABLA
 # =====================================================
 
 def extraer_tabla():
@@ -207,13 +208,17 @@ def extraer_tabla():
 
     try:
 
+        # LOGIN
         login(driver)
 
+        # REPORTE
         driver.get(URL_REPORTE)
         time.sleep(8)
 
+        # HISTORICO
         aplicar_historico(driver, desde, hasta)
 
+        # TABLAS
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
         print("Tablas encontradas:", len(tablas))
@@ -241,13 +246,13 @@ def extraer_tabla():
                         l100 = num(textos[8])
 
                         filas_finales.append([
-                            fecha_carga,
-                            dominio,
-                            "",
-                            "",
-                            km,
-                            litros,
-                            l100
+                            fecha_carga,   # A
+                            dominio,       # B
+                            "",            # C
+                            "",            # D
+                            km,            # E
+                            litros,        # F
+                            l100           # G
                         ])
 
         print("Filas detectadas:", len(filas_finales))
