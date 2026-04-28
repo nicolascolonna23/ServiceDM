@@ -228,13 +228,18 @@ def extraer_tabla():
             if "/" in val:
                 cajas.append(i)
 
-        if len(cajas) >= 2:
+                if len(cajas) >= 2:
 
-            cajas[0].clear()
-            cajas[0].send_keys(desde)
-
-            cajas[1].clear()
-            cajas[1].send_keys(hasta)
+            for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
+                driver.execute_script("arguments[0].removeAttribute('readonly');", caja)
+                driver.execute_script("arguments[0].value = '';", caja)
+                driver.execute_script("arguments[0].value = arguments[1];", caja, valor)
+                driver.execute_script(
+                    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", caja
+                )
+                driver.execute_script(
+                    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", caja
+                )
 
         time.sleep(2)
 
