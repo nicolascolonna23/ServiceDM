@@ -22,8 +22,10 @@ NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
 GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
 
-# Secret renombrado a SHEET_ID_SERVICES para no pisar el de otros scripts
-_sheet_raw = os.environ["SHEET_ID_SERVICES"]
+# Busca SHEET_ID_SERVICES primero; si no existe usa SHEET_ID como fallback
+_sheet_raw = os.environ.get("SHEET_ID_SERVICES") or os.environ.get("SHEET_ID", "")
+if not _sheet_raw:
+    raise EnvironmentError("Falta el secret SHEET_ID_SERVICES (o SHEET_ID) en el workflow")
 _m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
 SHEET_ID = _m.group(1) if _m else _sheet_raw.strip()
 
