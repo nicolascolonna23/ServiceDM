@@ -2,7 +2,7 @@ name: Actualizar Odómetros Nexpro
 
 on:
   schedule:
-    - cron: '0 13 * * 1-6'
+    - cron: '0 19 * * 1-6'
   workflow_dispatch:
 
 jobs:
