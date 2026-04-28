@@ -92,12 +92,23 @@ def login(driver):
 # (reutilizable para cualquier pantalla)
 # =====================================================
 def aplicar_historico(driver, desde, hasta):
-    time.sleep(8)
+    time.sleep(10)
 
-    # --- Click en "Histórico" ---
-    candidatos = driver.find_elements(By.XPATH, "//button | //a | //span | //div[@role='button']")
+    # --- Diagnóstico: listar todos los textos de botones/links ---
+    todos = driver.find_elements(By.XPATH, "//button | //a | //span | //div[@role='button'] | //li")
+    textos_encontrados = []
+    for e in todos:
+        try:
+            t = e.text.strip()
+            if t:
+                textos_encontrados.append(t)
+        except:
+            pass
+    print("Elementos clickeables en página:", textos_encontrados[:30])
+
+    # --- Click en "Histórico" (flexible: acepta cualquier texto que contenga "hist") ---
     historico = None
-    for e in candidatos:
+    for e in todos:
         try:
             txt = e.text.strip().lower()
             if "hist" in txt:
@@ -106,11 +117,14 @@ def aplicar_historico(driver, desde, hasta):
                 break
         except:
             pass
-    if historico is None:
-        raise Exception("No encontró botón Histórico")
-    driver.execute_script("arguments[0].click();", historico)
-    print("Click Histórico")
-    time.sleep(4)
+
+    if historico is not None:
+        driver.execute_script("arguments[0].click();", historico)
+        print("Click Histórico")
+        time.sleep(5)
+    else:
+        # La pantalla no tiene botón Histórico → intentar setear fechas directamente
+        print("[!] Botón Histórico no encontrado. Intentando setear fechas directamente...")
 
     # --- Inputs de fecha visibles y editables ---
     inputs = driver.find_elements(By.TAG_NAME, "input")
@@ -118,34 +132,53 @@ def aplicar_historico(driver, desde, hasta):
     for i in inputs:
         try:
             val     = str(i.get_attribute("value") or "")
+            tipo    = str(i.get_attribute("type") or "text").lower()
             visible = i.is_displayed()
             enabled = i.is_enabled()
-            if "/" in val and visible and enabled:
+            # Aceptar inputs con "/" en el valor, o inputs de tipo date/text visibles
+            if visible and enabled and ("/" in val or tipo in ["date"]):
                 fechas.append(i)
         except:
             pass
+
+    # Fallback: buscar cualquier input text visible si no se encontraron fechas
+    if len(fechas) < 2:
+        print("  Buscando inputs texto genéricos...")
+        for i in inputs:
+            try:
+                tipo    = str(i.get_attribute("type") or "text").lower()
+                visible = i.is_displayed()
+                enabled = i.is_enabled()
+                if visible and enabled and tipo in ["text", "date"] and i not in fechas:
+                    fechas.append(i)
+            except:
+                pass
+
     print("Fechas utilizables:", len(fechas))
     if len(fechas) < 2:
-        raise Exception("No encontró inputs fecha editables")
+        raise Exception("No encontró inputs de fecha editables en esta pantalla")
 
     driver.execute_script("arguments[0].removeAttribute('readonly');", fechas[0])
     driver.execute_script("arguments[0].removeAttribute('readonly');", fechas[1])
     driver.execute_script("arguments[0].value=arguments[1];", fechas[0], desde)
     driver.execute_script("arguments[0].value=arguments[1];", fechas[1], hasta)
+    # Disparar eventos change/blur para que la página reconozca el cambio
+    driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", fechas[0])
+    driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", fechas[1])
     print("Fechas seteadas:", desde, "->", hasta)
 
-    # --- Click en "Visualizar" ---
-    candidatos = driver.find_elements(By.XPATH, "//button | //a | //span | //div[@role='button']")
+    # --- Click en "Visualizar" o "Buscar" ---
+    candidatos = driver.find_elements(By.XPATH, "//button | //a | //span | //div[@role='button'] | //input[@type='button'] | //input[@type='submit']")
     for e in candidatos:
         try:
-            txt = e.text.strip().lower()
-            if "visualizar" in txt:
+            txt = (e.text or e.get_attribute("value") or "").strip().lower()
+            if any(k in txt for k in ["visualizar", "buscar", "consultar", "search", "ver"]):
                 driver.execute_script("arguments[0].click();", e)
-                print("Click Visualizar")
+                print("Click Visualizar/Buscar:", txt)
                 break
         except:
             pass
-    time.sleep(12)
+    time.sleep(14)
 
 # =====================================================
 # EXTRAER TELEMETRIA  (km, litros, l/100km)
@@ -217,12 +250,16 @@ def extraer_ralenti_de_tabla(driver):
         print("Headers consumo:", headers)
 
         # Buscar índice de ralentí
+        # Preferir "consumo en ralentí" (lts) sobre "% de ralentí"
         idx_ralenti  = None
         idx_dominio  = 0
         for i, h in enumerate(headers):
             if any(k in h for k in ["ralenti", "ralentí", "idle", "relenti"]):
-                idx_ralenti = i
-                print(f"  → Ralentí en columna {i}: '{h}'")
+                # Solo tomar el primero que matchee (consumo en lts, no el %)
+                # Si ya encontramos uno y este tiene "%" en el nombre, ignorarlo
+                if idx_ralenti is None or "%" not in h:
+                    idx_ralenti = i
+                    print(f"  → Ralentí en columna {i}: '{h}'")
             if any(k in h for k in ["patente", "dominio", "unidad", "placa"]):
                 idx_dominio = i
 
@@ -245,9 +282,9 @@ def extraer_ralenti_de_tabla(driver):
 
     # --- Fallback: índice fijo si no se detectó por header ---
     if not datos:
-        print("  [!] Ralentí no detectado por header. Usando índice fijo = 5")
-        print("      (Revisá la tabla y ajustá IDX_RALENTI si los valores no son correctos)")
-        IDX_RALENTI = 5   # <-- AJUSTAR según la columna real de ralentí
+        print("  [!] Ralentí no detectado por header. Usando índice fijo = 6")
+        print("      (columna 6 = 'consumo en ralentí' según los headers detectados)")
+        IDX_RALENTI = 6   # consumo en ralentí (lts), NO el % que está en columna 7
         for tabla in tablas:
             filas = tabla.find_elements(By.TAG_NAME, "tr")
             for fila in filas:
