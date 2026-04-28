@@ -3,32 +3,32 @@ nexpro_odometros.py
 Corre en GitHub Actions: login en Nexpro → extrae km → actualiza Google Sheets
 Las credenciales vienen de variables de entorno (GitHub Secrets)
 """
-
 import os
 import re
 import time
 import json
 import tempfile
 from datetime import datetime
-
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.options import Options
-
 import gspread
 from google.oauth2.service_account import Credentials
 
 # ─── CREDENCIALES DESDE VARIABLES DE ENTORNO (GitHub Secrets) ───────────────
 NEXPRO_USUARIO  = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
-SHEET_ID        = os.environ["SHEET_ID"]
-GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]  # contenido del .json como string
+GOOGLE_CREDS    = os.environ["GOOGLE_CREDENTIALS_JSON"]
+
+# FIX: parsear SHEET_ID tanto si es URL completa como si es solo el ID
+_sheet_raw = os.environ["SHEET_ID"]
+_m = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
+SHEET_ID = _m.group(1) if _m else _sheet_raw.strip()
 
 # ─── CONFIGURACIÓN ───────────────────────────────────────────────────────────
 NEXPRO_URL = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
-
 PESTANAS = [
     "Services-LAD",
     "Services-BUE",
@@ -37,10 +37,8 @@ PESTANAS = [
     "Services-LRJ",
     "Services-TUC",
 ]
-
 COL_PATENTE   = 0  # Columna A
 COL_KM_ACTUAL = 7  # Columna H
-
 
 # ─── HELPERS ────────────────────────────────────────────────────────────────
 def normalizar_patente(texto: str) -> str:
@@ -54,11 +52,9 @@ def es_km(texto: str) -> bool:
     t = texto.replace(".", "").replace(",", "").strip()
     return t.isdigit() and 1000 < int(t) < 5_000_000
 
-
 # ─── PASO 1: LOGIN Y EXTRACCIÓN ──────────────────────────────────────────────
 def extraer_odometros() -> dict:
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Iniciando Chrome headless...")
-
     opciones = Options()
     opciones.add_argument("--headless=new")
     opciones.add_argument("--no-sandbox")
@@ -76,10 +72,8 @@ def extraer_odometros() -> dict:
         print(f"[{datetime.now().strftime('%H:%M:%S')}] Navegando al login...")
         driver.get(NEXPRO_URL)
         time.sleep(4)
-
         print(f"URL: {driver.current_url} | Título: {driver.title}")
 
-        # Campo usuario — ASP.NET usa IDs dinámicos, probamos varios selectores
         selectores_usuario = [
             "input[type='text']",
             "input[id*='user' i]",
@@ -90,34 +84,28 @@ def extraer_odometros() -> dict:
         campo_usuario = None
         for sel in selectores_usuario:
             try:
-                # element_to_be_clickable espera a que el campo esté activo y habilitado
                 campo_usuario = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, sel)))
                 print(f"Campo usuario: {sel}")
                 break
             except:
                 continue
-
         if not campo_usuario:
-            raise Exception("No se encontró el campo usuario — guardá diagnostico.html para revisar")
+            raise Exception("No se encontró el campo usuario")
 
         campo_pass = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, "input[type='password']")))
 
-        # Usar JavaScript para escribir — más robusto que send_keys en portales ASP.NET
         driver.execute_script("arguments[0].value = '';", campo_usuario)
         driver.execute_script("arguments[0].value = arguments[1];", campo_usuario, NEXPRO_USUARIO)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_usuario)
         driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_usuario)
         time.sleep(0.5)
-
         driver.execute_script("arguments[0].value = '';", campo_pass)
         driver.execute_script("arguments[0].value = arguments[1];", campo_pass, NEXPRO_PASSWORD)
         driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", campo_pass)
         driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", campo_pass)
         time.sleep(0.5)
-
         print(f"Credenciales ingresadas via JavaScript")
 
-        # Botón login
         selectores_btn = [
             "input[type='submit']",
             "button[type='submit']",
@@ -133,7 +121,6 @@ def extraer_odometros() -> dict:
                 break
             except:
                 continue
-
         if not btn:
             raise Exception("No se encontró el botón de login")
 
@@ -157,10 +144,9 @@ def extraer_odometros() -> dict:
             driver.get(url)
             time.sleep(8)
 
-            # Desactivar paginación — mostrar todos los registros
             from selenium.webdriver.support.ui import Select
             selectores_paginacion = [
-                "select",  # cualquier select en la página
+                "select",
                 "select[id*='size']",
                 "select[id*='length']",
                 "select[id*='registros']",
@@ -175,12 +161,10 @@ def extraer_odometros() -> dict:
                         select = Select(sel_elem)
                         opciones = [o.get_attribute("value") for o in select.options]
                         print(f"  Select encontrado — opciones: {opciones}")
-                        # Intentar primero -1 (todos), sino el valor más alto
                         if "-1" in opciones:
                             select.select_by_value("-1")
                             paginacion_desactivada = True
                         elif opciones:
-                            # Tomar el valor numérico más alto
                             nums = [(int(v), v) for v in opciones if v.lstrip("-").isdigit()]
                             if nums:
                                 valor_max = max(nums, key=lambda x: x[0])[1]
@@ -204,7 +188,6 @@ def extraer_odometros() -> dict:
                 continue
 
             print(f"  {len(tablas)} tabla(s)")
-
             filas_totales = 0
             for tabla in tablas:
                 filas = tabla.find_elements(By.TAG_NAME, "tr")
@@ -217,7 +200,6 @@ def extraer_odometros() -> dict:
                     for i, texto in enumerate(textos):
                         if es_patente(texto):
                             patente = normalizar_patente(texto)
-                            # Tomar el valor numérico MÁS GRANDE (odómetro total > 10.000)
                             mejor_km = None
                             for j in range(i+1, min(i+10, len(textos))):
                                 t = textos[j].replace(".", "").replace(",", "").strip()
@@ -227,16 +209,12 @@ def extraer_odometros() -> dict:
                                         if mejor_km is None or val > mejor_km:
                                             mejor_km = val
                             if mejor_km:
-                                # Solo actualizar si el valor nuevo es mayor (más confiable)
                                 if patente not in odometros or mejor_km > odometros[patente]:
                                     odometros[patente] = mejor_km
                                     print(f"  ✅ {patente}: {mejor_km:,} km")
-
             print(f"  Filas procesadas: {filas_totales} | Acumulado: {len(odometros)} vehículos")
 
-        # Recorrimos todas las URLs — mostrar resumen
         print(f"\nExtracción completa: {len(odometros)} vehículos en total")
-
         if not odometros:
             print(f"\n⚠️  Sin datos. URL final: {driver.current_url}")
             with open("diagnostico.html", "w", encoding="utf-8") as f:
@@ -254,24 +232,40 @@ def extraer_odometros() -> dict:
     print(f"\nTotal: {len(odometros)} vehículos extraídos")
     return odometros
 
-
 # ─── PASO 2: ACTUALIZAR SHEETS ───────────────────────────────────────────────
-def actualizar_sheets(odometros: dict):
-    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Conectando a Google Sheets...")
-
+def conectar_sheets():
+    """
+    FIX: usa service_account_from_dict (API moderna de gspread).
+    No requiere archivo temporal ni gspread.authorize (deprecado).
+    """
     creds_dict = json.loads(GOOGLE_CREDS)
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
-        json.dump(creds_dict, f)
-        creds_path = f.name
-
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    creds  = Credentials.from_service_account_file(creds_path, scopes=scopes)
-    client = gspread.authorize(creds)
-    sheet  = client.open_by_key(SHEET_ID)
-    os.unlink(creds_path)
+    # Método moderno — más estable que gspread.authorize()
+    creds  = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    client = gspread.Client(auth=creds)
+    print(f"  SHEET_ID usado: {SHEET_ID}")
+    return client.open_by_key(SHEET_ID)
+
+
+def actualizar_sheets(odometros: dict):
+    print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Conectando a Google Sheets...")
+
+    # Reintentos en caso de error transitorio de red
+    sheet = None
+    for intento in range(1, 4):
+        try:
+            sheet = conectar_sheets()
+            print(f"  ✅ Conectado al spreadsheet")
+            break
+        except Exception as e:
+            print(f"  ❌ Intento {intento}/3 fallido: {e}")
+            if intento < 3:
+                time.sleep(10)
+            else:
+                raise
 
     total = 0
     no_encontrados = []
@@ -290,10 +284,9 @@ def actualizar_sheets(odometros: dict):
                 if patente in odometros:
                     from gspread.utils import rowcol_to_a1
                     km_nexpro = odometros[patente]
-                    # Leer km actual que ya tiene el Sheet
                     km_sheet_str = fila[COL_KM_ACTUAL].strip() if len(fila) > COL_KM_ACTUAL else ""
-                    km_sheet = int(km_sheet_str.replace(".", "").replace(",", "")) if km_sheet_str.isdigit() else 0
-                    # Solo escribir si el valor de Nexpro es MAYOR al que ya está en el Sheet
+                    km_sheet_clean = km_sheet_str.replace(".", "").replace(",", "")
+                    km_sheet = int(km_sheet_clean) if km_sheet_clean.isdigit() else 0
                     if km_nexpro > km_sheet:
                         celda = rowcol_to_a1(idx, COL_KM_ACTUAL + 1)
                         batch.append({"range": celda, "values": [[km_nexpro]]})
@@ -320,7 +313,6 @@ def actualizar_sheets(odometros: dict):
             print(f"   - {p}")
     print(f"{'='*50}")
 
-
 # ─── MAIN ────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     print(f"\n{'='*50}")
@@ -329,7 +321,6 @@ if __name__ == "__main__":
     print(f"{'='*50}")
 
     odometros = extraer_odometros()
-
     if odometros:
         actualizar_sheets(odometros)
     else:
