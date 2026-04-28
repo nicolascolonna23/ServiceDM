@@ -108,92 +108,33 @@ def extraer_tabla():
 
         print("Abriendo login...")
 
-        # Usuario
         user = wait.until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[type='text']")
             )
         )
 
-        driver.execute_script("arguments[0].value='';", user)
-        driver.execute_script(
-            "arguments[0].value=arguments[1];",
-            user,
-            NEXPRO_USUARIO
-        )
-        driver.execute_script(
-            "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
-            user
-        )
-        driver.execute_script(
-            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-            user
-        )
+        user.clear()
+        user.send_keys(NEXPRO_USUARIO)
 
-        # Password
         passwd = wait.until(
             EC.presence_of_element_located(
                 (By.CSS_SELECTOR, "input[type='password']")
             )
         )
 
-        driver.execute_script("arguments[0].value='';", passwd)
-        driver.execute_script(
-            "arguments[0].value=arguments[1];",
-            passwd,
-            NEXPRO_PASSWORD
-        )
-        driver.execute_script(
-            "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));",
-            passwd
-        )
-        driver.execute_script(
-            "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-            passwd
-        )
+        passwd.clear()
+        passwd.send_keys(NEXPRO_PASSWORD)
 
         time.sleep(1)
 
-        # Buscar botón login
-        selectores = [
-            "input[type='submit']",
-            "button[type='submit']",
-            "button",
-            "input"
-        ]
-
-        boton = None
-
-        for sel in selectores:
-            try:
-                elems = driver.find_elements(By.CSS_SELECTOR, sel)
-
-                for e in elems:
-                    txt = (
-                        (e.text or "") + " " +
-                        str(e.get_attribute("value") or "")
-                    ).lower()
-
-                    if any(x in txt for x in ["ingresar", "login", "entrar", "acceder"]):
-                        boton = e
-                        break
-
-                if boton:
-                    break
-
-            except:
-                pass
-
-        if not boton:
-            boton = wait.until(
-                EC.presence_of_element_located(
-                    (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
-                )
+        boton = wait.until(
+            EC.element_to_be_clickable(
+                (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
             )
+        )
 
-        driver.execute_script("arguments[0].scrollIntoView(true);", boton)
-        time.sleep(1)
-        driver.execute_script("arguments[0].click();", boton)
+        boton.click()
 
         print("Login enviado...")
         time.sleep(8)
@@ -205,21 +146,22 @@ def extraer_tabla():
         # =============================================
 
         driver.get(URL_REPORTE)
-        time.sleep(7)
+        time.sleep(8)
 
-        # Histórico
         botones = driver.find_elements(By.TAG_NAME, "button")
 
         for b in botones:
             if "Histórico" in b.text:
+                print("Click en Histórico")
                 driver.execute_script("arguments[0].click();", b)
+                time.sleep(3)
                 break
 
-        time.sleep(3)
+        # =============================================
+        # FECHAS
+        # =============================================
 
-        # Fechas
         inputs = driver.find_elements(By.TAG_NAME, "input")
-
         cajas = []
 
         for i in inputs:
@@ -231,38 +173,51 @@ def extraer_tabla():
         if len(cajas) >= 2:
 
             for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
-                driver.execute_script("arguments[0].removeAttribute('readonly');", caja)
-                driver.execute_script("arguments[0].value = '';", caja)
-                driver.execute_script("arguments[0].value = arguments[1];", caja, valor)
                 driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", caja
+                    "arguments[0].removeAttribute('readonly');",
+                    caja
                 )
                 driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", caja
+                    "arguments[0].value = arguments[1];",
+                    caja,
+                    valor
+                )
+                driver.execute_script(
+                    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+                    caja
                 )
 
         time.sleep(2)
 
-        # Visualizar
+        # =============================================
+        # VISUALIZAR
+        # =============================================
+
         botones = driver.find_elements(By.TAG_NAME, "button")
 
-    for b in botones:
-     if "Visualizar" in b.text:
-        print("Click en Visualizar")
-        driver.execute_script("arguments[0].scrollIntoView(true);", b)
-        time.sleep(1)
-        driver.execute_script("arguments[0].click();", b)
-        time.sleep(5)
-        break
+        for b in botones:
+            if "Visualizar" in b.text:
+                print("Click en Visualizar")
+                driver.execute_script("arguments[0].scrollIntoView(true);", b)
+                time.sleep(1)
+
+                try:
+                    b.click()
+                except:
+                    driver.execute_script("arguments[0].click();", b)
+
+                break
 
         print("Esperando tabla...")
-        time.sleep(8)
+        time.sleep(15)
 
         # =============================================
         # TABLA
         # =============================================
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
+
+        print("Cantidad tablas encontradas:", len(tablas))
 
         for tabla in tablas:
 
@@ -284,13 +239,13 @@ def extraer_tabla():
                         l100 = num(textos[7])
 
                         filas_finales.append([
-                            fecha_carga,   # A
-                            dominio,       # B
-                            "",            # C
-                            "",            # D
-                            km,            # E
-                            litros,        # F
-                            l100           # G
+                            fecha_carga,
+                            dominio,
+                            "",
+                            "",
+                            km,
+                            litros,
+                            l100
                         ])
 
         print("Filas detectadas:", len(filas_finales))
@@ -309,7 +264,12 @@ def conectar_sheet():
 
     creds_dict = json.loads(GOOGLE_CREDS)
 
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=".json",
+        delete=False
+    ) as f:
+
         json.dump(creds_dict, f)
         path = f.name
 
@@ -318,7 +278,10 @@ def conectar_sheet():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file(path, scopes=scopes)
+    creds = Credentials.from_service_account_file(
+        path,
+        scopes=scopes
+    )
 
     client = gspread.authorize(creds)
 
