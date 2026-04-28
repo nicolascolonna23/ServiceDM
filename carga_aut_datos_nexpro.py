@@ -246,10 +246,14 @@ def extraer_tabla():
         # Visualizar
         botones = driver.find_elements(By.TAG_NAME, "button")
 
-        for b in botones:
-            if "Visualizar" in b.text:
-                driver.execute_script("arguments[0].click();", b)
-                break
+    for b in botones:
+     if "Visualizar" in b.text:
+        print("Click en Visualizar")
+        driver.execute_script("arguments[0].scrollIntoView(true);", b)
+        time.sleep(1)
+        driver.execute_script("arguments[0].click();", b)
+        time.sleep(5)
+        break
 
         print("Esperando tabla...")
         time.sleep(8)
