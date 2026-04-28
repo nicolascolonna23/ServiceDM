@@ -1,5 +1,6 @@
 # carga_aut_datos_nexpro.py
-# VERSION COMPLETA - LOGIN REAL + SCRAPE + GOOGLE SHEETS
+# VERSION COMPLETA CORREGIDA
+# LOGIN SIN clear() + EXTRACCION + GOOGLE SHEETS
 
 import os
 import re
@@ -50,7 +51,6 @@ def num(txt):
 
 
 def obtener_mes_anterior():
-
     hoy = date.today()
 
     primero_actual = hoy.replace(day=1)
@@ -59,9 +59,9 @@ def obtener_mes_anterior():
 
     desde = primero_anterior.strftime("%d/%m/%Y")
     hasta = ultimo_anterior.strftime("%d/%m/%Y")
-    fecha = ultimo_anterior.strftime("%d/%m/%Y")
+    fecha_carga = ultimo_anterior.strftime("%d/%m/%Y")
 
-    return desde, hasta, fecha
+    return desde, hasta, fecha_carga
 
 
 # =====================================================
@@ -82,7 +82,7 @@ def crear_driver():
 
 
 # =====================================================
-# LOGIN REAL
+# LOGIN
 # =====================================================
 
 def login(driver):
@@ -104,10 +104,11 @@ def login(driver):
         )
     )
 
-    user.clear()
-    user.send_keys(NEXPRO_USUARIO)
+    # Nexpro falla con clear()
+    driver.execute_script("arguments[0].value='';", user)
+    driver.execute_script("arguments[0].value='';", pwd)
 
-    pwd.clear()
+    user.send_keys(NEXPRO_USUARIO)
     pwd.send_keys(NEXPRO_PASSWORD)
     pwd.send_keys(Keys.ENTER)
 
@@ -117,7 +118,7 @@ def login(driver):
 
 
 # =====================================================
-# EXTRAER
+# EXTRAER TABLA
 # =====================================================
 
 def extraer_tabla():
@@ -129,7 +130,6 @@ def extraer_tabla():
     print("Buscando:", desde, "->", hasta)
 
     driver = crear_driver()
-    wait = WebDriverWait(driver, 30)
 
     filas_finales = []
 
@@ -140,11 +140,11 @@ def extraer_tabla():
 
         # REPORTE
         driver.get(URL_REPORTE)
-        time.sleep(8)
+        time.sleep(10)
 
         print("URL REPORTE:", driver.current_url)
 
-        # Buscar inputs fecha
+        # FECHAS
         inputs = driver.find_elements(By.TAG_NAME, "input")
 
         cajas = []
@@ -178,7 +178,7 @@ def extraer_tabla():
                 hasta
             )
 
-        # Buscar botón Visualizar / Buscar
+        # BOTON VISUALIZAR
         botones = driver.find_elements(By.TAG_NAME, "button")
 
         for b in botones:
@@ -186,14 +186,12 @@ def extraer_tabla():
 
             if any(x in txt for x in ["visualizar", "buscar", "consultar"]):
                 driver.execute_script("arguments[0].click();", b)
+                print("Click en:", txt)
                 break
 
         time.sleep(15)
 
-        # =================================================
         # TABLAS
-        # =================================================
-
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
         print("Tablas encontradas:", len(tablas))
@@ -205,7 +203,7 @@ def extraer_tabla():
             for fila in filas:
 
                 celdas = fila.find_elements(By.TAG_NAME, "td")
-                textos = [x.text.strip() for x in celdas if x.text.strip() != ""]
+                textos = [x.text.strip() for x in celdas if x.text.strip()]
 
                 if len(textos) >= 9:
 
@@ -221,13 +219,13 @@ def extraer_tabla():
                         l100 = num(textos[8])
 
                         filas_finales.append([
-                            fecha_carga,
-                            dominio,
-                            "",
-                            "",
-                            km,
-                            litros,
-                            l100
+                            fecha_carga,   # A
+                            dominio,       # B
+                            "",            # C
+                            "",            # D
+                            km,            # E
+                            litros,        # F
+                            l100           # G
                         ])
 
         print("Filas detectadas:", len(filas_finales))
