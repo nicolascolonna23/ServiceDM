@@ -228,7 +228,7 @@ def extraer_tabla():
             if "/" in val:
                 cajas.append(i)
 
-                if len(cajas) >= 2:
+        if len(cajas) >= 2:
 
             for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
                 driver.execute_script("arguments[0].removeAttribute('readonly');", caja)
