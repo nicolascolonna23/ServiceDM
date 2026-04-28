@@ -3,7 +3,7 @@ name: Actualizar Odómetros Nexpro
 on:
   schedule:
     # Todos los días - 10:00 AM Argentina (13:00 UTC)
-    - cron: '15 19 * * *'
+    - cron: '30 19 * * *'
 
   workflow_dispatch:
 
