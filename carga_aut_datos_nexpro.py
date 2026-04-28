@@ -74,15 +74,49 @@ def norm(texto):
     )
 
 
-def click_boton(driver, palabras_clave):
+def click_historico(driver):
+    """Busca el link/boton Historico en cualquier tipo de elemento."""
+    # Primero intenta por texto exacto en cualquier tag
+    for xpath in [
+        "//*[normalize-space(text())='Histórico']",
+        "//*[normalize-space(text())='Historico']",
+        "//*[contains(normalize-space(text()),'ist') and contains(normalize-space(text()),'rico')]",
+    ]:
+        try:
+            elems = driver.find_elements(By.XPATH, xpath)
+            if elems:
+                print("  Histórico encontrado:", elems[0].tag_name, elems[0].text)
+                driver.execute_script("arguments[0].click();", elems[0])
+                return True
+        except:
+            pass
+
+    # Fallback: busca en todos los elementos clickeables
+    try:
+        todos = driver.find_elements(By.XPATH, "//*[@href or @onclick or @ng-click]")
+        for e in todos:
+            t = norm(e.text.strip())
+            if "historico" in t or "historic" in t:
+                print("  Histórico fallback:", e.tag_name, e.text)
+                driver.execute_script("arguments[0].click();", e)
+                return True
+    except:
+        pass
+
+    print("  Histórico NO encontrado")
+    return False
+
+
+def click_visualizar(driver):
+    """Busca el boton Buscar/Visualizar."""
     botones = driver.find_elements(By.TAG_NAME, "button")
-    print("Botones visibles:", [b.text.strip() for b in botones])
+    print("  Botones:", [b.text.strip() for b in botones])
     for b in botones:
-        if any(p in norm(b.text) for p in palabras_clave):
-            print("Click en:", b.text.strip())
+        if any(p in norm(b.text) for p in ["visualizar", "buscar", "consultar"]):
+            print("  Click en:", b.text.strip())
             driver.execute_script("arguments[0].click();", b)
             return True
-    print("Boton NO encontrado:", palabras_clave)
+    print("  Botón Visualizar/Buscar NO encontrado")
     return False
 
 
@@ -200,10 +234,11 @@ def extraer_tabla():
         driver.get(URL_REPORTE)
         time.sleep(8)
 
-        print("--- Buscando boton Historico ---")
-        click_boton(driver, ["historico", "historic"])
+        print("--- Buscando Historico ---")
+        click_historico(driver)
         time.sleep(4)
 
+        # Fechas
         inputs = driver.find_elements(By.TAG_NAME, "input")
         cajas = []
 
@@ -228,8 +263,8 @@ def extraer_tabla():
 
         time.sleep(2)
 
-        print("--- Buscando boton Visualizar ---")
-        click_boton(driver, ["visualizar", "buscar", "consultar", "ver"])
+        print("--- Buscando Visualizar/Buscar ---")
+        click_visualizar(driver)
 
         print("Esperando tabla...")
         time.sleep(15)
@@ -248,13 +283,15 @@ def extraer_tabla():
                 celdas = fila.find_elements(By.TAG_NAME, "td")
                 textos = [c.text.strip() for c in celdas]
 
-                if len(textos) >= 8:
+                # Columnas Nexpro: [0]dominio [1]combustible [2]unidad
+                # [3]litros [4]km [5]consumo_medio [6]ralenti [7]pct_ralenti [8]l100km
+                if len(textos) >= 9:
                     dominio = textos[0].upper().strip()
 
                     if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
                         litros = num(textos[3])
                         km = num(textos[4])
-                        l100 = num(textos[7])
+                        l100 = num(textos[8])
 
                         filas_finales.append([
                             fecha_carga,
