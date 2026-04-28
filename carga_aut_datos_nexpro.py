@@ -1,5 +1,5 @@
 # nexpro_telemetria.py
-# VERSION CORREGIDA / MAPEO REAL DE COLUMNAS NEXPRO
+# VERSION CORREGIDA / LECTURA REAL DE COLUMNAS VISIBLES
 
 import os
 import re
@@ -75,35 +75,17 @@ def norm(texto):
     )
 
 
-def click_historico(driver):
+def click_text(driver, palabras):
+    botones = driver.find_elements(By.XPATH, "//*")
 
-    xpaths = [
-        "//*[contains(text(),'Histórico')]",
-        "//*[contains(text(),'Historico')]"
-    ]
-
-    for xp in xpaths:
+    for b in botones:
         try:
-            elems = driver.find_elements(By.XPATH, xp)
-            if elems:
-                driver.execute_script("arguments[0].click();", elems[0])
+            t = norm(b.text.strip())
+            if any(p in t for p in palabras):
+                driver.execute_script("arguments[0].click();", b)
                 return True
         except:
             pass
-
-    return False
-
-
-def click_visualizar(driver):
-
-    botones = driver.find_elements(By.TAG_NAME, "button")
-
-    for b in botones:
-        t = norm(b.text)
-
-        if any(x in t for x in ["visualizar", "buscar", "consultar"]):
-            driver.execute_script("arguments[0].click();", b)
-            return True
 
     return False
 
@@ -115,13 +97,11 @@ def click_visualizar(driver):
 def crear_driver():
 
     options = Options()
-
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1600,1200")
-    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--window-size=1800,1400")
 
     return webdriver.Chrome(options=options)
 
@@ -134,9 +114,7 @@ def extraer_tabla():
 
     desde, hasta, fecha_carga = obtener_mes_anterior()
 
-    print("=" * 50)
     print("Buscando:", desde, "->", hasta)
-    print("=" * 50)
 
     driver = crear_driver()
     wait = WebDriverWait(driver, 30)
@@ -165,60 +143,44 @@ def extraer_tabla():
 
         driver.execute_script("arguments[0].value=arguments[1];", passwd, NEXPRO_PASSWORD)
 
-        boton = wait.until(
-            EC.presence_of_element_located(
-                (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
-            )
-        )
-
-        driver.execute_script("arguments[0].click();", boton)
-
+        click_text(driver, ["ingresar", "login", "entrar"])
         time.sleep(8)
 
         # REPORTE
         driver.get(URL_REPORTE)
         time.sleep(8)
 
-        click_historico(driver)
+        click_text(driver, ["historico"])
         time.sleep(4)
 
         # FECHAS
         inputs = driver.find_elements(By.TAG_NAME, "input")
-        cajas = []
 
+        cajas = []
         for i in inputs:
             val = str(i.get_attribute("value") or "")
-            if "/" in val and len(val) < 20:
+            if "/" in val:
                 cajas.append(i)
 
         if len(cajas) >= 2:
 
-            for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[0],
+                desde
+            )
 
-                driver.execute_script(
-                    "arguments[0].removeAttribute('readonly');",
-                    caja
-                )
+            driver.execute_script(
+                "arguments[0].value=arguments[1];",
+                cajas[1],
+                hasta
+            )
 
-                driver.execute_script(
-                    "arguments[0].value=arguments[1];",
-                    caja,
-                    valor
-                )
-
-                driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",
-                    caja
-                )
-
-        time.sleep(2)
-
-        click_visualizar(driver)
-
+        click_text(driver, ["visualizar", "buscar", "consultar"])
         time.sleep(15)
 
         # =================================================
-        # TABLA
+        # TABLA REAL
         # =================================================
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
@@ -230,32 +192,29 @@ def extraer_tabla():
             for fila in filas:
 
                 celdas = fila.find_elements(By.TAG_NAME, "td")
-                textos = [c.text.strip() for c in celdas]
 
-                # TABLA REAL NEXPRO:
-                # 0 Dominio
-                # 1 Tipo combustible
-                # 2 Unidad
-                # 3 Consumo total
-                # 4 KM Recorridos
-                # 5 Consumo medio
-                # 6 Consumo ralenti
-                # 7 % ralenti
-                # 8 Consumo c/100km
+                # SOLO celdas visibles con texto
+                textos = []
 
-                if len(textos) >= 9:
+                for c in celdas:
+                    try:
+                        if c.is_displayed():
+                            t = c.text.strip()
+                            if t != "":
+                                textos.append(t)
+                    except:
+                        pass
+
+                # LA TABLA VISIBLE REAL TIENE 9 COLUMNAS
+                if len(textos) == 9:
 
                     dominio = textos[0].upper().strip()
 
                     if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
 
-                        litros = num(textos[3])   # consumo total
-                        km = num(textos[4])       # km recorridos
-                        l100 = num(textos[8])     # consumo c/100km
-
-                        # filtrar filas basura
-                        if km <= 0:
-                            continue
+                        litros = num(textos[3])   # Consumo total
+                        km = num(textos[4])       # KM Recorridos
+                        l100 = num(textos[8])     # Consumo c/100km
 
                         filas_finales.append([
                             fecha_carga,
@@ -276,7 +235,7 @@ def extraer_tabla():
 
 
 # =====================================================
-# GOOGLE SHEETS
+# GOOGLE
 # =====================================================
 
 def conectar_sheet():
@@ -306,10 +265,6 @@ def conectar_sheet():
     return client.open_by_key(SHEET_ID)
 
 
-# =====================================================
-# DUPLICADOS
-# =====================================================
-
 def ya_existe_mes(ws, fecha):
 
     col = ws.col_values(1)
@@ -320,10 +275,6 @@ def ya_existe_mes(ws, fecha):
 
     return False
 
-
-# =====================================================
-# SUBIR
-# =====================================================
 
 def subir(rows):
 
