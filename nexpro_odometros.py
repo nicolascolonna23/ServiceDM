@@ -235,33 +235,40 @@ def extraer_odometros() -> dict:
 # ─── PASO 2: ACTUALIZAR SHEETS ───────────────────────────────────────────────
 def conectar_sheets():
     """
-    FIX: usa service_account_from_dict (API moderna de gspread).
-    No requiere archivo temporal ni gspread.authorize (deprecado).
+    Autenticación con Google Sheets.
+    Usa service_account_from_dict (el método más confiable de gspread).
     """
     creds_dict = json.loads(GOOGLE_CREDS)
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    # Método moderno — más estable que gspread.authorize()
-    creds  = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-    client = gspread.Client(auth=creds)
-    print(f"  SHEET_ID usado: {SHEET_ID}")
-    return client.open_by_key(SHEET_ID)
+
+    # Diagnóstico: mostrar qué cuenta y qué ID se está usando
+    print(f"  Service account : {creds_dict.get('client_email', 'NO ENCONTRADO')}")
+    print(f"  SHEET_ID        : '{SHEET_ID}'")
+
+    # service_account_from_dict maneja scopes y refresh internamente
+    gc = gspread.service_account_from_dict(creds_dict)
+    return gc.open_by_key(SHEET_ID)
 
 
 def actualizar_sheets(odometros: dict):
     print(f"\n[{datetime.now().strftime('%H:%M:%S')}] Conectando a Google Sheets...")
 
-    # Reintentos en caso de error transitorio de red
     sheet = None
     for intento in range(1, 4):
         try:
             sheet = conectar_sheets()
             print(f"  ✅ Conectado al spreadsheet")
             break
+        except gspread.exceptions.APIError as e:
+            # Mostrar el status HTTP real para diagnosticar el problema
+            status = getattr(e.response, "status_code", "?")
+            body   = getattr(e.response, "text", "")[:300]
+            print(f"  ❌ Intento {intento}/3 — HTTP {status}: {body}")
+            if intento < 3:
+                time.sleep(10)
+            else:
+                raise
         except Exception as e:
-            print(f"  ❌ Intento {intento}/3 fallido: {e}")
+            print(f"  ❌ Intento {intento}/3 — {type(e).__name__}: {e}")
             if intento < 3:
                 time.sleep(10)
             else:
