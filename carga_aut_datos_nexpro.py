@@ -5,7 +5,7 @@ import os
 import re
 import json
 import time
-import tempfile
+import tempfile            if "/" in val and len(val) < 20:
 import unicodedata
 from datetime import datetime, date, timedelta
 
@@ -234,7 +234,7 @@ def extraer_tabla():
 
         for i in inputs:
             val = str(i.get_attribute("value") or "")
-            if "/" in val:
+            if "/" in val and len(val) < 20:
                 cajas.append(i)
 
         print("Cajas de fecha encontradas:", len(cajas),
