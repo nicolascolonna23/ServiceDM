@@ -34,6 +34,9 @@ URL_PERFORMANCE = "https://nexproconnect.net/Iveco/Reportes/Scoring_UnidadesIvec
 HOJA_TELEMETRIA = "TELEMETRIA"
 HOJA_DATOS      = "DATOS UNIDADES"
 
+# Patentes excluidas — no se cargan en ninguna hoja
+PATENTES_EXCLUIDAS = {"AF310TU", "AE527FA"}
+
 # =====================================================
 # HELPERS
 # =====================================================
@@ -206,12 +209,15 @@ def extraer_tabla():
                 celdas = fila.find_elements(By.TAG_NAME, "td")
                 textos = [x.text.strip() for x in celdas if x.text.strip()]
                 if len(textos) >= 9 and es_patente(textos[0]):
+                    patente = textos[0].upper().strip()
+                    if patente in PATENTES_EXCLUIDAS:
+                        continue
                     litros = num(textos[3])
                     km     = num(textos[4])
                     l100   = num(textos[8])
                     filas_finales.append([
                         fecha_carga,
-                        textos[0].upper().strip(),
+                        patente,
                         "", "",
                         km, litros, l100
                     ])
@@ -274,7 +280,7 @@ def extraer_ralenti_de_tabla(driver):
             if len(textos) <= max(idx_dominio, idx_ralenti):
                 continue
             dominio = textos[idx_dominio].upper().strip()
-            if es_patente(dominio):
+            if es_patente(dominio) and dominio not in PATENTES_EXCLUIDAS:
                 datos[dominio] = num(textos[idx_ralenti])
 
         if datos:
@@ -359,7 +365,7 @@ def extraer_performance(driver, desde, hasta):
             if len(textos) <= idx_dominio:
                 continue
             dominio = textos[idx_dominio].upper().strip()
-            if not es_patente(dominio):
+            if not es_patente(dominio) or dominio in PATENTES_EXCLUIDAS:
                 continue
 
             hs_motor = num(textos[idx_motor]) if idx_motor is not None and len(textos) > idx_motor else 0.0
