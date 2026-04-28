@@ -1,6 +1,6 @@
 # carga_aut_datos_nexpro.py
-# VERSION COMPLETA CORREGIDA
-# LOGIN SIN clear() + EXTRACCION + GOOGLE SHEETS
+# VERSION DEFINITIVA
+# LOGIN + HISTORICO REAL + MES ANTERIOR + GOOGLE SHEETS
 
 import os
 import re
@@ -51,6 +51,7 @@ def num(txt):
 
 
 def obtener_mes_anterior():
+
     hoy = date.today()
 
     primero_actual = hoy.replace(day=1)
@@ -104,7 +105,6 @@ def login(driver):
         )
     )
 
-    # Nexpro falla con clear()
     driver.execute_script("arguments[0].value='';", user)
     driver.execute_script("arguments[0].value='';", pwd)
 
@@ -118,7 +118,69 @@ def login(driver):
 
 
 # =====================================================
-# EXTRAER TABLA
+# HISTORICO REAL
+# =====================================================
+
+def aplicar_historico(driver, desde, hasta):
+
+    wait = WebDriverWait(driver, 30)
+
+    # Click Histórico
+    historico = wait.until(
+        EC.element_to_be_clickable(
+            (
+                By.XPATH,
+                "//button[contains(.,'Histórico') or contains(.,'Historico')]"
+            )
+        )
+    )
+
+    driver.execute_script("arguments[0].click();", historico)
+
+    print("Click en Histórico")
+    time.sleep(3)
+
+    # Esperar modal y buscar inputs fecha
+    cajas = wait.until(
+        EC.presence_of_all_elements_located(
+            (
+                By.XPATH,
+                "//input[contains(@value,'/')]"
+            )
+        )
+    )
+
+    if len(cajas) >= 2:
+
+        driver.execute_script("arguments[0].value='';", cajas[0])
+        driver.execute_script("arguments[0].value='';", cajas[1])
+
+        cajas[0].send_keys(desde)
+        cajas[1].send_keys(hasta)
+
+        print("Fechas cargadas:", desde, hasta)
+
+    time.sleep(1)
+
+    # Click Visualizar modal
+    visualizar = wait.until(
+        EC.element_to_be_clickable(
+            (
+                By.XPATH,
+                "//button[contains(.,'Visualizar')]"
+            )
+        )
+    )
+
+    driver.execute_script("arguments[0].click();", visualizar)
+
+    print("Click en Visualizar")
+
+    time.sleep(12)
+
+
+# =====================================================
+# EXTRAER
 # =====================================================
 
 def extraer_tabla():
@@ -135,61 +197,12 @@ def extraer_tabla():
 
     try:
 
-        # LOGIN
         login(driver)
 
-        # REPORTE
         driver.get(URL_REPORTE)
-        time.sleep(10)
+        time.sleep(8)
 
-        print("URL REPORTE:", driver.current_url)
-
-        # FECHAS
-        inputs = driver.find_elements(By.TAG_NAME, "input")
-
-        cajas = []
-
-        for i in inputs:
-            val = str(i.get_attribute("value") or "")
-            if "/" in val:
-                cajas.append(i)
-
-        if len(cajas) >= 2:
-
-            driver.execute_script(
-                "arguments[0].removeAttribute('readonly');",
-                cajas[0]
-            )
-
-            driver.execute_script(
-                "arguments[0].removeAttribute('readonly');",
-                cajas[1]
-            )
-
-            driver.execute_script(
-                "arguments[0].value=arguments[1];",
-                cajas[0],
-                desde
-            )
-
-            driver.execute_script(
-                "arguments[0].value=arguments[1];",
-                cajas[1],
-                hasta
-            )
-
-        # BOTON VISUALIZAR
-        botones = driver.find_elements(By.TAG_NAME, "button")
-
-        for b in botones:
-            txt = b.text.lower().strip()
-
-            if any(x in txt for x in ["visualizar", "buscar", "consultar"]):
-                driver.execute_script("arguments[0].click();", b)
-                print("Click en:", txt)
-                break
-
-        time.sleep(15)
+        aplicar_historico(driver, desde, hasta)
 
         # TABLAS
         tablas = driver.find_elements(By.TAG_NAME, "table")
@@ -219,13 +232,13 @@ def extraer_tabla():
                         l100 = num(textos[8])
 
                         filas_finales.append([
-                            fecha_carga,   # A
-                            dominio,       # B
-                            "",            # C
-                            "",            # D
-                            km,            # E
-                            litros,        # F
-                            l100           # G
+                            fecha_carga,
+                            dominio,
+                            "",
+                            "",
+                            km,
+                            litros,
+                            l100
                         ])
 
         print("Filas detectadas:", len(filas_finales))
