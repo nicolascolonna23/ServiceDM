@@ -1,5 +1,6 @@
 # carga_aut_datos_nexpro.py
-# DEBUG HISTORICO DEFINITIVO
+# VERSION FINAL
+# LOGIN OK + HISTORICO OK + FECHAS VISIBLES + SHEETS
 
 import os
 import re
@@ -50,6 +51,7 @@ def num(txt):
 
 
 def obtener_mes_anterior():
+
     hoy = date.today()
 
     primero_actual = hoy.replace(day=1)
@@ -115,7 +117,7 @@ def login(driver):
 
 
 # =====================================================
-# DEBUG HISTORICO
+# HISTORICO + FECHAS
 # =====================================================
 
 def aplicar_historico(driver, desde, hasta):
@@ -127,16 +129,6 @@ def aplicar_historico(driver, desde, hasta):
         "//button | //a | //span | //div[@role='button']"
     )
 
-    print("Candidatos encontrados:", len(candidatos))
-
-    for i, e in enumerate(candidatos):
-        try:
-            txt = e.text.strip()
-            if txt:
-                print(i, "=>", txt)
-        except:
-            pass
-
     historico = None
 
     for e in candidatos:
@@ -145,6 +137,7 @@ def aplicar_historico(driver, desde, hasta):
 
             if "hist" in txt:
                 historico = e
+                print("Encontrado Histórico:", txt)
                 break
         except:
             pass
@@ -157,32 +150,58 @@ def aplicar_historico(driver, desde, hasta):
     print("Click Histórico")
     time.sleep(4)
 
-    # Buscar fechas
+    # ==========================================
+    # INPUTS FECHA VISIBLES
+    # ==========================================
+
     inputs = driver.find_elements(By.TAG_NAME, "input")
 
-    cajas = []
+    fechas = []
 
     for i in inputs:
-        val = str(i.get_attribute("value") or "")
-        if "/" in val:
-            cajas.append(i)
+        try:
+            val = str(i.get_attribute("value") or "")
+            visible = i.is_displayed()
+            enabled = i.is_enabled()
 
-    print("Cajas fecha:", len(cajas))
+            if "/" in val and visible and enabled:
+                fechas.append(i)
+        except:
+            pass
 
-    if len(cajas) >= 2:
+    print("Fechas utilizables:", len(fechas))
 
-        driver.execute_script("arguments[0].removeAttribute('readonly');", cajas[0])
-        driver.execute_script("arguments[0].removeAttribute('readonly');", cajas[1])
+    if len(fechas) < 2:
+        raise Exception("No encontró inputs fecha editables")
 
-        driver.execute_script("arguments[0].value='';", cajas[0])
-        driver.execute_script("arguments[0].value='';", cajas[1])
+    driver.execute_script(
+        "arguments[0].removeAttribute('readonly');",
+        fechas[0]
+    )
 
-        cajas[0].send_keys(desde)
-        cajas[1].send_keys(hasta)
+    driver.execute_script(
+        "arguments[0].removeAttribute('readonly');",
+        fechas[1]
+    )
 
-        print("Fechas cargadas:", desde, hasta)
+    driver.execute_script(
+        "arguments[0].value=arguments[1];",
+        fechas[0],
+        desde
+    )
 
-    # Buscar visualizar
+    driver.execute_script(
+        "arguments[0].value=arguments[1];",
+        fechas[1],
+        hasta
+    )
+
+    print("Fechas seteadas:", desde, hasta)
+
+    # ==========================================
+    # VISUALIZAR
+    # ==========================================
+
     candidatos = driver.find_elements(
         By.XPATH,
         "//button | //a | //span | //div[@role='button']"
@@ -293,7 +312,10 @@ def conectar_sheet():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file(path, scopes=scopes)
+    creds = Credentials.from_service_account_file(
+        path,
+        scopes=scopes
+    )
 
     client = gspread.authorize(creds)
 
