@@ -88,6 +88,8 @@ def extraer_tabla():
 
     desde, hasta, fecha_carga = obtener_mes_anterior()
 
+    print("NEXPRO TELEMETRIA")
+    print(datetime.now())
     print("=" * 50)
     print("Buscando:", desde, "->", hasta)
     print("=" * 50)
@@ -114,8 +116,13 @@ def extraer_tabla():
             )
         )
 
-        user.clear()
-        user.send_keys(NEXPRO_USUARIO)
+        # usamos JS porque clear() falla en Nexpro
+        driver.execute_script("arguments[0].value='';", user)
+        driver.execute_script(
+            "arguments[0].value=arguments[1];",
+            user,
+            NEXPRO_USUARIO
+        )
 
         passwd = wait.until(
             EC.presence_of_element_located(
@@ -123,18 +130,28 @@ def extraer_tabla():
             )
         )
 
-        passwd.clear()
-        passwd.send_keys(NEXPRO_PASSWORD)
+        driver.execute_script("arguments[0].value='';", passwd)
+        driver.execute_script(
+            "arguments[0].value=arguments[1];",
+            passwd,
+            NEXPRO_PASSWORD
+        )
 
         time.sleep(1)
 
         boton = wait.until(
-            EC.element_to_be_clickable(
-                (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
+            EC.presence_of_element_located(
+                (
+                    By.CSS_SELECTOR,
+                    "input[type='submit'],button[type='submit']"
+                )
             )
         )
 
-        boton.click()
+        driver.execute_script(
+            "arguments[0].click();",
+            boton
+        )
 
         print("Login enviado...")
         time.sleep(8)
@@ -165,25 +182,43 @@ def extraer_tabla():
         cajas = []
 
         for i in inputs:
-            val = str(i.get_attribute("value"))
+            val = str(i.get_attribute("value") or "")
 
             if "/" in val:
                 cajas.append(i)
 
         if len(cajas) >= 2:
 
-            for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
+            pares = [
+                (cajas[0], desde),
+                (cajas[1], hasta)
+            ]
+
+            for caja, valor in pares:
+
                 driver.execute_script(
                     "arguments[0].removeAttribute('readonly');",
                     caja
                 )
+
                 driver.execute_script(
-                    "arguments[0].value = arguments[1];",
+                    "arguments[0].value='';",
+                    caja
+                )
+
+                driver.execute_script(
+                    "arguments[0].value=arguments[1];",
                     caja,
                     valor
                 )
+
                 driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
+                    "arguments[0].dispatchEvent(new Event('input',{bubbles:true}));",
+                    caja
+                )
+
+                driver.execute_script(
+                    "arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",
                     caja
                 )
 
@@ -198,14 +233,15 @@ def extraer_tabla():
         for b in botones:
             if "Visualizar" in b.text:
                 print("Click en Visualizar")
-                driver.execute_script("arguments[0].scrollIntoView(true);", b)
+                driver.execute_script(
+                    "arguments[0].scrollIntoView(true);",
+                    b
+                )
                 time.sleep(1)
-
-                try:
-                    b.click()
-                except:
-                    driver.execute_script("arguments[0].click();", b)
-
+                driver.execute_script(
+                    "arguments[0].click();",
+                    b
+                )
                 break
 
         print("Esperando tabla...")
@@ -217,7 +253,7 @@ def extraer_tabla():
 
         tablas = driver.find_elements(By.TAG_NAME, "table")
 
-        print("Cantidad tablas encontradas:", len(tablas))
+        print("Cantidad tablas:", len(tablas))
 
         for tabla in tablas:
 
@@ -232,7 +268,10 @@ def extraer_tabla():
 
                     dominio = textos[0].upper().strip()
 
-                    if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
+                    if re.match(
+                        r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$",
+                        dominio
+                    ):
 
                         litros = num(textos[3])
                         km = num(textos[4])
@@ -324,7 +363,10 @@ def subir(rows):
         print("Ese mes ya existe.")
         return
 
-    ws.append_rows(rows, value_input_option="USER_ENTERED")
+    ws.append_rows(
+        rows,
+        value_input_option="USER_ENTERED"
+    )
 
     print("Subidas:", len(rows), "filas")
 
@@ -335,9 +377,5 @@ def subir(rows):
 
 if __name__ == "__main__":
 
-    print("NEXPRO TELEMETRIA")
-    print(datetime.now())
-
     filas = extraer_tabla()
-
     subir(filas)
