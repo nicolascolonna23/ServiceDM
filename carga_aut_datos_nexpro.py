@@ -25,8 +25,11 @@ from selenium.webdriver.support import expected_conditions as EC
 
 NEXPRO_USUARIO = os.environ["NEXPRO_USUARIO"]
 NEXPRO_PASSWORD = os.environ["NEXPRO_PASSWORD"]
-SHEET_ID = os.environ["SHEET_ID"]
 GOOGLE_CREDS = os.environ["GOOGLE_CREDENTIALS_JSON"]
+
+_sheet_raw = os.environ["SHEET_ID"]
+_match = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
+SHEET_ID = _match.group(1) if _match else _sheet_raw.strip()
 
 URL_LOGIN = "https://nexproconnect.net/Iveco/Login/Login2.aspx"
 URL_REPORTE = "https://nexproconnect.net/Iveco/ConsumoIveco/ConsumoIveco.aspx"
@@ -74,15 +77,11 @@ def norm(texto):
 def click_boton(driver, palabras_clave):
     botones = driver.find_elements(By.TAG_NAME, "button")
     print("Botones visibles:", [b.text.strip() for b in botones])
-
     for b in botones:
-        texto = norm(b.text.strip())
-
-        if any(p in texto for p in palabras_clave):
+        if any(p in norm(b.text) for p in palabras_clave):
             print("Click en:", b.text.strip())
             driver.execute_script("arguments[0].click();", b)
             return True
-
     print("Boton NO encontrado:", palabras_clave)
     return False
 
@@ -123,6 +122,10 @@ def extraer_tabla():
 
     try:
 
+        # =============================================
+        # LOGIN
+        # =============================================
+
         driver.get(URL_LOGIN)
         time.sleep(5)
 
@@ -135,11 +138,9 @@ def extraer_tabla():
         )
 
         driver.execute_script("arguments[0].value='';", user)
-        driver.execute_script(
-            "arguments[0].value=arguments[1];",
-            user,
-            NEXPRO_USUARIO
-        )
+        driver.execute_script("arguments[0].value=arguments[1];", user, NEXPRO_USUARIO)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", user)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", user)
 
         passwd = wait.until(
             EC.presence_of_element_located(
@@ -148,29 +149,53 @@ def extraer_tabla():
         )
 
         driver.execute_script("arguments[0].value='';", passwd)
-        driver.execute_script(
-            "arguments[0].value=arguments[1];",
-            passwd,
-            NEXPRO_PASSWORD
-        )
+        driver.execute_script("arguments[0].value=arguments[1];", passwd, NEXPRO_PASSWORD)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('input', {bubbles:true}));", passwd)
+        driver.execute_script("arguments[0].dispatchEvent(new Event('change', {bubbles:true}));", passwd)
 
         time.sleep(1)
 
-        boton = wait.until(
-            EC.presence_of_element_located(
-                (
-                    By.CSS_SELECTOR,
-                    "input[type='submit'],button[type='submit']"
+        selectores = [
+            "input[type='submit']",
+            "button[type='submit']",
+            "button",
+            "input"
+        ]
+
+        boton = None
+
+        for sel in selectores:
+            try:
+                elems = driver.find_elements(By.CSS_SELECTOR, sel)
+                for e in elems:
+                    txt = ((e.text or "") + " " + str(e.get_attribute("value") or "")).lower()
+                    if any(x in txt for x in ["ingresar", "login", "entrar", "acceder"]):
+                        boton = e
+                        break
+                if boton:
+                    break
+            except:
+                pass
+
+        if not boton:
+            boton = wait.until(
+                EC.presence_of_element_located(
+                    (By.CSS_SELECTOR, "input[type='submit'],button[type='submit']")
                 )
             )
-        )
 
+        driver.execute_script("arguments[0].scrollIntoView(true);", boton)
+        time.sleep(1)
         driver.execute_script("arguments[0].click();", boton)
 
         print("Login enviado...")
         time.sleep(8)
 
         print("URL actual:", driver.current_url)
+
+        # =============================================
+        # REPORTE
+        # =============================================
 
         driver.get(URL_REPORTE)
         time.sleep(8)
@@ -184,48 +209,20 @@ def extraer_tabla():
 
         for i in inputs:
             val = str(i.get_attribute("value") or "")
-
             if "/" in val and len(val) < 20:
                 cajas.append(i)
 
-        print(
-            "Cajas encontradas:",
-            len(cajas),
-            [i.get_attribute("value") for i in cajas]
-        )
+        print("Cajas encontradas:", len(cajas),
+              [i.get_attribute("value") for i in cajas])
 
         if len(cajas) >= 2:
-
             for caja, valor in [(cajas[0], desde), (cajas[1], hasta)]:
-
-                driver.execute_script(
-                    "arguments[0].removeAttribute('readonly');",
-                    caja
-                )
-
-                driver.execute_script(
-                    "arguments[0].value='';",
-                    caja
-                )
-
-                driver.execute_script(
-                    "arguments[0].value=arguments[1];",
-                    caja,
-                    valor
-                )
-
-                driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('input',{bubbles:true}));",
-                    caja
-                )
-
-                driver.execute_script(
-                    "arguments[0].dispatchEvent(new Event('change',{bubbles:true}));",
-                    caja
-                )
-
+                driver.execute_script("arguments[0].removeAttribute('readonly');", caja)
+                driver.execute_script("arguments[0].value='';", caja)
+                driver.execute_script("arguments[0].value=arguments[1];", caja, valor)
+                driver.execute_script("arguments[0].dispatchEvent(new Event('input',{bubbles:true}));", caja)
+                driver.execute_script("arguments[0].dispatchEvent(new Event('change',{bubbles:true}));", caja)
             print("Fechas seteadas:", desde, "->", hasta)
-
         else:
             print("No se encontraron cajas de fecha")
 
@@ -237,28 +234,24 @@ def extraer_tabla():
         print("Esperando tabla...")
         time.sleep(15)
 
-        tablas = driver.find_elements(By.TAG_NAME, "table")
+        # =============================================
+        # TABLA
+        # =============================================
 
+        tablas = driver.find_elements(By.TAG_NAME, "table")
         print("Cantidad tablas:", len(tablas))
 
         for tabla in tablas:
-
             filas = tabla.find_elements(By.TAG_NAME, "tr")
 
             for fila in filas:
-
                 celdas = fila.find_elements(By.TAG_NAME, "td")
                 textos = [c.text.strip() for c in celdas]
 
                 if len(textos) >= 8:
-
                     dominio = textos[0].upper().strip()
 
-                    if re.match(
-                        r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$",
-                        dominio
-                    ):
-
+                    if re.match(r"^[A-Z]{2}\d{3}[A-Z]{2}$|^[A-Z]{3}\d{3}$", dominio):
                         litros = num(textos[3])
                         km = num(textos[4])
                         l100 = num(textos[7])
@@ -289,12 +282,7 @@ def conectar_sheet():
 
     creds_dict = json.loads(GOOGLE_CREDS)
 
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".json",
-        delete=False
-    ) as f:
-
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
         json.dump(creds_dict, f)
         path = f.name
 
@@ -303,13 +291,8 @@ def conectar_sheet():
         "https://www.googleapis.com/auth/drive"
     ]
 
-    creds = Credentials.from_service_account_file(
-        path,
-        scopes=scopes
-    )
-
+    creds = Credentials.from_service_account_file(path, scopes=scopes)
     client = gspread.authorize(creds)
-
     os.unlink(path)
 
     return client.open_by_key(SHEET_ID)
@@ -349,10 +332,7 @@ def subir(rows):
         print("Ese mes ya existe.")
         return
 
-    ws.append_rows(
-        rows,
-        value_input_option="USER_ENTERED"
-    )
+    ws.append_rows(rows, value_input_option="USER_ENTERED")
 
     print("Subidas:", len(rows), "filas")
 
@@ -367,4 +347,5 @@ if __name__ == "__main__":
     print(datetime.now())
 
     filas = extraer_tabla()
+
     subir(filas)
