@@ -298,7 +298,9 @@ def extraer_ralenti_de_tabla(driver):
                 textos = [c.text.strip() for c in celdas if c.text.strip()]
                 if len(textos) >= 9 and es_patente(textos[0]):
                     try:
-                        datos[textos[0].upper().strip()] = num(textos[IDX_RALENTI])
+                        p = textos[0].upper().strip()
+                        if p not in PATENTES_EXCLUIDAS:
+                            datos[p] = num(textos[IDX_RALENTI])
                     except:
                         pass
             if datos:
@@ -400,8 +402,11 @@ def extraer_datos_unidades():
         # 2) Hs Motor + CO2 → reporte de performance
         performance_dict = extraer_performance(driver, desde, hasta)
 
-        # 3) Combinar por dominio
-        dominios = sorted(set(list(ralenti_dict.keys()) + list(performance_dict.keys())))
+        # 3) Combinar por dominio (excluir patentes ignoradas)
+        dominios = sorted(
+            d for d in set(list(ralenti_dict.keys()) + list(performance_dict.keys()))
+            if d not in PATENTES_EXCLUIDAS
+        )
         filas = []
         for dominio in dominios:
             ralenti  = ralenti_dict.get(dominio, 0.0)
