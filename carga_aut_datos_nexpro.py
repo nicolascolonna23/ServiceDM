@@ -35,7 +35,7 @@ HOJA_TELEMETRIA = "TELEMETRIA"
 HOJA_DATOS      = "DATOS UNIDADES"
 
 # Patentes excluidas — no se cargan en ninguna hoja
-PATENTES_EXCLUIDAS = {"AF310TU", "AE527FA"}
+PATENTES_EXCLUIDAS = {"AF310TU", "AF591UW"}
 
 # =====================================================
 # HELPERS
