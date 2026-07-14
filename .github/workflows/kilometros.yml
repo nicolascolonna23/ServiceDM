@@ -2,7 +2,7 @@ name: Kilometros Mensuales DAZ
 
 on:
   schedule:
-    - cron: '0 11 1 * *'   # día 1 de cada mes a las 8am Argentina (UTC-3)
+    - cron: '0 13 1 * *'   # día 1 de cada mes a las 10am Argentina (UTC-3), 2h después de consumos para no compartir sesión
   workflow_dispatch:
 
 jobs:
