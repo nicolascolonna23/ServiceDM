@@ -53,7 +53,7 @@ def login(driver):
 
 
 def _entrar_stock(driver):
-    wait = WebDriverWait(driver, 20)
+    wait = WebDriverWait(driver, 40)
     wait.until(lambda d: d.execute_script("return typeof openLink === 'function';"))
     ventanas_antes = set(driver.window_handles)
     driver.execute_script("openLink('W255TK', '853', '/stock/Login.aspx?empresa=853');")
@@ -205,18 +205,37 @@ def enviar_error(error_txt):
         smtp.send_message(msg)
 
 
+def obtener_filas(mes, anio, intentos=3):
+    """Login + navegación + extracción, con reintentos ante timeouts del portal
+    (recrea el driver en cada intento para partir de una sesión limpia)."""
+    ultimo_error = None
+    for intento in range(1, intentos + 1):
+        driver = crear_driver()
+        try:
+            print(f"Intento {intento}/{intentos}")
+            login(driver)
+            _entrar_stock(driver)
+            buscar_consumos(driver, mes, anio)
+            filas = extraer_todos_los_datos(driver)
+            print(f"Total filas extraídas: {len(filas)}")
+            if not filas:
+                raise RuntimeError("No se encontraron datos en el reporte.")
+            return filas
+        except Exception as e:
+            ultimo_error = e
+            print(f"Intento {intento} falló: {e}")
+            if intento < intentos:
+                time.sleep(15)
+        finally:
+            driver.quit()
+    raise ultimo_error
+
+
 if __name__ == "__main__":
-    driver = crear_driver()
     try:
         mes, anio = mes_anterior()
         print(f"Procesando período: {mes:02d}/{anio}")
-        login(driver)
-        _entrar_stock(driver)
-        buscar_consumos(driver, mes, anio)
-        filas = extraer_todos_los_datos(driver)
-        print(f"Total filas extraídas: {len(filas)}")
-        if not filas:
-            raise RuntimeError("No se encontraron datos en el reporte.")
+        filas = obtener_filas(mes, anio)
         escribir_en_hoja(filas, mes, anio)
     except Exception as e:
         try:
@@ -224,5 +243,3 @@ if __name__ == "__main__":
         except Exception:
             pass
         raise
-    finally:
-        driver.quit()
