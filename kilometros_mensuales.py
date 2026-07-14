@@ -42,6 +42,28 @@ def crear_driver():
     return webdriver.Chrome(options=opciones)
 
 
+def _diagnostico(driver, etiqueta=""):
+    """Imprime al log en qué estado quedó el navegador (para depurar fallos)."""
+    try:
+        url = driver.current_url
+    except Exception:
+        url = "(sin url)"
+    try:
+        titulo = driver.title
+    except Exception:
+        titulo = "(sin título)"
+    try:
+        texto = driver.find_element(By.TAG_NAME, "body").text.strip()
+        texto = " ".join(texto.split())[:600]
+    except Exception:
+        texto = "(sin texto)"
+    print(f"--- DIAGNÓSTICO {etiqueta} ---")
+    print(f"  URL   : {url}")
+    print(f"  Título: {titulo}")
+    print(f"  Texto : {texto}")
+    print("--- fin diagnóstico ---")
+
+
 def login(driver):
     driver.get(URL_LOGIN)
     wait = WebDriverWait(driver, 20)
@@ -49,7 +71,19 @@ def login(driver):
     driver.find_element(By.ID, "txtPass").send_keys(PASSWORD)
     campo_usuario.send_keys(USUARIO)
     driver.find_element(By.ID, "btnLogin").click()
-    wait.until(EC.url_contains("/menu/"))
+    # La URL de login ya contiene "/menu/", así que confirmamos el login real:
+    # esperamos a que aparezca openLink (menú cargado) o que desaparezca el form.
+    try:
+        WebDriverWait(driver, 30).until(
+            lambda d: d.execute_script("return typeof openLink === 'function';")
+            or not d.find_elements(By.ID, "txtUsuario")
+        )
+    except Exception:
+        _diagnostico(driver, "login no confirmado")
+        raise RuntimeError(
+            "El login no se completó: el navegador sigue en la pantalla de "
+            "acceso o el menú no cargó. Revisar usuario/clave o cambios en el portal."
+        )
 
 
 def _entrar_stock(driver):
@@ -224,6 +258,7 @@ def obtener_filas(mes, anio, intentos=3):
         except Exception as e:
             ultimo_error = e
             print(f"Intento {intento} falló: {e}")
+            _diagnostico(driver, f"intento {intento}")
             if intento < intentos:
                 time.sleep(15)
         finally:
