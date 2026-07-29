@@ -1,0 +1,60 @@
+name: Hawk Odometros
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_moviles:
+        description: "Cuantos moviles leer (0 = todos). Usar 3 para probar."
+        required: false
+        default: "0"
+  schedule:
+    - cron: "0 11 * * 1-5"   # 08:00 ART, lun-vie
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: pip install selenium pandas openpyxl
+
+      - name: Instalar Chrome
+        uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+          install-chromedriver: true
+
+      - name: Correr scraper
+        env:
+          HAWK_USER: ${{ secrets.HAWK_USER }}
+          HAWK_PASS: ${{ secrets.HAWK_PASS }}
+          MAX_MOVILES: ${{ github.event.inputs.max_moviles || '0' }}
+          HEADLESS: "1"
+        run: python hawk_km.py
+
+      - name: Subir resultados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kilometrajes
+          path: data/
+          retention-days: 30
+
+      - name: Commit al repo
+        if: success()
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add data/*.xlsx data/historico.csv || true
+          git diff --staged --quiet || git commit -m "km $(date -u +%Y-%m-%d)"
+          git push
