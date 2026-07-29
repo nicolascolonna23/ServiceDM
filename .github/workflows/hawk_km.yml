@@ -32,7 +32,10 @@ jobs:
         uses: browser-actions/setup-chrome@v1
         with:
           chrome-version: stable
-          install-chromedriver: true
+          install-chromedriver: false
+
+      - name: Limpiar chromedriver del PATH
+        run: sudo rm -f "$(command -v chromedriver)" || true
 
       - name: Correr scraper
         env:
