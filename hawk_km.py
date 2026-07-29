@@ -2,9 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 HAWK GPS -> kilometraje de cada movil -> Excel
-Corre headless en GitHub Actions.
-
-Secrets requeridos: HAWK_USER, HAWK_PASS
+Headless en GitHub Actions.  Secrets: HAWK_USER, HAWK_PASS
 """
 
 import os, re, sys, time, datetime, traceback
@@ -14,57 +12,90 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
-URL          = "http://www.hawkgps.com.ar/HawkEyeWeb/Index.aspx"
-USER         = os.environ.get("HAWK_USER", "")
-PASS         = os.environ.get("HAWK_PASS", "")
-MAX_MOVILES  = int(os.environ.get("MAX_MOVILES", "0"))   # 0 = todos
-HEADLESS     = os.environ.get("HEADLESS", "1") == "1"
+URL         = "http://www.hawkgps.com.ar/HawkEyeWeb/Index.aspx"
+USER        = os.environ.get("HAWK_USER", "")
+PASS        = os.environ.get("HAWK_PASS", "")
+MAX_MOVILES = int(os.environ.get("MAX_MOVILES", "0"))
+HEADLESS    = os.environ.get("HEADLESS", "1") == "1"
 
-OUT_DIR      = "data"
-ESPERA_MODAL = 12
-PAUSA        = 0.7
+OUT_DIR = "data"
+PAUSA   = 0.7
+ESPERA  = 12
 
 # ------------------------------------------------------------------ JS
 
-JS_FILAS = """
+JS_PATENTES = """
 const re = /\\b([A-Z]{2}\\d{3}[A-Z]{2}|[A-Z]{3}\\d{3})\\b/;
-const out = [];
-const vistos = new Set();
+const out = [], vistos = new Set();
 document.querySelectorAll('div,li,td,span,a').forEach(el => {
   if (el.children.length > 2) return;
   const t = (el.innerText || '').trim();
   if (!t || t.length > 60) return;
   const m = t.match(re);
-  if (!m) return;
-  if (vistos.has(m[1])) return;
-  let row = el;
-  for (let i = 0; i < 5 && row.parentElement; i++) {
-    if (row.offsetHeight >= 35 && row.offsetHeight <= 90 && row.offsetWidth > 200) break;
-    row = row.parentElement;
-  }
-  vistos.add(m[1]);
-  row.setAttribute('data-km', m[1]);
-  out.push(m[1]);
+  if (!m || vistos.has(m[1])) return;
+  vistos.add(m[1]); out.push(m[1]);
 });
 return out;
 """
 
-JS_FLECHA = """
-const row = arguments[0];
-const h = [...row.querySelectorAll('div,span,img,a,td')]
-  .filter(e => e.offsetParent !== null && e.offsetWidth > 8 && e.offsetWidth < 60);
-return h.length ? h[h.length-1] : row;
+# busca la fila de la patente AHORA y guarda candidatos clickeables (derecha -> izquierda)
+JS_PREPARAR = """
+const pat = arguments[0];
+let nodos = [...document.querySelectorAll('div,li,td,tr')].filter(e => {
+  if (e.offsetParent === null) return false;
+  const r = e.getBoundingClientRect();
+  if (r.width < 120 || r.width > 800) return false;
+  if (r.height < 22 || r.height > 120) return false;
+  const t = e.innerText || '';
+  return t.includes(pat) && t.length < 90;
+});
+if (!nodos.length) return -1;
+nodos.sort((a,b) => {
+  const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+  return (ra.width*ra.height) - (rb.width*rb.height);
+});
+const fila = nodos[0];
+fila.scrollIntoView({block:'center'});
+window.__fila = fila;
+const c = [...fila.querySelectorAll('*')].filter(e => {
+  const r = e.getBoundingClientRect();
+  return e.offsetParent !== null && r.width > 5 && r.width < 70 && r.height > 5 && r.height < 70;
+});
+c.sort((a,b) => b.getBoundingClientRect().left - a.getBoundingClientRect().left);
+window.__cands = c;
+return c.length;
 """
 
-JS_CLICK = """
-const el = arguments[0];
-el.scrollIntoView({block:'center'});
+JS_CLICK_CAND = """
+const i = arguments[0];
+const el = (i < 0) ? window.__fila : (window.__cands || [])[i];
+if (!el) return false;
 ['mouseover','mousedown','mouseup','click'].forEach(n =>
   el.dispatchEvent(new MouseEvent(n, {bubbles:true, cancelable:true, view:window})));
+return true;
 """
 
-JS_ITEM = """
-const txts = arguments[0];
+JS_CLICK_ESPECIAL = """
+const tipo = arguments[0];
+const el = window.__fila;
+if (!el) return false;
+if (tipo === 'dbl') {
+  el.dispatchEvent(new MouseEvent('dblclick', {bubbles:true, cancelable:true, view:window}));
+} else {
+  el.dispatchEvent(new MouseEvent('contextmenu', {bubbles:true, cancelable:true, view:window, button:2}));
+}
+return true;
+"""
+
+JS_MENU_ABIERTO = """
+const txts = ['Información del móvil','Informacion del movil'];
+return [...document.querySelectorAll('div,li,a,span,td')]
+  .some(e => e.children.length === 0 && e.offsetParent !== null &&
+             txts.includes((e.innerText||'').trim()));
+"""
+
+JS_CLICK_MENU = """
+const txts = ['Información del móvil','Informacion del movil'];
 const els = [...document.querySelectorAll('div,li,a,span,td')]
   .filter(e => e.children.length === 0 && e.offsetParent !== null &&
                txts.includes((e.innerText||'').trim()));
@@ -76,8 +107,7 @@ return true;
 """
 
 JS_CAMPO = """
-const etiquetas = arguments[0];
-for (const etq of etiquetas) {
+for (const etq of arguments[0]) {
   const els = [...document.querySelectorAll('div,td,span,label,li')]
     .filter(e => e.offsetParent !== null && (e.innerText||'').trim().startsWith(etq));
   for (const e of els) {
@@ -96,14 +126,18 @@ const c = [...document.querySelectorAll('div,span,a,img,button')]
   .filter(e => e.offsetParent !== null &&
     ((e.innerText||'').trim() === '\\u00d7' || (e.innerText||'').trim() === 'X' ||
      /close|cerrar/i.test(e.className + ' ' + (e.title||'') + ' ' + (e.id||''))));
-if (!c.length) return false;
-const el = c[c.length-1];
-['mousedown','mouseup','click'].forEach(n =>
-  el.dispatchEvent(new MouseEvent(n, {bubbles:true, cancelable:true, view:window})));
-return true;
+let n = 0;
+c.slice(-3).forEach(el => {
+  ['mousedown','mouseup','click'].forEach(ev =>
+    el.dispatchEvent(new MouseEvent(ev, {bubbles:true, cancelable:true, view:window})));
+  n++;
+});
+return n;
 """
 
-# ------------------------------------------------------------------ driver
+JS_DUMP_FILA = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
+
+# ------------------------------------------------------------------ util
 
 def crear_driver():
     o = Options()
@@ -126,88 +160,6 @@ def shot(d, nombre):
     except Exception:
         pass
 
-# ------------------------------------------------------------------ login
-
-def login(d):
-    d.get(URL)
-    time.sleep(4)
-
-    fin = time.time() + 45
-    pw = None
-    while time.time() < fin:
-        cands = [e for e in d.find_elements(By.CSS_SELECTOR, "input[type='password']")
-                 if e.is_displayed()]
-        if cands:
-            pw = cands[0]
-            break
-        if d.execute_script(JS_FILAS):          # sesion ya activa
-            return
-        time.sleep(1)
-
-    if pw is None:
-        shot(d, "err_login")
-        raise SystemExit("No encuentro el campo de contrasena.")
-
-    txts = [e for e in d.find_elements(By.CSS_SELECTOR, "input[type='text'],input:not([type])")
-            if e.is_displayed()]
-    if not txts:
-        shot(d, "err_login")
-        raise SystemExit("No encuentro el campo de usuario.")
-
-    txts[0].clear(); txts[0].send_keys(USER)
-    pw.clear();      pw.send_keys(PASS)
-
-    ok = False
-    for sel in ["input[type='submit']", "button[type='submit']", "button", "a[id*='ogin']"]:
-        for b in d.find_elements(By.CSS_SELECTOR, sel):
-            etiqueta = (b.text or "") + " " + (b.get_attribute("value") or "")
-            if b.is_displayed() and re.search(r"ingres|entrar|login|acceder|aceptar", etiqueta, re.I):
-                d.execute_script(JS_CLICK, b); ok = True; break
-        if ok:
-            break
-    if not ok:
-        pw.send_keys(Keys.ENTER)
-
-    fin = time.time() + 60
-    while time.time() < fin:
-        time.sleep(2)
-        if d.execute_script(JS_FILAS):
-            print("login OK")
-            return
-    shot(d, "err_post_login")
-    raise SystemExit("Login sin lista de moviles. Revisa data/err_post_login.png")
-
-# ------------------------------------------------------------------ scrape
-
-def leer_movil(d, patente):
-    fila = d.find_element(By.CSS_SELECTOR, f'[data-km="{patente}"]')
-    d.execute_script("arguments[0].scrollIntoView({block:'center'});", fila)
-    time.sleep(0.2)
-
-    d.execute_script(JS_CLICK, d.execute_script(JS_FLECHA, fila))
-    time.sleep(PAUSA)
-
-    if not d.execute_script(JS_ITEM, ["Información del móvil", "Informacion del movil"]):
-        raise RuntimeError("no abrio menu contextual")
-    time.sleep(PAUSA)
-
-    km = ult = None
-    t0 = time.time()
-    while time.time() - t0 < ESPERA_MODAL:
-        km = d.execute_script(JS_CAMPO, ["Kilometraje"])
-        if km:
-            ult = d.execute_script(JS_CAMPO, ["Último reporte", "Ultimo reporte"])
-            break
-        time.sleep(0.4)
-
-    if not d.execute_script(JS_CERRAR):
-        try:
-            d.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-        except Exception:
-            pass
-    time.sleep(PAUSA)
-    return km, ult
-
 def num(s):
     if not s:
         return None
@@ -221,20 +173,151 @@ def num(s):
     except Exception:
         return None
 
+# ------------------------------------------------------------------ login
+
+def login(d):
+    d.get(URL)
+    time.sleep(4)
+    fin, pw = time.time() + 45, None
+    while time.time() < fin:
+        v = [e for e in d.find_elements(By.CSS_SELECTOR, "input[type='password']") if e.is_displayed()]
+        if v:
+            pw = v[0]; break
+        if d.execute_script(JS_PATENTES):
+            return
+        time.sleep(1)
+    if pw is None:
+        shot(d, "err_login"); raise SystemExit("No encuentro campo contrasena.")
+
+    txts = [e for e in d.find_elements(By.CSS_SELECTOR, "input[type='text'],input:not([type])")
+            if e.is_displayed()]
+    if not txts:
+        shot(d, "err_login"); raise SystemExit("No encuentro campo usuario.")
+    txts[0].clear(); txts[0].send_keys(USER)
+    pw.clear(); pw.send_keys(PASS)
+
+    ok = False
+    for sel in ["input[type='submit']", "button[type='submit']", "button", "a[id*='ogin']"]:
+        for b in d.find_elements(By.CSS_SELECTOR, sel):
+            etq = (b.text or "") + " " + (b.get_attribute("value") or "")
+            if b.is_displayed() and re.search(r"ingres|entrar|login|acceder|aceptar", etq, re.I):
+                b.click(); ok = True; break
+        if ok:
+            break
+    if not ok:
+        pw.send_keys(Keys.ENTER)
+
+    fin = time.time() + 60
+    while time.time() < fin:
+        time.sleep(2)
+        if d.execute_script(JS_PATENTES):
+            print("login OK"); return
+    shot(d, "err_post_login"); raise SystemExit("Login sin lista de moviles.")
+
+# ------------------------------------------------------------------ filtro
+
+def buscar_filtro(d):
+    for e in d.find_elements(By.CSS_SELECTOR, "input"):
+        try:
+            if not e.is_displayed():
+                continue
+            ph = (e.get_attribute("placeholder") or "") + " " + (e.get_attribute("title") or "")
+            if re.search(r"filtr", ph, re.I):
+                return e
+        except Exception:
+            pass
+    return None
+
+def filtrar(d, filtro, texto):
+    if filtro is None:
+        return
+    try:
+        filtro.clear()
+        filtro.send_keys(Keys.COMMAND, "a")
+    except Exception:
+        pass
+    try:
+        filtro.send_keys(Keys.CONTROL, "a")
+    except Exception:
+        pass
+    filtro.send_keys(Keys.BACK_SPACE * 15)
+    filtro.send_keys(texto)
+    time.sleep(1.2)
+
+# ------------------------------------------------------------------ scrape
+
+IDX_OK = None   # indice de candidato que funciona (se aprende con el primero)
+
+def abrir_menu(d, patente, debug=False):
+    global IDX_OK
+    n = d.execute_script(JS_PREPARAR, patente)
+    if n == -1:
+        raise RuntimeError("fila no encontrada")
+
+    orden = ([IDX_OK] if IDX_OK is not None else []) + list(range(min(n, 8))) + [-1]
+    for idx in orden:
+        if not d.execute_script(JS_CLICK_CAND, idx):
+            continue
+        time.sleep(PAUSA)
+        if d.execute_script(JS_MENU_ABIERTO):
+            IDX_OK = idx
+            return True
+    for tipo in ("dbl", "ctx"):
+        d.execute_script(JS_CLICK_ESPECIAL, tipo)
+        time.sleep(PAUSA)
+        if d.execute_script(JS_MENU_ABIERTO):
+            return True
+    if debug:
+        try:
+            os.makedirs(OUT_DIR, exist_ok=True)
+            with open(f"{OUT_DIR}/fila_debug.html", "w") as f:
+                f.write(d.execute_script(JS_DUMP_FILA))
+        except Exception:
+            pass
+    raise RuntimeError(f"no abrio menu (cands={n})")
+
+def leer_movil(d, filtro, patente, debug=False):
+    filtrar(d, filtro, patente)
+    abrir_menu(d, patente, debug)
+
+    if not d.execute_script(JS_CLICK_MENU):
+        raise RuntimeError("no clickeo item del menu")
+    time.sleep(PAUSA)
+
+    km = ult = None
+    t0 = time.time()
+    while time.time() - t0 < ESPERA:
+        km = d.execute_script(JS_CAMPO, ["Kilometraje"])
+        if km:
+            ult = d.execute_script(JS_CAMPO, ["Último reporte", "Ultimo reporte"])
+            break
+        time.sleep(0.4)
+
+    d.execute_script(JS_CERRAR)
+    time.sleep(0.4)
+    try:
+        d.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+    except Exception:
+        pass
+    time.sleep(0.3)
+    return km, ult
+
 # ------------------------------------------------------------------ main
 
 def main():
     if not USER or not PASS:
         raise SystemExit("Faltan secrets HAWK_USER / HAWK_PASS")
-
     os.makedirs(OUT_DIR, exist_ok=True)
     d = crear_driver()
     try:
         login(d)
-        pats = d.execute_script(JS_FILAS)
+        pats = d.execute_script(JS_PATENTES)
         if MAX_MOVILES:
             pats = pats[:MAX_MOVILES]
         print(f"{len(pats)} moviles detectados")
+
+        filtro = buscar_filtro(d)
+        print("filtro:", "OK" if filtro is not None else "NO ENCONTRADO")
 
         ahora = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=-3)))
         filas = []
@@ -242,12 +325,11 @@ def main():
             km = ult = err = None
             for intento in (1, 2):
                 try:
-                    d.execute_script(JS_FILAS)
-                    km, ult = leer_movil(d, p)
+                    km, ult = leer_movil(d, filtro, p, debug=(i == 1 and intento == 2))
                     err = None
                     break
                 except Exception as e:
-                    err = str(e)[:120]
+                    err = str(e).split("\n")[0][:120]
                     time.sleep(1)
             filas.append({
                 "Patente": p,
@@ -258,27 +340,25 @@ def main():
                 "Error": err,
             })
             print(f"[{i}/{len(pats)}] {p} -> {km} {'ERR:' + err if err else ''}")
+            if i == 1 and err:
+                shot(d, "err_primer_movil")
 
+        filtrar(d, filtro, "")
         df = pd.DataFrame(filas)
         stamp = ahora.strftime("%Y%m%d_%H%M")
         df.to_excel(f"{OUT_DIR}/kilometrajes_{stamp}.xlsx", index=False)
         df.to_excel(f"{OUT_DIR}/kilometrajes_latest.xlsx", index=False)
-
         hist = f"{OUT_DIR}/historico.csv"
         df.to_csv(hist, mode="a", header=not os.path.exists(hist), index=False)
 
-        ok = df["Kilometraje"].notna().sum()
-        print(f"\nOK {ok}/{len(df)} -> {OUT_DIR}/kilometrajes_{stamp}.xlsx")
+        ok = int(df["Kilometraje"].notna().sum())
+        print(f"\nOK {ok}/{len(df)}  (idx_click={IDX_OK})")
         if ok == 0:
-            shot(d, "err_sin_datos")
-            sys.exit(1)
+            shot(d, "err_sin_datos"); sys.exit(1)
     except SystemExit:
-        shot(d, "err_fatal")
-        raise
+        shot(d, "err_fatal"); raise
     except Exception:
-        traceback.print_exc()
-        shot(d, "err_fatal")
-        sys.exit(1)
+        traceback.print_exc(); shot(d, "err_fatal"); sys.exit(1)
     finally:
         d.quit()
 
