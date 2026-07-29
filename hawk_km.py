@@ -103,35 +103,50 @@ const el = els[els.length-1];
 return true;
 """
 
-# devuelve el numero que sigue a "Kilometraje", salteando "(Km.)" y ":"
-JS_KM = """
-const re = /Kilometraje[^0-9\\-]{0,15}([0-9][0-9.,]*)/;
-const nodos = [...document.querySelectorAll('div,td,span,label,li,p')]
-  .filter(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
-for (const e of nodos) {
-  for (const cand of [e.innerText, e.parentElement ? e.parentElement.innerText : '']) {
-    const m = (cand||'').match(re);
-    if (m) return m[1];
-  }
-}
-return null;
-"""
+# ---- lectura de campo: texto en ancestros, luego inputs, luego body
+JS_VALOR = """
+const etiqueta = arguments[0];   // "Kilometraje" | "reporte"
+const modo     = arguments[1];   // "num" | "txt"
 
-JS_ULT = """
-const re = /(?:Último|Ultimo) reporte[^0-9]{0,10}([0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{2,4}[^\\n]{0,12})/;
-const nodos = [...document.querySelectorAll('div,td,span,label,li,p')]
-  .filter(e => e.offsetParent !== null && /(Último|Ultimo) reporte/.test(e.innerText||''));
-for (const e of nodos) {
-  for (const cand of [e.innerText, e.parentElement ? e.parentElement.innerText : '']) {
-    const m = (cand||'').match(re);
-    if (m) return m[1].trim();
+const reNum = new RegExp(etiqueta + "[^0-9A-Za-z]{0,20}([0-9][0-9.,]*)");
+const reTxt = new RegExp(etiqueta + "[^0-9]{0,15}([0-9]{1,2}\\\\/[0-9]{1,2}\\\\/[0-9]{2,4}[^\\\\n]{0,12})");
+const re = (modo === "num") ? reNum : reTxt;
+
+function probar(txt) {
+  if (!txt) return null;
+  const m = txt.match(re);
+  return m ? m[1].trim() : null;
+}
+
+const hojas = [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
+  .filter(e => e.offsetParent !== null && (e.innerText||'').includes(etiqueta));
+
+// 1) texto de la etiqueta y de sus ancestros
+for (const h of hojas) {
+  let n = h;
+  for (let i = 0; i < 6 && n; i++, n = n.parentElement) {
+    const v = probar(n.innerText);
+    if (v) return v;
   }
 }
-return null;
+// 2) valores dentro de inputs cercanos
+for (const h of hojas) {
+  let n = h;
+  for (let i = 0; i < 6 && n; i++, n = n.parentElement) {
+    const ins = [...n.querySelectorAll('input,textarea')]
+      .map(e => (e.value || '').trim()).filter(Boolean);
+    for (const v of ins) {
+      if (modo === "num" && /^[0-9][0-9.,]*$/.test(v)) return v;
+      if (modo === "txt" && /[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{2,4}/.test(v)) return v;
+    }
+  }
+}
+// 3) todo el body
+return probar(document.body.innerText);
 """
 
 JS_MODAL_ABIERTO = """
-return [...document.querySelectorAll('div,td,span,label,li,p')]
+return [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
   .some(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
 """
 
@@ -147,7 +162,17 @@ const el = c[c.length-1];
 return true;
 """
 
-JS_DUMP = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
+JS_DUMP_MODAL = """
+const hojas = [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
+  .filter(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
+if (!hojas.length) return "SIN MODAL";
+let n = hojas[0];
+for (let i = 0; i < 6 && n.parentElement; i++) n = n.parentElement;
+return "=== TEXTO ===\\n" + n.innerText +
+       "\\n\\n=== HTML ===\\n" + n.outerHTML.slice(0, 150000);
+"""
+
+JS_DUMP_FILA = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
 
 # ------------------------------------------------------------------ util
 
@@ -169,6 +194,14 @@ def shot(d, nombre):
         d.save_screenshot(f"{OUT_DIR}/{nombre}.png")
         with open(f"{OUT_DIR}/{nombre}.html", "w") as f:
             f.write(d.page_source)
+    except Exception:
+        pass
+
+def guardar(nombre, texto):
+    try:
+        os.makedirs(OUT_DIR, exist_ok=True)
+        with open(f"{OUT_DIR}/{nombre}", "w") as f:
+            f.write(texto or "")
     except Exception:
         pass
 
@@ -247,9 +280,6 @@ def filtrar(d, filtro, texto):
         return
     try:
         filtro.clear()
-    except Exception:
-        pass
-    try:
         filtro.send_keys(Keys.BACK_SPACE * 15)
         filtro.send_keys(texto)
     except Exception:
@@ -257,7 +287,6 @@ def filtrar(d, filtro, texto):
     time.sleep(1.2)
 
 def cerrar_modal(d, intentos=5):
-    """Cierra hasta que 'Kilometraje' desaparece de la pantalla."""
     for _ in range(intentos):
         if not d.execute_script(JS_MODAL_ABIERTO):
             return True
@@ -272,7 +301,7 @@ def cerrar_modal(d, intentos=5):
 
 IDX_OK = None
 
-def abrir_menu(d, patente, debug=False):
+def abrir_menu(d, patente):
     global IDX_OK
     n = d.execute_script(JS_PREPARAR, patente)
     if n == -1:
@@ -290,21 +319,15 @@ def abrir_menu(d, patente, debug=False):
         time.sleep(PAUSA)
         if d.execute_script(JS_MENU_ABIERTO):
             return
-    if debug:
-        try:
-            os.makedirs(OUT_DIR, exist_ok=True)
-            with open(f"{OUT_DIR}/fila_debug.html", "w") as f:
-                f.write(d.execute_script(JS_DUMP))
-        except Exception:
-            pass
+    guardar("fila_debug.html", d.execute_script(JS_DUMP_FILA))
     raise RuntimeError(f"no abrio menu (cands={n})")
 
-def leer_movil(d, filtro, patente, debug=False):
+def leer_movil(d, filtro, patente, dump=False):
     if not cerrar_modal(d):
         raise RuntimeError("modal anterior no cierra")
 
     filtrar(d, filtro, patente)
-    abrir_menu(d, patente, debug)
+    abrir_menu(d, patente)
 
     if not d.execute_script(JS_CLICK_MENU):
         raise RuntimeError("no clickeo item del menu")
@@ -312,11 +335,16 @@ def leer_movil(d, filtro, patente, debug=False):
     km = ult = None
     t0 = time.time()
     while time.time() - t0 < ESPERA:
-        km = d.execute_script(JS_KM)
-        if km:
-            ult = d.execute_script(JS_ULT)
-            break
-        time.sleep(0.4)
+        if d.execute_script(JS_MODAL_ABIERTO):
+            km = d.execute_script(JS_VALOR, "Kilometraje", "num")
+            if km:
+                break
+        time.sleep(0.5)
+
+    if d.execute_script(JS_MODAL_ABIERTO):
+        ult = d.execute_script(JS_VALOR, "reporte", "txt")
+        if dump:
+            guardar("modal_debug.txt", d.execute_script(JS_DUMP_MODAL))
 
     cerrar_modal(d)
     return km, ult
@@ -344,7 +372,7 @@ def main():
             km = ult = err = None
             for intento in (1, 2):
                 try:
-                    km, ult = leer_movil(d, filtro, p, debug=(i == 1 and intento == 2))
+                    km, ult = leer_movil(d, filtro, p, dump=(i == 1))
                     err = None
                     break
                 except Exception as e:
@@ -359,8 +387,8 @@ def main():
                 "Error": err,
             })
             print(f"[{i}/{len(pats)}] {p} -> km={km} ult={ult} {'ERR:' + err if err else ''}")
-            if i == 1 and err:
-                shot(d, "err_primer_movil")
+            if i == 1:
+                shot(d, "primer_movil")
 
         filtrar(d, filtro, "")
         df = pd.DataFrame(filas)
