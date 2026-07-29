@@ -38,7 +38,6 @@ document.querySelectorAll('div,li,td,span,a').forEach(el => {
 return out;
 """
 
-# busca la fila de la patente AHORA y guarda candidatos clickeables (derecha -> izquierda)
 JS_PREPARAR = """
 const pat = arguments[0];
 let nodos = [...document.querySelectorAll('div,li,td,tr')].filter(e => {
@@ -76,14 +75,12 @@ return true;
 """
 
 JS_CLICK_ESPECIAL = """
-const tipo = arguments[0];
 const el = window.__fila;
 if (!el) return false;
-if (tipo === 'dbl') {
+if (arguments[0] === 'dbl')
   el.dispatchEvent(new MouseEvent('dblclick', {bubbles:true, cancelable:true, view:window}));
-} else {
+else
   el.dispatchEvent(new MouseEvent('contextmenu', {bubbles:true, cancelable:true, view:window, button:2}));
-}
 return true;
 """
 
@@ -106,36 +103,51 @@ const el = els[els.length-1];
 return true;
 """
 
-JS_CAMPO = """
-for (const etq of arguments[0]) {
-  const els = [...document.querySelectorAll('div,td,span,label,li')]
-    .filter(e => e.offsetParent !== null && (e.innerText||'').trim().startsWith(etq));
-  for (const e of els) {
-    const t = (e.parentElement ? e.parentElement.innerText : e.innerText) || '';
-    const i = t.indexOf(etq);
-    if (i < 0) continue;
-    const resto = t.slice(i + etq.length).split('\\n')[0].replace(':','').trim();
-    if (resto) return resto;
+# devuelve el numero que sigue a "Kilometraje", salteando "(Km.)" y ":"
+JS_KM = """
+const re = /Kilometraje[^0-9\\-]{0,15}([0-9][0-9.,]*)/;
+const nodos = [...document.querySelectorAll('div,td,span,label,li,p')]
+  .filter(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
+for (const e of nodos) {
+  for (const cand of [e.innerText, e.parentElement ? e.parentElement.innerText : '']) {
+    const m = (cand||'').match(re);
+    if (m) return m[1];
   }
 }
 return null;
 """
 
-JS_CERRAR = """
+JS_ULT = """
+const re = /(?:Último|Ultimo) reporte[^0-9]{0,10}([0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{2,4}[^\\n]{0,12})/;
+const nodos = [...document.querySelectorAll('div,td,span,label,li,p')]
+  .filter(e => e.offsetParent !== null && /(Último|Ultimo) reporte/.test(e.innerText||''));
+for (const e of nodos) {
+  for (const cand of [e.innerText, e.parentElement ? e.parentElement.innerText : '']) {
+    const m = (cand||'').match(re);
+    if (m) return m[1].trim();
+  }
+}
+return null;
+"""
+
+JS_MODAL_ABIERTO = """
+return [...document.querySelectorAll('div,td,span,label,li,p')]
+  .some(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
+"""
+
+JS_CERRAR_UNO = """
 const c = [...document.querySelectorAll('div,span,a,img,button')]
   .filter(e => e.offsetParent !== null &&
     ((e.innerText||'').trim() === '\\u00d7' || (e.innerText||'').trim() === 'X' ||
      /close|cerrar/i.test(e.className + ' ' + (e.title||'') + ' ' + (e.id||''))));
-let n = 0;
-c.slice(-3).forEach(el => {
-  ['mousedown','mouseup','click'].forEach(ev =>
-    el.dispatchEvent(new MouseEvent(ev, {bubbles:true, cancelable:true, view:window})));
-  n++;
-});
-return n;
+if (!c.length) return false;
+const el = c[c.length-1];
+['mousedown','mouseup','click'].forEach(ev =>
+  el.dispatchEvent(new MouseEvent(ev, {bubbles:true, cancelable:true, view:window})));
+return true;
 """
 
-JS_DUMP_FILA = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
+JS_DUMP = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
 
 # ------------------------------------------------------------------ util
 
@@ -168,6 +180,8 @@ def num(s):
         s = s.replace(".", "").replace(",", ".")
     elif s.count(","):
         s = s.replace(",", ".")
+    elif s.count(".") > 1:
+        s = s.replace(".", "")
     try:
         return float(s)
     except Exception:
@@ -214,7 +228,7 @@ def login(d):
             print("login OK"); return
     shot(d, "err_post_login"); raise SystemExit("Login sin lista de moviles.")
 
-# ------------------------------------------------------------------ filtro
+# ------------------------------------------------------------------ helpers
 
 def buscar_filtro(d):
     for e in d.find_elements(By.CSS_SELECTOR, "input"):
@@ -233,27 +247,36 @@ def filtrar(d, filtro, texto):
         return
     try:
         filtro.clear()
-        filtro.send_keys(Keys.COMMAND, "a")
     except Exception:
         pass
     try:
-        filtro.send_keys(Keys.CONTROL, "a")
+        filtro.send_keys(Keys.BACK_SPACE * 15)
+        filtro.send_keys(texto)
     except Exception:
         pass
-    filtro.send_keys(Keys.BACK_SPACE * 15)
-    filtro.send_keys(texto)
     time.sleep(1.2)
 
-# ------------------------------------------------------------------ scrape
+def cerrar_modal(d, intentos=5):
+    """Cierra hasta que 'Kilometraje' desaparece de la pantalla."""
+    for _ in range(intentos):
+        if not d.execute_script(JS_MODAL_ABIERTO):
+            return True
+        d.execute_script(JS_CERRAR_UNO)
+        time.sleep(0.4)
+        try:
+            d.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+        except Exception:
+            pass
+        time.sleep(0.4)
+    return not d.execute_script(JS_MODAL_ABIERTO)
 
-IDX_OK = None   # indice de candidato que funciona (se aprende con el primero)
+IDX_OK = None
 
 def abrir_menu(d, patente, debug=False):
     global IDX_OK
     n = d.execute_script(JS_PREPARAR, patente)
     if n == -1:
         raise RuntimeError("fila no encontrada")
-
     orden = ([IDX_OK] if IDX_OK is not None else []) + list(range(min(n, 8))) + [-1]
     for idx in orden:
         if not d.execute_script(JS_CLICK_CAND, idx):
@@ -261,45 +284,41 @@ def abrir_menu(d, patente, debug=False):
         time.sleep(PAUSA)
         if d.execute_script(JS_MENU_ABIERTO):
             IDX_OK = idx
-            return True
+            return
     for tipo in ("dbl", "ctx"):
         d.execute_script(JS_CLICK_ESPECIAL, tipo)
         time.sleep(PAUSA)
         if d.execute_script(JS_MENU_ABIERTO):
-            return True
+            return
     if debug:
         try:
             os.makedirs(OUT_DIR, exist_ok=True)
             with open(f"{OUT_DIR}/fila_debug.html", "w") as f:
-                f.write(d.execute_script(JS_DUMP_FILA))
+                f.write(d.execute_script(JS_DUMP))
         except Exception:
             pass
     raise RuntimeError(f"no abrio menu (cands={n})")
 
 def leer_movil(d, filtro, patente, debug=False):
+    if not cerrar_modal(d):
+        raise RuntimeError("modal anterior no cierra")
+
     filtrar(d, filtro, patente)
     abrir_menu(d, patente, debug)
 
     if not d.execute_script(JS_CLICK_MENU):
         raise RuntimeError("no clickeo item del menu")
-    time.sleep(PAUSA)
 
     km = ult = None
     t0 = time.time()
     while time.time() - t0 < ESPERA:
-        km = d.execute_script(JS_CAMPO, ["Kilometraje"])
+        km = d.execute_script(JS_KM)
         if km:
-            ult = d.execute_script(JS_CAMPO, ["Último reporte", "Ultimo reporte"])
+            ult = d.execute_script(JS_ULT)
             break
         time.sleep(0.4)
 
-    d.execute_script(JS_CERRAR)
-    time.sleep(0.4)
-    try:
-        d.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
-    except Exception:
-        pass
-    time.sleep(0.3)
+    cerrar_modal(d)
     return km, ult
 
 # ------------------------------------------------------------------ main
@@ -339,7 +358,7 @@ def main():
                 "Fecha_lectura": ahora.strftime("%Y-%m-%d %H:%M:%S"),
                 "Error": err,
             })
-            print(f"[{i}/{len(pats)}] {p} -> {km} {'ERR:' + err if err else ''}")
+            print(f"[{i}/{len(pats)}] {p} -> km={km} ult={ult} {'ERR:' + err if err else ''}")
             if i == 1 and err:
                 shot(d, "err_primer_movil")
 
@@ -352,7 +371,8 @@ def main():
         df.to_csv(hist, mode="a", header=not os.path.exists(hist), index=False)
 
         ok = int(df["Kilometraje"].notna().sum())
-        print(f"\nOK {ok}/{len(df)}  (idx_click={IDX_OK})")
+        unicos = df["Kilometraje"].dropna().nunique()
+        print(f"\nOK {ok}/{len(df)}  valores_distintos={unicos}  idx_click={IDX_OK}")
         if ok == 0:
             shot(d, "err_sin_datos"); sys.exit(1)
     except SystemExit:
