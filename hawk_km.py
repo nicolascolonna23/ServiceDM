@@ -29,8 +29,9 @@ RE_ULT = re.compile(r"(?:Último|Ultimo)\s+reporte[^0-9]{0,10}([0-9]{1,2}/[0-9]{
 
 JS_PATENTES = """
 const re = /\\b([A-Z]{2}\\d{3}[A-Z]{2}|[A-Z]{3}\\d{3})\\b/;
+const raiz = window.__panel || document;
 const out = [], vistos = new Set();
-document.querySelectorAll('div,li,td,span,a').forEach(el => {
+raiz.querySelectorAll('div,li,td,span,a').forEach(el => {
   if (el.children.length > 2) return;
   const t = (el.innerText || '').trim();
   if (!t || t.length > 60) return;
@@ -41,12 +42,33 @@ document.querySelectorAll('div,li,td,span,a').forEach(el => {
 return out;
 """
 
+# panel de la lista = ancestro del input "Filtrar lista..." que contenga varias patentes
+JS_SET_PANEL = """
+const re = /\\b([A-Z]{2}\\d{3}[A-Z]{2}|[A-Z]{3}\\d{3})\\b/g;
+let inp = [...document.querySelectorAll('input')].find(e => {
+  if (e.offsetParent === null) return false;
+  const s = (e.placeholder||'') + ' ' + (e.title||'');
+  return /filtr/i.test(s);
+});
+if (!inp) { window.__panel = null; return 'sin input filtro'; }
+let n = inp;
+for (let i = 0; i < 10 && n.parentElement; i++) {
+  n = n.parentElement;
+  const t = n.innerText || '';
+  const hits = (t.match(re) || []).length;
+  if (hits >= 3) { window.__panel = n; return 'panel con ' + hits + ' patentes'; }
+}
+window.__panel = null;
+return 'panel no encontrado';
+"""
+
 JS_PREPARAR = """
 const pat = arguments[0];
-let nodos = [...document.querySelectorAll('div,li,td,tr')].filter(e => {
+const raiz = window.__panel || document;
+let nodos = [...raiz.querySelectorAll('div,li,td,tr')].filter(e => {
   if (e.offsetParent === null) return false;
   const r = e.getBoundingClientRect();
-  if (r.width < 120 || r.width > 800) return false;
+  if (r.width < 100 || r.width > 800) return false;
   if (r.height < 22 || r.height > 120) return false;
   const t = e.innerText || '';
   return t.includes(pat) && t.length < 90;
@@ -106,7 +128,6 @@ const el = els[els.length-1];
 return true;
 """
 
-# contenedor mas chico que contiene la patente Y la palabra Kilometraje = el modal de ese movil
 JS_MODAL_TEXTO = """
 const pat = arguments[0];
 const nodos = [...document.querySelectorAll('div,table,form,section,td')].filter(e => {
@@ -124,10 +145,6 @@ JS_MODAL_INPUTS = """
 if (!window.__modal) return [];
 return [...window.__modal.querySelectorAll('input,textarea')]
   .map(e => (e.value || '').trim()).filter(Boolean);
-"""
-
-JS_MODAL_HTML = """
-return window.__modal ? window.__modal.outerHTML.slice(0, 150000) : 'SIN MODAL';
 """
 
 JS_HAY_MODAL = """
@@ -257,9 +274,9 @@ def filtrar(d, filtro, texto):
         filtro.send_keys(texto)
     except Exception:
         pass
-    time.sleep(1.2)
+    time.sleep(1.3)
 
-def cerrar_modal(d, intentos=4):
+def cerrar_modal(d, intentos=5):
     for _ in range(intentos):
         if not d.execute_script(JS_HAY_MODAL):
             return True
@@ -278,7 +295,7 @@ def abrir_menu(d, patente):
     global IDX_OK
     n = d.execute_script(JS_PREPARAR, patente)
     if n == -1:
-        raise RuntimeError("fila no encontrada")
+        raise RuntimeError("fila no encontrada en el panel")
     orden = ([IDX_OK] if IDX_OK is not None else []) + list(range(min(n, 8))) + [-1]
     for idx in orden:
         if not d.execute_script(JS_CLICK_CAND, idx):
@@ -292,7 +309,7 @@ def abrir_menu(d, patente):
         time.sleep(PAUSA)
         if d.execute_script(JS_MENU_ABIERTO):
             return
-    guardar("fila_debug.html", d.execute_script(JS_DUMP_FILA))
+    guardar(f"fila_{patente}.html", d.execute_script(JS_DUMP_FILA))
     raise RuntimeError(f"no abrio menu (cands={n})")
 
 def leer_movil(d, filtro, patente, dump=False):
@@ -302,7 +319,6 @@ def leer_movil(d, filtro, patente, dump=False):
     if not d.execute_script(JS_CLICK_MENU):
         raise RuntimeError("no clickeo item del menu")
 
-    # esperar el modal QUE CORRESPONDE a esta patente
     texto = None
     t0 = time.time()
     while time.time() - t0 < ESPERA:
@@ -313,7 +329,6 @@ def leer_movil(d, filtro, patente, dump=False):
 
     if dump:
         guardar(f"modal_{patente}.txt", texto or "SIN TEXTO")
-        guardar(f"modal_{patente}.html", d.execute_script(JS_MODAL_HTML))
 
     km = ult = None
     if texto:
@@ -323,13 +338,11 @@ def leer_movil(d, filtro, patente, dump=False):
         m = RE_ULT.search(texto)
         if m:
             ult = m.group(1).strip()
-
     if km is None:
         for v in d.execute_script(JS_MODAL_INPUTS):
             if re.fullmatch(r"[0-9][0-9.,]*", v) and len(v) >= 4:
                 km = v
                 break
-
     if texto is None:
         raise RuntimeError("modal de la patente no aparecio")
 
@@ -345,6 +358,7 @@ def main():
     d = crear_driver()
     try:
         login(d)
+        print("panel:", d.execute_script(JS_SET_PANEL))
         pats = d.execute_script(JS_PATENTES)
         if MAX_MOVILES:
             pats = pats[:MAX_MOVILES]
@@ -357,13 +371,17 @@ def main():
         filas = []
         for i, p in enumerate(pats, 1):
             km = ult = err = None
-            for intento in (1, 2):
+            for intento in (1, 2, 3):
                 try:
                     km, ult = leer_movil(d, filtro, p, dump=(i <= 2))
                     err = None
                     break
                 except Exception as e:
                     err = str(e).split("\n")[0][:120]
+                    # limpiar estado antes de reintentar
+                    cerrar_modal(d)
+                    filtrar(d, filtro, "")
+                    d.execute_script(JS_SET_PANEL)
                     time.sleep(1)
             filas.append({
                 "Patente": p,
@@ -374,8 +392,6 @@ def main():
                 "Error": err,
             })
             print(f"[{i}/{len(pats)}] {p} -> km={km} ult={ult} {'ERR:' + err if err else ''}")
-            if i == 2 and km is None:
-                shot(d, "segundo_movil")
 
         filtrar(d, filtro, "")
         df = pd.DataFrame(filas)
