@@ -20,7 +20,10 @@ HEADLESS    = os.environ.get("HEADLESS", "1") == "1"
 
 OUT_DIR = "data"
 PAUSA   = 0.7
-ESPERA  = 12
+ESPERA  = 15
+
+RE_KM  = re.compile(r"Kilometraje[^0-9A-Za-z]{0,20}([0-9][0-9.,]*)")
+RE_ULT = re.compile(r"(?:Último|Ultimo)\s+reporte[^0-9]{0,10}([0-9]{1,2}/[0-9]{1,2}/[0-9]{2,4}[ 0-9:]{0,9})")
 
 # ------------------------------------------------------------------ JS
 
@@ -103,49 +106,31 @@ const el = els[els.length-1];
 return true;
 """
 
-# ---- lectura de campo: texto en ancestros, luego inputs, luego body
-JS_VALOR = """
-const etiqueta = arguments[0];   // "Kilometraje" | "reporte"
-const modo     = arguments[1];   // "num" | "txt"
-
-const reNum = new RegExp(etiqueta + "[^0-9A-Za-z]{0,20}([0-9][0-9.,]*)");
-const reTxt = new RegExp(etiqueta + "[^0-9]{0,15}([0-9]{1,2}\\\\/[0-9]{1,2}\\\\/[0-9]{2,4}[^\\\\n]{0,12})");
-const re = (modo === "num") ? reNum : reTxt;
-
-function probar(txt) {
-  if (!txt) return null;
-  const m = txt.match(re);
-  return m ? m[1].trim() : null;
-}
-
-const hojas = [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
-  .filter(e => e.offsetParent !== null && (e.innerText||'').includes(etiqueta));
-
-// 1) texto de la etiqueta y de sus ancestros
-for (const h of hojas) {
-  let n = h;
-  for (let i = 0; i < 6 && n; i++, n = n.parentElement) {
-    const v = probar(n.innerText);
-    if (v) return v;
-  }
-}
-// 2) valores dentro de inputs cercanos
-for (const h of hojas) {
-  let n = h;
-  for (let i = 0; i < 6 && n; i++, n = n.parentElement) {
-    const ins = [...n.querySelectorAll('input,textarea')]
-      .map(e => (e.value || '').trim()).filter(Boolean);
-    for (const v of ins) {
-      if (modo === "num" && /^[0-9][0-9.,]*$/.test(v)) return v;
-      if (modo === "txt" && /[0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{2,4}/.test(v)) return v;
-    }
-  }
-}
-// 3) todo el body
-return probar(document.body.innerText);
+# contenedor mas chico que contiene la patente Y la palabra Kilometraje = el modal de ese movil
+JS_MODAL_TEXTO = """
+const pat = arguments[0];
+const nodos = [...document.querySelectorAll('div,table,form,section,td')].filter(e => {
+  if (e.offsetParent === null) return false;
+  const t = e.innerText || '';
+  return t.includes(pat) && t.includes('Kilometraje');
+});
+if (!nodos.length) { window.__modal = null; return null; }
+nodos.sort((a,b) => (a.innerText||'').length - (b.innerText||'').length);
+window.__modal = nodos[0];
+return (nodos[0].innerText || '').slice(0, 6000);
 """
 
-JS_MODAL_ABIERTO = """
+JS_MODAL_INPUTS = """
+if (!window.__modal) return [];
+return [...window.__modal.querySelectorAll('input,textarea')]
+  .map(e => (e.value || '').trim()).filter(Boolean);
+"""
+
+JS_MODAL_HTML = """
+return window.__modal ? window.__modal.outerHTML.slice(0, 150000) : 'SIN MODAL';
+"""
+
+JS_HAY_MODAL = """
 return [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
   .some(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
 """
@@ -162,16 +147,6 @@ const el = c[c.length-1];
 return true;
 """
 
-JS_DUMP_MODAL = """
-const hojas = [...document.querySelectorAll('div,td,span,label,li,p,b,font')]
-  .filter(e => e.offsetParent !== null && (e.innerText||'').includes('Kilometraje'));
-if (!hojas.length) return "SIN MODAL";
-let n = hojas[0];
-for (let i = 0; i < 6 && n.parentElement; i++) n = n.parentElement;
-return "=== TEXTO ===\\n" + n.innerText +
-       "\\n\\n=== HTML ===\\n" + n.outerHTML.slice(0, 150000);
-"""
-
 JS_DUMP_FILA = "return window.__fila ? window.__fila.outerHTML : 'sin fila';"
 
 # ------------------------------------------------------------------ util
@@ -180,7 +155,7 @@ def crear_driver():
     o = Options()
     if HEADLESS:
         o.add_argument("--headless=new")
-    o.add_argument("--window-size=1920,1080")
+    o.add_argument("--window-size=1920,1200")
     o.add_argument("--no-sandbox")
     o.add_argument("--disable-dev-shm-usage")
     o.add_argument("--disable-gpu")
@@ -192,8 +167,6 @@ def shot(d, nombre):
     try:
         os.makedirs(OUT_DIR, exist_ok=True)
         d.save_screenshot(f"{OUT_DIR}/{nombre}.png")
-        with open(f"{OUT_DIR}/{nombre}.html", "w") as f:
-            f.write(d.page_source)
     except Exception:
         pass
 
@@ -286,9 +259,9 @@ def filtrar(d, filtro, texto):
         pass
     time.sleep(1.2)
 
-def cerrar_modal(d, intentos=5):
+def cerrar_modal(d, intentos=4):
     for _ in range(intentos):
-        if not d.execute_script(JS_MODAL_ABIERTO):
+        if not d.execute_script(JS_HAY_MODAL):
             return True
         d.execute_script(JS_CERRAR_UNO)
         time.sleep(0.4)
@@ -297,7 +270,7 @@ def cerrar_modal(d, intentos=5):
         except Exception:
             pass
         time.sleep(0.4)
-    return not d.execute_script(JS_MODAL_ABIERTO)
+    return not d.execute_script(JS_HAY_MODAL)
 
 IDX_OK = None
 
@@ -323,28 +296,42 @@ def abrir_menu(d, patente):
     raise RuntimeError(f"no abrio menu (cands={n})")
 
 def leer_movil(d, filtro, patente, dump=False):
-    if not cerrar_modal(d):
-        raise RuntimeError("modal anterior no cierra")
-
+    cerrar_modal(d)
     filtrar(d, filtro, patente)
     abrir_menu(d, patente)
-
     if not d.execute_script(JS_CLICK_MENU):
         raise RuntimeError("no clickeo item del menu")
 
-    km = ult = None
+    # esperar el modal QUE CORRESPONDE a esta patente
+    texto = None
     t0 = time.time()
     while time.time() - t0 < ESPERA:
-        if d.execute_script(JS_MODAL_ABIERTO):
-            km = d.execute_script(JS_VALOR, "Kilometraje", "num")
-            if km:
-                break
+        texto = d.execute_script(JS_MODAL_TEXTO, patente)
+        if texto and RE_KM.search(texto):
+            break
         time.sleep(0.5)
 
-    if d.execute_script(JS_MODAL_ABIERTO):
-        ult = d.execute_script(JS_VALOR, "reporte", "txt")
-        if dump:
-            guardar("modal_debug.txt", d.execute_script(JS_DUMP_MODAL))
+    if dump:
+        guardar(f"modal_{patente}.txt", texto or "SIN TEXTO")
+        guardar(f"modal_{patente}.html", d.execute_script(JS_MODAL_HTML))
+
+    km = ult = None
+    if texto:
+        m = RE_KM.search(texto)
+        if m:
+            km = m.group(1)
+        m = RE_ULT.search(texto)
+        if m:
+            ult = m.group(1).strip()
+
+    if km is None:
+        for v in d.execute_script(JS_MODAL_INPUTS):
+            if re.fullmatch(r"[0-9][0-9.,]*", v) and len(v) >= 4:
+                km = v
+                break
+
+    if texto is None:
+        raise RuntimeError("modal de la patente no aparecio")
 
     cerrar_modal(d)
     return km, ult
@@ -372,7 +359,7 @@ def main():
             km = ult = err = None
             for intento in (1, 2):
                 try:
-                    km, ult = leer_movil(d, filtro, p, dump=(i == 1))
+                    km, ult = leer_movil(d, filtro, p, dump=(i <= 2))
                     err = None
                     break
                 except Exception as e:
@@ -387,8 +374,8 @@ def main():
                 "Error": err,
             })
             print(f"[{i}/{len(pats)}] {p} -> km={km} ult={ult} {'ERR:' + err if err else ''}")
-            if i == 1:
-                shot(d, "primer_movil")
+            if i == 2 and km is None:
+                shot(d, "segundo_movil")
 
         filtrar(d, filtro, "")
         df = pd.DataFrame(filas)
