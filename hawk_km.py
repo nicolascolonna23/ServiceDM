@@ -199,7 +199,9 @@ def main():
         if i % 20 == 0:
             print(f"  {i}/{len(lista)}")
 
-    df = pd.DataFrame(filas).sort_values("Patente").reset_index(drop=True)
+    df = pd.DataFrame(filas)
+    df["Patente"] = df["Patente"].replace({"AF527AE": "AE527FA", "AE527AE": "AE527FA"})
+    df = df[df["Kilometraje"].notna()].sort_values("Patente").reset_index(drop=True)
     stamp = ahora.strftime("%Y%m%d_%H%M")
     df.to_excel(f"{OUT_DIR}/kilometrajes_{stamp}.xlsx", index=False)
     df.to_excel(f"{OUT_DIR}/kilometrajes_latest.xlsx", index=False)
