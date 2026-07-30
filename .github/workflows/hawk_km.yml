@@ -3,10 +3,10 @@ name: Hawk Odometros
 on:
   workflow_dispatch:
     inputs:
-      max_moviles:
-        description: "Cuantos moviles leer (0 = todos). Usar 3 para probar."
+      solo_empresas:
+        description: "Filtrar empresas (subcadena, coma). Vacio = toda la flota."
         required: false
-        default: "0"
+        default: "CATAMARCA"
   schedule:
     - cron: "0 11 * * 1-5"   # 08:00 ART, lun-vie
 
@@ -16,7 +16,7 @@ permissions:
 jobs:
   scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
           python-version: "3.11"
 
       - name: Instalar dependencias
-        run: pip install selenium pandas openpyxl
+        run: pip install selenium requests pandas openpyxl
 
       - name: Instalar Chrome
         uses: browser-actions/setup-chrome@v1
@@ -41,8 +41,7 @@ jobs:
         env:
           HAWK_USER: ${{ secrets.HAWK_USER }}
           HAWK_PASS: ${{ secrets.HAWK_PASS }}
-          MAX_MOVILES: ${{ github.event.inputs.max_moviles || '0' }}
-          HEADLESS: "1"
+          SOLO_EMPRESAS: ${{ github.event.inputs.solo_empresas }}
         run: python hawk_km.py
 
       - name: Subir resultados
