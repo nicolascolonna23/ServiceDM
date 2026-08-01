@@ -41,7 +41,7 @@ PATENTES_EXCLUIDAS = {"AF310TU", "AF591UW","AE527FA"}
 # HELPERS
 # =====================================================
 def num(txt):
-    txt = str(txt).strip().replace(".", "").replace(",", ".")
+    txt = str(txt).strip().replace("%", "").strip().replace(".", "").replace(",", ".")
     try:
         return float(txt)
     except:
@@ -233,7 +233,7 @@ def extraer_tabla():
 # =====================================================
 def extraer_ralenti_de_tabla(driver):
     """
-    Lee el ralentí (lts) de la tabla de consumo ya visualizada.
+    Lee el ralentí (%) de la tabla de consumo ya visualizada.
     Intenta detectar la columna por el header; si no la encuentra
     usa un índice fijo configurable.
     Retorna dict: { "PATENTE": ralenti_float }
@@ -256,16 +256,16 @@ def extraer_ralenti_de_tabla(driver):
         print("Headers consumo:", headers)
 
         # Buscar índice de ralentí
-        # Preferir "consumo en ralentí" (lts) sobre "% de ralentí"
+        # Preferir "% de ralentí" sobre "consumo en ralentí" (lts)
         idx_ralenti  = None
         idx_dominio  = 0
         for i, h in enumerate(headers):
             if any(k in h for k in ["ralenti", "ralentí", "idle", "relenti"]):
-                # Solo tomar el primero que matchee (consumo en lts, no el %)
-                # Si ya encontramos uno y este tiene "%" en el nombre, ignorarlo
-                if idx_ralenti is None or "%" not in h:
+                # Preferir la columna del porcentaje: si esta tiene "%" en el
+                # nombre, se queda con ella aunque ya hubiéramos encontrado otra
+                if idx_ralenti is None or "%" in h:
                     idx_ralenti = i
-                    print(f"  → Ralentí en columna {i}: '{h}'")
+                    print(f"  → Ralentí (%) en columna {i}: '{h}'")
             if any(k in h for k in ["patente", "dominio", "unidad", "placa"]):
                 idx_dominio = i
 
@@ -288,9 +288,9 @@ def extraer_ralenti_de_tabla(driver):
 
     # --- Fallback: índice fijo si no se detectó por header ---
     if not datos:
-        print("  [!] Ralentí no detectado por header. Usando índice fijo = 6")
-        print("      (columna 6 = 'consumo en ralentí' según los headers detectados)")
-        IDX_RALENTI = 6   # consumo en ralentí (lts), NO el % que está en columna 7
+        print("  [!] Ralentí no detectado por header. Usando índice fijo = 7")
+        print("      (columna 7 = '% de ralentí' según los headers detectados)")
+        IDX_RALENTI = 7   # % de ralentí, NO los lts que están en columna 6
         for tabla in tablas:
             filas = tabla.find_elements(By.TAG_NAME, "tr")
             for fila in filas:
