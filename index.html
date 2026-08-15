@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Flota | Diemar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===================== TOKENS ===================== *
+     * Tablero oscuro por decision de diseno (pantalla de
+     * control interna). Paleta de series validada contra
+     * la superficie #12161a.                              */
+    :root {
+      color-scheme: dark;
+
+      /* Superficies y chrome */
+      --plane:        #08090b;
+      --surface-1:    #12161a;
+      --surface-2:    #171c21;
+      --surface-3:    #1d2329;
+      --hairline:     rgba(255,255,255,0.07);
+      --hairline-2:   rgba(255,255,255,0.12);
+
+      /* Tinta */
+      --ink:          #e9ecef;
+      --ink-2:        #a9b0b8;
+      --ink-muted:    #7b828b;
+
+      /* Marca Diemar (solo chrome: nunca dentro de un grafico) */
+      --brand:        #ff7a1a;
+      --brand-deep:   #d35400;
+      --brand-soft:   rgba(255,122,26,0.12);
+
+      /* Series categoricas (dark) - validadas all-pairs */
+      --series-1:     #3987e5;  /* consumo l/100km */
+      --series-2:     #d95926;  /* CO2             */
+      --series-3:     #199e70;  /* ralenti %       */
+
+      /* Estados de service (paleta de estado reservada) */
+      --st-good:      #0ca30c;
+      --st-warning:   #fab219;
+      --st-serious:   #ec835a;
+      --st-critical:  #d03b3b;
+      --st-none:      #7b828b;
+
+      /* Chrome de graficos */
+      --grid:         #22262b;
+      --axis:         #383c42;
+
+      --radius:       14px;
+      --shadow:       0 18px 44px rgba(0,0,0,0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { max-width: 100%; overflow-x: hidden; }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      background: var(--plane);
+      color: var(--ink);
+      margin: 0;
+      padding: 0 0 60px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Fondo tecnologico: grilla fina + halo de marca */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+      background-size: 46px 46px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      top: -280px; left: 50%;
+      width: 1100px; height: 620px;
+      transform: translateX(-50%);
+      background: radial-gradient(ellipse at center, rgba(255,122,26,0.11), transparent 68%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .shell { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 0 20px; }
+
+    /* ===================== HEADER ===================== */
+    .topbar {
+      display: flex; align-items: center; gap: 18px;
+      flex-wrap: wrap;
+      padding: 22px 0 18px;
+      border-bottom: 1px solid var(--hairline);
+      position: relative;
+    }
+    .topbar::after {
+      content: "";
+      position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+      background: linear-gradient(90deg, var(--brand), rgba(255,122,26,0) 55%);
+    }
+    .logo { height: 46px; width: auto; }
+    .brandblock { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+    .brandblock h1 {
+      margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em;
+    }
+    .brandblock .sub {
+      font-size: 11px; letter-spacing: 2.4px; text-transform: uppercase;
+      color: var(--ink-muted); font-weight: 500;
+    }
+    .meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px;
+      font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+      color: var(--ink-2); background: var(--surface-2);
+      border: 1px solid var(--hairline); border-radius: 999px;
+      padding: 6px 12px; font-weight: 500; white-space: nowrap;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--st-good); flex: none; }
+    .dot.warn { background: var(--st-warning); }
+    .dot.off  { background: var(--st-none); }
+    .dot.live { animation: pulse 2.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.32; } }
+    @media (prefers-reduced-motion: reduce) { .dot.live { animation: none; } }
+
+    .btn-refresh {
+      font: inherit; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+      font-weight: 600; color: var(--brand); background: var(--brand-soft);
+      border: 1px solid rgba(255,122,26,0.32); border-radius: 999px;
+      padding: 6px 14px; cursor: pointer; transition: background .18s, color .18s;
+    }
+    .btn-refresh:hover { background: rgba(255,122,26,0.2); }
+    .btn-refresh[disabled] { opacity: .5; cursor: default; }
+
+    /* ===================== TABS ===================== */
+    .tabs {
+      display: flex; gap: 6px; margin: 18px 0 4px;
+      overflow-x: auto; scrollbar-width: none; padding-bottom: 4px;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      font: inherit; font-size: 12.5px; font-weight: 600; letter-spacing: 0.4px;
+      color: var(--ink-2); background: var(--surface-1);
+      border: 1px solid var(--hairline); border-radius: 10px;
+      padding: 10px 18px; cursor: pointer; white-space: nowrap;
+      transition: color .18s, border-color .18s, background .18s;
+      display: inline-flex; align-items: center; gap: 8px;
+    }
+    .tab:hover { color: var(--ink); border-color: var(--hairline-2); }
+    .tab[aria-selected="true"] {
+      color: #fff; background: linear-gradient(180deg, rgba(255,122,26,0.18), rgba(255,122,26,0.06));
+      border-color: rgba(255,122,26,0.45);
+      box-shadow: 0 0 0 1px rgba(255,122,26,0.12), 0 6px 20px rgba(255,122,26,0.10);
+    }
+    .tab .count {
+      font-size: 10.5px; font-weight: 700; color: var(--ink-muted);
+      background: rgba(255,255,255,0.06); border-radius: 6px; padding: 2px 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .tab[aria-selected="true"] .count { color: var(--brand); background: rgba(255,122,26,0.14); }
+
+    .panel { display: none; padding-top: 22px; }
+    .panel.active { display: block; }
+
+    /* ===================== CARDS ===================== */
+    .card {
+      background: var(--surface-1);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+      padding: 15px 18px; border-bottom: 1px solid var(--hairline);
+    }
+    .card-head h2, .card-head h3 {
+      margin: 0; font-size: 12px; font-weight: 600;
+      letter-spacing: 1.6px; text-transform: uppercase; color: var(--ink-2);
+    }
+    .card-head .spacer { margin-left: auto; }
+    .card-body { padding: 18px; }
+
+    .section-label {
+      display: flex; align-items: center; gap: 12px;
+      font-size: 11.5px; font-weight: 600; letter-spacing: 2.2px;
+      text-transform: uppercase; color: var(--ink-muted);
+      margin: 30px 0 12px;
+    }
+    .section-label::before { content: ""; width: 3px; height: 14px; background: var(--brand); border-radius: 2px; }
+    .section-label::after { content: ""; flex: 1; height: 1px; background: var(--hairline); }
+
+    /* ===================== KPI TILES ===================== */
+    .kpi-row {
+      display: grid; gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(184px, 1fr));
+    }
+    .kpi {
+      background: var(--surface-1); border: 1px solid var(--hairline);
+      border-radius: 12px; padding: 16px 16px 15px; position: relative; overflow: hidden;
+    }
+    .kpi::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: var(--kpi-accent, var(--brand));
+    }
+    .kpi .k-label {
+      font-size: 10.5px; letter-spacing: 1.4px; text-transform: uppercase;
+      color: var(--ink-muted); font-weight: 600;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .kpi .k-value {
+      font-size: 32px; font-weight: 600; line-height: 1.1; margin-top: 9px;
+      letter-spacing: -0.02em; white-space: nowrap;
+    }
+    .kpi .k-value .u { font-size: 15px; color: var(--ink-muted); font-weight: 500; }
+    .kpi .k-foot { font-size: 11.5px; color: var(--ink-muted); margin-top: 5px; }
+
+    /* ===================== ESTADO PILLS ===================== */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px 3px 8px; border-radius: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.5px;
+      border: 1px solid currentColor; white-space: nowrap;
+    }
+    .pill .ic {
+      width: 14px; height: 14px; border-radius: 4px; flex: none;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; background: currentColor;
+    }
+    .pill .ic span { color: #0b0e11; }
+    .st-vencido  { color: var(--st-critical); background: rgba(208,59,59,0.10); }
+    .st-urgente  { color: var(--st-serious);  background: rgba(236,131,90,0.10); }
+    .st-proximo  { color: var(--st-warning);  background: rgba(250,178,25,0.10); }
+    .st-ok       { color: var(--st-good);     background: rgba(12,163,12,0.10); }
+    .st-sindato  { color: var(--st-none);     background: rgba(123,130,139,0.10); }
+
+    /* ===================== FILTROS ===================== */
+    .filterbar {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+      padding: 12px 14px; margin-bottom: 14px;
+      background: var(--surface-1); border: 1px solid var(--hairline); border-radius: 12px;
+    }
+    .filterbar .fl {
+      font-size: 10.5px; letter-spacing: 1.3px; text-transform: uppercase;
+      color: var(--ink-muted); font-weight: 600; margin-right: 2px;
+    }
+    .inp, .sel {
+      font: inherit; font-size: 12.5px; color: var(--ink);
+      background: var(--surface-3); border: 1px solid var(--hairline);
+      border-radius: 8px; padding: 8px 11px; outline: none; min-width: 130px;
+      transition: border-color .15s;
+    }
+    .inp:focus, .sel:focus { border-color: rgba(255,122,26,0.55); }
+    .inp::placeholder { color: var(--ink-muted); }
+    .seg { display: inline-flex; background: var(--surface-3); border: 1px solid var(--hairline); border-radius: 8px; padding: 2px; }
+    .seg button {
+      font: inherit; font-size: 11.5px; font-weight: 600; color: var(--ink-2);
+      background: none; border: none; border-radius: 6px; padding: 6px 12px; cursor: pointer;
+    }
+    .seg button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand); }
+
+    /* ===================== TABLAS ===================== */
+    .table-wrap { overflow-x: auto; }
+    table.data { width: 100%; border-collapse: collapse; min-width: 680px; font-variant-numeric: tabular-nums; }
+    table.data thead th {
+      background: #0d1114; color: var(--ink-muted);
+      font-size: 10.5px; font-weight: 600; letter-spacing: 1.3px; text-transform: uppercase;
+      padding: 12px 9px; text-align: left; white-space: nowrap;
+      border-bottom: 1px solid var(--hairline);
+      position: sticky; top: 0; z-index: 2; cursor: pointer; user-select: none;
+    }
+    table.data thead th:hover { color: var(--brand); }
+    table.data thead th .arrow { opacity: .35; margin-left: 5px; font-size: 9px; }
+    table.data thead th[aria-sort] .arrow { opacity: 1; color: var(--brand); }
+    table.data td {
+      padding: 11px 9px; font-size: 12.5px; border-bottom: 1px solid rgba(255,255,255,0.04);
+      white-space: nowrap;
+    }
+    table.data tbody tr:hover { background: rgba(255,122,26,0.045); }
+    table.data td.num { text-align: right; }
+    .pat {
+      font-weight: 700; color: var(--brand); letter-spacing: 0.4px;
+      background: none; border: none; font: inherit; font-weight: 700; color: var(--brand);
+      cursor: pointer; padding: 0; text-align: left;
+    }
+    .pat:hover { text-decoration: underline; }
+    .empty { padding: 34px; text-align: center; color: var(--ink-muted); font-size: 13px; }
+
+    /* ===================== GRAFICOS ===================== */
+    .grid-2 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); }
+    .grid-3 { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+
+    .chart-holder { width: 100%; overflow-x: auto; }
+    .chart-holder svg { display: block; max-width: 100%; height: auto; }
+    .chart-note { font-size: 11.5px; color: var(--ink-muted); margin-top: 10px; }
+
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+    .legend .item { display: inline-flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--ink-2); }
+    .legend .swatch { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+    .legend .val { color: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+    .btn-view {
+      font: inherit; font-size: 10.5px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+      color: var(--ink-muted); background: var(--surface-3);
+      border: 1px solid var(--hairline); border-radius: 7px; padding: 5px 10px; cursor: pointer;
+    }
+    .btn-view:hover { color: var(--ink); }
+    .btn-view[aria-pressed="true"] { color: var(--brand); border-color: rgba(255,122,26,0.35); }
+
+    table.mini { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+    table.mini th, table.mini td { padding: 7px 10px; text-align: right; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    table.mini th:first-child, table.mini td:first-child { text-align: left; }
+    table.mini th { color: var(--ink-muted); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600; }
+
+    #tip {
+      position: fixed; z-index: 90; pointer-events: none; opacity: 0;
+      transition: opacity .12s;
+      background: #0b0e11; border: 1px solid var(--hairline-2); border-radius: 9px;
+      padding: 9px 11px; font-size: 12px; line-height: 1.5;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.65); max-width: 250px;
+    }
+    #tip .t-title { font-weight: 600; margin-bottom: 3px; }
+    #tip .t-row { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+    #tip .t-row b { color: var(--ink); font-weight: 600; }
+
+    /* ===================== BARRA APILADA DE ESTADO ===================== */
+    .stack { display: flex; gap: 2px; height: 12px; border-radius: 4px; overflow: hidden; margin: 4px 0 14px; }
+    .stack > i { display: block; height: 100%; }
+    .stack > i:first-child { border-radius: 4px 0 0 4px; }
+    .stack > i:last-child { border-radius: 0 4px 4px 0; }
+
+    /* ===================== FICHA POR UNIDAD ===================== */
+    .unit-pick { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .ficha-head {
+      display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start;
+      padding: 20px; border-bottom: 1px solid var(--hairline);
+      background: linear-gradient(180deg, rgba(255,122,26,0.055), transparent);
+    }
+    .ficha-pat {
+      font-size: 34px; font-weight: 700; letter-spacing: 0.5px; color: var(--brand);
+      line-height: 1; margin-bottom: 8px;
+    }
+    .ficha-model { font-size: 14px; color: var(--ink); font-weight: 500; }
+    .ficha-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .tag {
+      font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; font-weight: 600;
+      color: var(--ink-2); background: var(--surface-3);
+      border: 1px solid var(--hairline); border-radius: 6px; padding: 4px 9px;
+    }
+    .specs { display: grid; gap: 14px 26px; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); flex: 1; min-width: 260px; }
+    .spec .s-label { font-size: 10px; letter-spacing: 1.3px; text-transform: uppercase; color: var(--ink-muted); font-weight: 600; }
+    .spec .s-value { font-size: 14px; margin-top: 4px; font-weight: 500; }
+
+    .progress { margin-top: 6px; }
+    .progress .bar { height: 8px; border-radius: 4px; background: var(--surface-3); overflow: hidden; }
+    .progress .bar > i { display: block; height: 100%; border-radius: 4px; }
+    .progress .ends {
+      display: flex; justify-content: space-between; margin-top: 6px;
+      font-size: 11px; color: var(--ink-muted); font-variant-numeric: tabular-nums;
+    }
+
+    .unit-chips { display: flex; gap: 6px; flex-wrap: wrap; max-height: 122px; overflow-y: auto; padding: 2px; }
+    .unit-chip {
+      font: inherit; font-size: 11.5px; font-weight: 600; letter-spacing: 0.3px;
+      color: var(--ink-2); background: var(--surface-3);
+      border: 1px solid var(--hairline); border-radius: 7px; padding: 6px 10px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .unit-chip:hover { color: var(--ink); border-color: var(--hairline-2); }
+    .unit-chip[aria-pressed="true"] { color: var(--brand); border-color: rgba(255,122,26,0.5); background: var(--brand-soft); }
+    .unit-chip .bullet { width: 6px; height: 6px; border-radius: 50%; flex: none; }
+
+    .banner {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: var(--surface-1); border: 1px solid var(--hairline);
+      border-left: 3px solid var(--st-warning);
+      border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--ink-2);
+      margin-bottom: 14px;
+    }
+    .banner b { color: var(--ink); font-weight: 600; }
+
+    footer {
+      max-width: 1400px; margin: 42px auto 0; padding: 18px 20px 0;
+      border-top: 1px solid var(--hairline);
+      font-size: 11px; color: var(--ink-muted); line-height: 1.7;
+      position: relative; z-index: 1;
+    }
+
+    @media (max-width: 640px) {
+      .shell { padding: 0 12px; }
+      .ficha-pat { font-size: 27px; }
+      .kpi .k-value { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ============ HEADER ============ -->
+  <div class="topbar">
+    <img src="Imagenes/logo_diemar4.png" alt="Diemar" class="logo">
+    <div class="brandblock">
+      <div class="sub">Expreso Diemar</div>
+      <h1>Control de Flota &amp; Mantenimiento</h1>
+    </div>
+    <div class="meta">
+      <span class="chip" id="chip-fuente" title="Origen de los datos"><span class="dot off"></span><span id="fuente-txt">Sincronizando</span></span>
+      <span class="chip" id="chip-update"><span id="update-txt">--:--</span></span>
+      <button class="btn-refresh" id="btn-refresh" type="button">Actualizar</button>
+    </div>
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-general"   aria-selected="true"  data-panel="p-general">Control general</button>
+    <button class="tab" role="tab" id="tab-lad"       aria-selected="false" data-panel="p-lad">Larga distancia <span class="count" id="cnt-lad">0</span></button>
+    <button class="tab" role="tab" id="tab-dist"      aria-selected="false" data-panel="p-dist">Distribución <span class="count" id="cnt-dist">0</span></button>
+    <button class="tab" role="tab" id="tab-unidad"    aria-selected="false" data-panel="p-unidad">Por patente</button>
+    <button class="tab" role="tab" id="tab-prefiltro" aria-selected="false" data-panel="p-prefiltro">Prefiltros <span class="count" id="cnt-pref">0</span></button>
+  </div>
+
+  <!-- ============ PANEL: CONTROL GENERAL ============ -->
+  <section class="panel active" id="p-general" role="tabpanel" aria-labelledby="tab-general">
+
+    <div class="kpi-row" id="kpis-globales"></div>
+
+    <div class="section-label">Larga distancia vs. distribución</div>
+    <div class="grid-2" id="grupos-panel"></div>
+
+    <div class="section-label">Unidades más urgentes</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h3>Larga distancia &mdash; top 8 por km restantes</h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="rank-lad" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="rank-lad"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Distribución &mdash; top 8 por km restantes</h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="rank-dist" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="rank-dist"></div></div>
+      </div>
+    </div>
+
+    <div class="section-label">Distribución por sucursal</div>
+    <div class="card">
+      <div class="card-head">
+        <h3>Unidades por sucursal</h3>
+        <span class="spacer"></span>
+        <button class="btn-view" type="button" data-view="suc-chart" aria-pressed="false">Tabla</button>
+      </div>
+      <div class="card-body"><div id="suc-chart"></div></div>
+    </div>
+
+    <div class="section-label">Telemetría de la flota</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head">
+          <h3>Consumo promedio de la flota (l/100 km)</h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="flota-consumo" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="flota-consumo"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Emisiones totales de la flota (kg CO&#8322;)</h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="flota-co2" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="flota-co2"></div></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head">
+          <h3>Consumo por unidad &mdash; <span id="lbl-rank-consumo">…</span></h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="rank-consumo" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="rank-consumo"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>Ralentí por unidad (%) &mdash; <span id="lbl-rank-ralenti">…</span></h3>
+          <span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="rank-ralenti" aria-pressed="false">Tabla</button>
+        </div>
+        <div class="card-body"><div id="rank-ralenti"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL: LARGA DISTANCIA ============ -->
+  <section class="panel" id="p-lad" role="tabpanel" aria-labelledby="tab-lad">
+    <div class="kpi-row" id="kpis-lad"></div>
+    <div class="filterbar" style="margin-top:16px">
+      <span class="fl">Filtrar</span>
+      <input class="inp" type="search" id="f-lad-txt" placeholder="Patente, chofer, marca, modelo…">
+      <select class="sel" id="f-lad-estado">
+        <option value="">Todos los estados</option>
+        <option value="vencido">Vencido</option>
+        <option value="urgente">Urgente (&lt; 5.000 km)</option>
+        <option value="proximo">Próximo (&lt; 15.000 km)</option>
+        <option value="ok">Al día</option>
+        <option value="sindato">Sin datos</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table class="data" id="tbl-lad"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL: DISTRIBUCION ============ -->
+  <section class="panel" id="p-dist" role="tabpanel" aria-labelledby="tab-dist">
+    <div class="kpi-row" id="kpis-dist"></div>
+    <div class="filterbar" style="margin-top:16px">
+      <span class="fl">Filtrar</span>
+      <input class="inp" type="search" id="f-dist-txt" placeholder="Patente, chofer, marca, modelo…">
+      <select class="sel" id="f-dist-suc"><option value="">Todas las sucursales</option></select>
+      <select class="sel" id="f-dist-estado">
+        <option value="">Todos los estados</option>
+        <option value="vencido">Vencido</option>
+        <option value="urgente">Urgente (&lt; 5.000 km)</option>
+        <option value="proximo">Próximo (&lt; 15.000 km)</option>
+        <option value="ok">Al día</option>
+        <option value="sindato">Sin datos</option>
+      </select>
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table class="data" id="tbl-dist"></table></div>
+    </div>
+  </section>
+
+  <!-- ============ PANEL: POR PATENTE ============ -->
+  <section class="panel" id="p-unidad" role="tabpanel" aria-labelledby="tab-unidad">
+    <div class="filterbar">
+      <span class="fl">Unidad</span>
+      <input class="inp" type="search" id="f-unidad" placeholder="Buscar patente, chofer o modelo…" style="min-width:250px">
+      <div class="seg" id="seg-grupo">
+        <button type="button" data-g="" aria-pressed="true">Todas</button>
+        <button type="button" data-g="LAD" aria-pressed="false">Larga distancia</button>
+        <button type="button" data-g="DIS" aria-pressed="false">Distribución</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-body" style="padding:14px"><div class="unit-chips" id="unit-chips"></div></div>
+    </div>
+    <div id="ficha"></div>
+  </section>
+
+  <!-- ============ PANEL: PREFILTROS ============ -->
+  <section class="panel" id="p-prefiltro" role="tabpanel" aria-labelledby="tab-prefiltro">
+    <div class="filterbar">
+      <span class="fl">Filtrar</span>
+      <input class="inp" type="search" id="f-pref-txt" placeholder="Patente…">
+    </div>
+    <div class="card">
+      <div class="table-wrap"><table class="data" id="tbl-pref"></table></div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="shell">
+  <div>Fuentes: planilla <b>SERVICES</b> (flota, services y prefiltros) y planilla <b>COMBUSTIBLE</b> (telemetría, emisiones y ralentí).</div>
+  <div>Si una planilla no responde en vivo, el tablero usa el respaldo local en <code>data/flota.json</code> y <code>data/telemetria.json</code>.</div>
+</footer>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+   CONFIGURACION DE FUENTES
+   ---------------------------------------------------------------------
+   El tablero intenta leer en vivo y, si no puede (planilla sin publicar,
+   sin permisos o sin red), cae al respaldo local del repositorio.
+   ===================================================================== */
+const CFG = {
+  // Planilla SERVICES publicada en la web (Archivo > Compartir > Publicar en la web)
+  pubServices : "https://docs.google.com/spreadsheets/d/e/2PACX-1vS-BcGUJLdB2MCZXH1VRCOXSZQwktrKeEYO4DrEswu1Dso8nr9291YZWcWB4Sp8POdJM4plo0VEfn8f/pub?output=csv",
+  idServices  : "10xcMyBI6T4fxLidVu0strLV_tqrKrHJsdPi0y2SP0cU",
+  idCombust   : "1u7cckay0IJ60bfoKk2OZo-TjCvTbH9O1wKxNFdSKDCQ",
+  gid: {
+    lad       : "0",            // services larga distancia
+    conjunto  : "1026354276",   // services toda la flota
+    prefiltro : "1669414303",   // prefiltros
+    flota     : "743729287",    // maestro de unidades (modelo/marca/patente/sucursal)
+    telemetria: "0",            // consumo mensual l/100km
+    emisiones : "882343299"     // % ralenti y kg CO2
+  },
+  local: { flota: "data/flota.json", telemetria: "data/telemetria.json", servicios: "data/services.json" },
+  refreshMs: 300000
+};
+
+const gviz = (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
+const pub  = (gid)     => `${CFG.pubServices}&gid=${gid}`;
+
+/* =====================================================================
+   PALETA (tokens leidos del CSS para no duplicar valores)
+   ===================================================================== */
+const CSSV = getComputedStyle(document.documentElement);
+const C = {
+  s1: CSSV.getPropertyValue('--series-1').trim(),
+  s2: CSSV.getPropertyValue('--series-2').trim(),
+  s3: CSSV.getPropertyValue('--series-3').trim(),
+  grid: CSSV.getPropertyValue('--grid').trim(),
+  axis: CSSV.getPropertyValue('--axis').trim(),
+  muted: CSSV.getPropertyValue('--ink-muted').trim(),
+  ink2: CSSV.getPropertyValue('--ink-2').trim(),
+  surface: CSSV.getPropertyValue('--surface-1').trim()
+};
+
+const ESTADOS = {
+  vencido : { label:'VENCIDO',   icon:'!', cls:'st-vencido', color: CSSV.getPropertyValue('--st-critical').trim(), orden:0 },
+  urgente : { label:'URGENTE',   icon:'▲', cls:'st-urgente', color: CSSV.getPropertyValue('--st-serious').trim(),  orden:1 },
+  proximo : { label:'PRÓXIMO',   icon:'◆', cls:'st-proximo', color: CSSV.getPropertyValue('--st-warning').trim(),  orden:2 },
+  ok      : { label:'AL DÍA',    icon:'✓', cls:'st-ok',      color: CSSV.getPropertyValue('--st-good').trim(),     orden:3 },
+  sindato : { label:'SIN DATOS', icon:'?', cls:'st-sindato', color: CSSV.getPropertyValue('--st-none').trim(),     orden:4 }
+};
+const ORDEN_ESTADOS = ['vencido','urgente','proximo','ok','sindato'];
+
+const UMBRAL_URGENTE = 5000;
+const UMBRAL_PROXIMO = 15000;
+
+function estadoDe(falta) {
+  if (falta === null || !isFinite(falta)) return 'sindato';
+  if (falta < 0) return 'vencido';
+  if (falta < UMBRAL_URGENTE) return 'urgente';
+  if (falta < UMBRAL_PROXIMO) return 'proximo';
+  return 'ok';
+}
+
+/* =====================================================================
+   UTILIDADES
+   ===================================================================== */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+    ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]);
+}
+
+/** Normaliza una patente: "AD 247 MQ" y "AD247MQ" son la misma unidad. */
+function normPat(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+/** Formato de patente legible: AD247MQ -> AD 247 MQ */
+function fmtPat(s) {
+  const n = normPat(s);
+  const m = n.match(/^([A-Z]{2})(\d{3})([A-Z]{2})$/);
+  if (m) return `${m[1]} ${m[2]} ${m[3]}`;
+  const o = n.match(/^([A-Z]{3})(\d{3})$/);
+  if (o) return `${o[1]} ${o[2]}`;
+  return String(s || '').trim();
+}
+
+/**
+ * Parser numerico tolerante al formato es-AR y al formato crudo de gviz.
+ * "1.759.118" -> 1759118 · "232.005,59" -> 232005.59 · "34,17" -> 34.17 · "5435.3" -> 5435.3
+ */
+function num(v) {
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  let s = String(v == null ? '' : v).replace(/[\s $%]/g, '').replace(/(kg|km|lts?)/gi, '').trim();
+  if (!s || s === '-' || s === '—') return null;
+  let neg = false;
+  if (/^\(.*\)$/.test(s)) { neg = true; s = s.slice(1, -1); }
+  if (s[0] === '-') { neg = true; s = s.slice(1); }
+  if (!/^[\d.,]+$/.test(s)) return null;
+  const lc = s.lastIndexOf(','), ld = s.lastIndexOf('.');
+  if (lc >= 0 && ld >= 0) {
+    const dec = lc > ld ? ',' : '.';
+    s = s.replace(dec === ',' ? /\./g : /,/g, '').replace(dec, '.');
+  } else if (lc >= 0) {
+    s = /^\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g, '') : s.replace(',', '.');
+  } else if (ld >= 0) {
+    if (/^\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+  }
+  const n = parseFloat(s);
+  if (!isFinite(n)) return null;
+  return neg ? -n : n;
+}
+
+const nf0 = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 0 });
+const nf1 = new Intl.NumberFormat('es-AR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmt0 = n => (n === null || !isFinite(n)) ? '—' : nf0.format(Math.round(n));
+const fmt1 = n => (n === null || !isFinite(n)) ? '—' : nf1.format(n);
+
+const MESES_AR = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function mesLabel(m) {                       // "2026-07" -> "jul 26"
+  const p = String(m).split('-');
+  return p.length === 2 ? `${MESES_AR[parseInt(p[1], 10) - 1]} ${p[0].slice(2)}` : m;
+}
+function mesFromFecha(s) {                   // "31/07/2026" -> "2026-07"
+  const m = String(s || '').trim().match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (!m) return null;
+  let y = m[3]; if (y.length === 2) y = '20' + y;
+  return `${y}-${String(parseInt(m[2], 10)).padStart(2, '0')}`;
+}
+
+/** CSV completo (respeta comillas y saltos de linea dentro de celdas). */
+function parseCSV(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  const t = text.replace(/\r\n?/g, '\n');
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) {
+      if (ch === '"') { if (t[i + 1] === '"') { cell += '"'; i++; } else q = false; }
+      else cell += ch;
+    } else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell.trim()); cell = ''; }
+    else if (ch === '\n') { row.push(cell.trim()); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell !== '' || row.length) { row.push(cell.trim()); rows.push(row); }
+  return rows.filter(r => r.some(c => c !== ''));
+}
+
+/** Prueba varias URLs y devuelve el primer CSV valido. */
+async function fetchCSV(urls) {
+  for (const u of urls) {
+    try {
+      const sep = u.includes('?') ? '&' : '?';
+      const r = await fetch(u + sep + '_=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) continue;
+      const t = await r.text();
+      if (!t || t.trimStart().startsWith('<')) continue;   // login de Google / HTML
+      const rows = parseCSV(t);
+      if (rows.length > 1) return rows;
+    } catch (e) { /* CORS, red o permisos: probamos la siguiente */ }
+  }
+  return null;
+}
+
+/* =====================================================================
+   ESTADO DE LA APLICACION
+   ===================================================================== */
+const APP = {
+  unidades: new Map(),   // patente normalizada -> unidad
+  prefiltros: [],
+  meses: [],
+  fuentes: { flota: null, servicios: null, telemetria: null },
+  seleccion: null,
+  filtroGrupo: ''
+};
+
+/* =====================================================================
+   CARGA DE DATOS
+   ===================================================================== */
+
+/** Maestro de unidades: modelo(A) · marca(C) · chofer(D) · patente(E) · interno(F) · semi(G) · sucursal(H) · uso(I) */
+async function cargarFlota() {
+  const rows = await fetchCSV([pub(CFG.gid.flota), gviz(CFG.idServices, CFG.gid.flota)]);
+  if (rows) {
+    const head = rows.findIndex(r => (r[4] || '').toUpperCase().includes('PATENTE'));
+    const body = rows.slice(head >= 0 ? head + 1 : 1);
+    const out = body
+      .filter(r => normPat(r[4]).length >= 6)
+      .map(r => ({ modelo:r[0]||'', marca:r[2]||'', chofer:r[3]||'', patente:r[4]||'',
+                   interno:r[5]||'', semi:r[6]||'', sucursal:r[7]||'', uso:r[8]||'' }));
+    if (out.length > 5) { APP.fuentes.flota = 'vivo'; return out; }
+  }
+  const j = await fetch(CFG.local.flota, { cache: 'no-store' }).then(r => r.json());
+  APP.fuentes.flota = 'local';
+  return j.unidades.map(u => ({ modelo:u[0], marca:u[1], chofer:u[2], patente:u[3],
+                                interno:u[4], semi:u[5], sucursal:u[6], uso:u[7] }));
+}
+
+/** Tablas de service: patente(0) marca(1) chofer(2) residencia(3) fecha(4) kmUlt(5) kmProx(6) kmAct(7) falta(8) */
+function parseServicios(rows) {
+  const out = [];
+  for (const r of rows) {
+    const p = normPat(r[0]);
+    if (p.length < 6 || (r[0] || '').toUpperCase().includes('PATENTE')) continue;
+    out.push({
+      patente: p, marca: r[1] || '', chofer: r[2] || '', residencia: r[3] || '',
+      fechaUlt: r[4] || '', kmUlt: num(r[5]), kmProx: num(r[6]), kmAct: num(r[7]), falta: num(r[8])
+    });
+  }
+  return out;
+}
+
+async function cargarServicios() {
+  const [lad, conj, pref] = await Promise.all([
+    fetchCSV([pub(CFG.gid.lad),       gviz(CFG.idServices, CFG.gid.lad)]),
+    fetchCSV([pub(CFG.gid.conjunto),  gviz(CFG.idServices, CFG.gid.conjunto)]),
+    fetchCSV([pub(CFG.gid.prefiltro), gviz(CFG.idServices, CFG.gid.prefiltro)])
+  ]);
+
+  if (lad || conj) {
+    APP.fuentes.servicios = 'vivo';
+    APP.prefiltros = (pref || []).reduce((acc, r) => {
+      const p = normPat(r[0]);
+      if (p.length >= 6 && !(r[0] || '').toUpperCase().includes('PATENTE')) {
+        acc.push({ patente: p, kmUlt: num(r[1]), kmProx: num(r[2]), falta: num(r[3]) });
+      }
+      return acc;
+    }, []);
+    return {
+      servicios: parseServicios(conj || lad),
+      setLAD: new Set(lad ? parseServicios(lad).map(x => x.patente) : [])
+    };
+  }
+
+  // Respaldo local del repositorio
+  const j = await fetch(CFG.local.servicios, { cache: 'no-store' }).then(r => r.json());
+  APP.fuentes.servicios = 'local';
+  const fila = r => ({ patente: normPat(r[0]), marca: r[1], chofer: r[2], residencia: r[3],
+                       fechaUlt: r[4], kmUlt: r[5], kmProx: r[6], kmAct: r[7], falta: r[8] });
+  APP.prefiltros = (j.prefiltros || []).map(r =>
+    ({ patente: normPat(r[0]), kmUlt: r[1], kmProx: r[2], falta: r[3] }));
+  return {
+    servicios: j.lad.concat(j.conjunto).map(fila),
+    setLAD: new Set(j.lad.map(r => normPat(r[0])))
+  };
+}
+
+/** La telemetria es mensual y la planilla es grande: se cachea unas horas
+ *  para que el refresco automatico no la vuelva a bajar cada 5 minutos. */
+let telemCache = { t: 0, data: null };
+const TELEM_TTL = 6 * 3600 * 1000;
+
+/** Telemetria: consumo mensual + emisiones/ralenti. Devuelve { patentes }. */
+async function cargarTelemetria() {
+  if (telemCache.data && Date.now() - telemCache.t < TELEM_TTL) return telemCache.data;
+
+  const [tel, emi] = await Promise.all([
+    fetchCSV([gviz(CFG.idCombust, CFG.gid.telemetria)]),
+    fetchCSV([gviz(CFG.idCombust, CFG.gid.emisiones)])
+  ]);
+
+  if (tel || emi) {
+    const acc = new Map();
+    const slot = (p, m) => {
+      if (!acc.has(p)) acc.set(p, new Map());
+      const s = acc.get(p);
+      if (!s.has(m)) s.set(m, { mes:m, km:null, lts:null, c100:null, co2:null, ralenti:null, horas:null });
+      return s.get(m);
+    };
+    // FECHA(0) DOMINIO(1) TAG(2) MARCA(3) DISTANCIA(4) LITROS(5) CONSUMO/100(6)
+    const tags = new Map(), marcas = new Map();
+    for (const r of (tel || [])) {
+      const p = normPat(r[1]), m = mesFromFecha(r[0]);
+      if (!p || !m) continue;
+      const s = slot(p, m);
+      s.km = num(r[4]); s.lts = num(r[5]); s.c100 = num(r[6]);
+      if (r[2]) tags.set(p, r[2]);
+      if (r[3]) marcas.set(p, r[3]);
+    }
+    // FECHA(0) DOMINIO(1) HORAS MOTOR(2) RALENTI %(3) EMISIONES KG CO2(4)
+    for (const r of (emi || [])) {
+      const p = normPat(r[1]), m = mesFromFecha(r[0]);
+      if (!p || !m) continue;
+      const s = slot(p, m);
+      s.ralenti = num(r[3]); s.co2 = num(r[4]);
+      const h = String(r[2] || '').match(/^(\d+):/);
+      s.horas = h ? parseInt(h[1], 10) : null;
+    }
+    if (acc.size) {
+      APP.fuentes.telemetria = 'vivo';
+      const patentes = {};
+      for (const [p, s] of acc) {
+        patentes[p] = { tag: tags.get(p) || '', marca: marcas.get(p) || '',
+                        serie: Array.from(s.values()).sort((a, b) => a.mes.localeCompare(b.mes)) };
+      }
+      telemCache = { t: Date.now(), data: { patentes } };
+      return telemCache.data;
+    }
+  }
+
+  const j = await fetch(CFG.local.telemetria, { cache: 'no-store' }).then(r => r.json());
+  APP.fuentes.telemetria = 'local';
+  telemCache = { t: Date.now(), data: { patentes: j.patentes } };
+  return telemCache.data;
+}
+
+/** Une maestro + services + telemetria en un unico indice de unidades. */
+function construirUnidades(flota, servicios, setLAD, telemetria) {
+  const map = new Map();
+
+  for (const f of flota) {
+    const p = normPat(f.patente);
+    if (!p) continue;
+    const esLAD = /LARGA/i.test(f.uso) || /^LAD$/i.test((f.sucursal || '').trim());
+    map.set(p, {
+      patente: p, display: fmtPat(f.patente),
+      modelo: f.modelo, marca: f.marca, chofer: f.chofer,
+      interno: f.interno, semi: f.semi,
+      sucursal: (f.sucursal || '').trim(), uso: f.uso,
+      grupo: esLAD ? 'LAD' : 'DIS',
+      fechaUlt: '', kmUlt: null, kmProx: null, kmAct: null, falta: null,
+      estado: 'sindato', serie: [], enFlota: true
+    });
+  }
+
+  for (const s of servicios) {
+    let u = map.get(s.patente);
+    if (!u) {
+      u = { patente: s.patente, display: fmtPat(s.patente), modelo: '', marca: s.marca,
+            chofer: s.chofer, interno: '', semi: '', sucursal: (s.residencia || '').trim(),
+            uso: '', grupo: 'DIS', serie: [], enFlota: false };
+      map.set(s.patente, u);
+    }
+    u.fechaUlt = s.fechaUlt; u.kmUlt = s.kmUlt; u.kmProx = s.kmProx;
+    u.kmAct = s.kmAct; u.falta = s.falta;
+    // Sin lectura de odometro no se puede afirmar nada del service
+    u.estado = (s.kmAct === null || !isFinite(s.kmAct)) ? 'sindato' : estadoDe(s.falta);
+    if (!u.marca)  u.marca  = s.marca;
+    if (!u.chofer) u.chofer = s.chofer;
+    if (!u.sucursal) u.sucursal = (s.residencia || '').trim();
+    if (setLAD.has(s.patente) || /^LAD$/i.test((s.residencia || '').trim())) u.grupo = 'LAD';
+  }
+
+  const meses = new Set();
+  for (const [p, t] of Object.entries(telemetria.patentes || {})) {
+    const u = map.get(p);
+    if (!u) continue;
+    u.serie = t.serie || [];
+    u.serie.forEach(s => meses.add(s.mes));
+    if (!u.marca && t.marca) u.marca = t.marca;
+  }
+
+  // Unidades sin patente real (herramientas, autoelevadores) fuera del tablero
+  for (const [p, u] of map) {
+    if (!/\d/.test(p) || p.length < 6) map.delete(p);
+  }
+
+  APP.unidades = map;
+  APP.meses = Array.from(meses).sort();
+}
+
+/* =====================================================================
+   GRAFICOS (SVG en linea, sin dependencias)
+   ===================================================================== */
+const TIP = $('#tip');
+function tipShow(html, ev) {
+  TIP.innerHTML = html;
+  TIP.style.opacity = '1';
+  const r = TIP.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - 12;
+  if (x + r.width > window.innerWidth - 8)  x = ev.clientX - r.width - 14;
+  if (y + r.height > window.innerHeight - 8) y = window.innerHeight - r.height - 8;
+  if (y < 8) y = 8;
+  TIP.style.left = x + 'px';
+  TIP.style.top  = y + 'px';
+}
+function tipHide() { TIP.style.opacity = '0'; }
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+function el(tag, attrs, parent) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+
+/** Escalones "lindos" para el eje Y. */
+function ticks(max, count) {
+  if (!(max > 0)) return [0, 1];
+  const raw = max / count;
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].find(m => m * mag >= raw) * mag;
+  const out = [];
+  for (let v = 0; v <= max + step * 0.001; v += step) out.push(v);
+  return out;
+}
+
+/**
+ * Serie temporal (una sola serie => sin leyenda, el titulo la nombra).
+ * points: [{x:'2026-07', y:34.2}]  ·  fmt: formateador de valor
+ */
+function lineChart(host, points, opt) {
+  opt = opt || {};
+  host.innerHTML = '';
+  const pts = points.filter(p => p.y !== null && isFinite(p.y));
+  if (pts.length < 2) {
+    host.innerHTML = `<div class="empty">Se necesitan al menos dos meses con datos para trazar la evolución.</div>`;
+    return;
+  }
+  const W = Math.max(340, Math.min(opt.width || host.clientWidth || 620, 980));
+  const H = opt.height || 230;
+  const M = { t: 16, r: 18, b: 30, l: 52 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const color = opt.color || C.s1;
+  const fmt = opt.fmt || fmt1;
+
+  const maxY = Math.max.apply(null, pts.map(p => p.y));
+  const tk = ticks(maxY, 4);
+  const top = tk[tk.length - 1];
+  const X = i => M.l + (pts.length === 1 ? iw / 2 : (i * iw) / (pts.length - 1));
+  const Y = v => M.t + ih - (v / top) * ih;
+
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img',
+                          'aria-label': opt.aria || 'Evolución mensual' }, host);
+
+  tk.forEach(v => {
+    el('line', { x1: M.l, x2: W - M.r, y1: Y(v), y2: Y(v), stroke: C.grid, 'stroke-width': 1 }, svg);
+    const t = el('text', { x: M.l - 9, y: Y(v) + 4, 'text-anchor': 'end',
+                           fill: C.muted, 'font-size': 10.5 }, svg);
+    t.textContent = fmt(v);
+    t.style.fontVariantNumeric = 'tabular-nums';
+  });
+  el('line', { x1: M.l, x2: W - M.r, y1: M.t + ih, y2: M.t + ih, stroke: C.axis, 'stroke-width': 1 }, svg);
+
+  // Etiquetas de X sin colisiones: se muestran cada N segun el ancho
+  // Se etiqueta desde el ultimo mes hacia atras: el mes mas reciente siempre
+  // aparece y el espaciado queda uniforme (sin superposiciones).
+  const paso = Math.max(1, Math.ceil(pts.length / Math.max(1, Math.floor(iw / 54))));
+  for (let i = pts.length - 1; i >= 0; i -= paso) {
+    const t = el('text', { x: X(i), y: H - 9, 'text-anchor': 'middle', fill: C.muted, 'font-size': 10.5 }, svg);
+    t.textContent = mesLabel(pts[i].x);
+  }
+
+  if (opt.area !== false) {
+    const gid = 'g' + Math.random().toString(36).slice(2, 8);
+    const lg = el('linearGradient', { id: gid, x1: 0, y1: 0, x2: 0, y2: 1 }, el('defs', {}, svg));
+    el('stop', { offset: '0%',   'stop-color': color, 'stop-opacity': 0.26 }, lg);
+    el('stop', { offset: '100%', 'stop-color': color, 'stop-opacity': 0 }, lg);
+    const d = pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.y)}`).join('') +
+              `L${X(pts.length - 1)},${M.t + ih}L${X(0)},${M.t + ih}Z`;
+    el('path', { d, fill: `url(#${gid})` }, svg);
+  }
+
+  el('path', {
+    d: pts.map((p, i) => `${i ? 'L' : 'M'}${X(i)},${Y(p.y)}`).join(''),
+    fill: 'none', stroke: color, 'stroke-width': 2,
+    'stroke-linejoin': 'round', 'stroke-linecap': 'round'
+  }, svg);
+
+  // Promedio de referencia
+  if (opt.ref !== false && pts.length > 2) {
+    const avg = pts.reduce((a, p) => a + p.y, 0) / pts.length;
+    el('line', { x1: M.l, x2: W - M.r, y1: Y(avg), y2: Y(avg),
+                 stroke: C.axis, 'stroke-width': 1 }, svg);
+    const t = el('text', { x: W - M.r, y: Y(avg) - 6, 'text-anchor': 'end',
+                           fill: C.muted, 'font-size': 10 }, svg);
+    t.textContent = 'prom. ' + fmt(avg);
+  }
+
+  // Etiqueta directa solo en el ultimo punto
+  const last = pts[pts.length - 1];
+  el('circle', { cx: X(pts.length - 1), cy: Y(last.y), r: 4.5, fill: color,
+                 stroke: C.surface, 'stroke-width': 2 }, svg);
+
+  // Capa de hover: banda por punto (area de contacto amplia)
+  const cross = el('line', { x1: 0, x2: 0, y1: M.t, y2: M.t + ih, stroke: C.axis,
+                             'stroke-width': 1, opacity: 0 }, svg);
+  const focus = el('circle', { r: 5.5, fill: color, stroke: C.surface, 'stroke-width': 2, opacity: 0 }, svg);
+  pts.forEach((p, i) => {
+    const bw = Math.max(24, iw / pts.length);
+    const hit = el('rect', { x: X(i) - bw / 2, y: M.t, width: bw, height: ih,
+                             fill: 'transparent', style: 'cursor:crosshair' }, svg);
+    hit.addEventListener('mousemove', ev => {
+      cross.setAttribute('x1', X(i)); cross.setAttribute('x2', X(i)); cross.setAttribute('opacity', 1);
+      focus.setAttribute('cx', X(i)); focus.setAttribute('cy', Y(p.y)); focus.setAttribute('opacity', 1);
+      tipShow(`<div class="t-title">${esc(mesLabel(p.x))}</div>
+               <div class="t-row">${esc(opt.serieName || 'Valor')}: <b>${fmt(p.y)}${esc(opt.unit || '')}</b></div>
+               ${p.extra ? `<div class="t-row">${p.extra}</div>` : ''}`, ev);
+    });
+    hit.addEventListener('mouseleave', () => {
+      cross.setAttribute('opacity', 0); focus.setAttribute('opacity', 0); tipHide();
+    });
+  });
+}
+
+/** Barras verticales por mes (una serie). */
+function barChart(host, points, opt) {
+  opt = opt || {};
+  host.innerHTML = '';
+  const pts = points.filter(p => p.y !== null && isFinite(p.y));
+  if (!pts.length) { host.innerHTML = `<div class="empty">Sin datos cargados para este período.</div>`; return; }
+
+  const W = Math.max(340, Math.min(opt.width || host.clientWidth || 620, 980));
+  const H = opt.height || 230;
+  const M = { t: 16, r: 16, b: 30, l: 58 };
+  const iw = W - M.l - M.r, ih = H - M.t - M.b;
+  const color = opt.color || C.s2;
+  const fmt = opt.fmt || fmt0;
+
+  const tk = ticks(Math.max.apply(null, pts.map(p => p.y)), 4);
+  const top = tk[tk.length - 1];
+  const slot = iw / pts.length;
+  const bw = Math.max(4, Math.min(38, slot - 2));   // 2px de aire entre barras
+
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img',
+                          'aria-label': opt.aria || 'Valores mensuales' }, host);
+
+  tk.forEach(v => {
+    const y = M.t + ih - (v / top) * ih;
+    el('line', { x1: M.l, x2: W - M.r, y1: y, y2: y, stroke: C.grid, 'stroke-width': 1 }, svg);
+    const t = el('text', { x: M.l - 9, y: y + 4, 'text-anchor': 'end', fill: C.muted, 'font-size': 10.5 }, svg);
+    t.textContent = fmt(v);
+    t.style.fontVariantNumeric = 'tabular-nums';
+  });
+  el('line', { x1: M.l, x2: W - M.r, y1: M.t + ih, y2: M.t + ih, stroke: C.axis, 'stroke-width': 1 }, svg);
+
+  const paso = Math.max(1, Math.ceil(pts.length / Math.max(1, Math.floor(iw / 54))));
+  const etiquetar = new Set();
+  for (let i = pts.length - 1; i >= 0; i -= paso) etiquetar.add(i);
+  pts.forEach((p, i) => {
+    const cx = M.l + slot * i + slot / 2;
+    const h = Math.max(2, (p.y / top) * ih);
+    const r = el('rect', { x: cx - bw / 2, y: M.t + ih - h, width: bw, height: h,
+                           rx: 4, fill: color, style: 'cursor:pointer' }, svg);
+    // el redondeo solo debe verse arriba: tapamos la base
+    if (h > 6) el('rect', { x: cx - bw / 2, y: M.t + ih - 4, width: bw, height: 4, fill: color }, svg);
+    r.addEventListener('mousemove', ev => tipShow(
+      `<div class="t-title">${esc(mesLabel(p.x))}</div>
+       <div class="t-row">${esc(opt.serieName || 'Valor')}: <b>${fmt(p.y)}${esc(opt.unit || '')}</b></div>`, ev));
+    r.addEventListener('mouseleave', tipHide);
+
+    if (etiquetar.has(i)) {
+      const t = el('text', { x: cx, y: H - 9, 'text-anchor': 'middle', fill: C.muted, 'font-size': 10.5 }, svg);
+      t.textContent = mesLabel(p.x);
+    }
+  });
+}
+
+/**
+ * Ranking horizontal. items: [{label, value, color, sub, meta}]
+ * Se usa para "km restantes" (color = estado) y para consumo/ralenti (color = serie).
+ */
+function hbarChart(host, items, opt) {
+  opt = opt || {};
+  host.innerHTML = '';
+  if (!items.length) { host.innerHTML = `<div class="empty">Sin unidades para mostrar.</div>`; return; }
+
+  const rowH = 30, gap = 6;
+  const W = Math.max(320, Math.min(opt.width || host.clientWidth || 560, 980));
+  const H = items.length * (rowH + gap) + 6;
+  const labelW = opt.labelW || 92;
+  const valueW = opt.valueW || 84;
+  const iw = W - labelW - valueW - 8;
+  const fmt = opt.fmt || fmt0;
+
+  // El cero se ubica segun el dominio real: si todos los valores son
+  // negativos las barras ocupan el ancho completo hacia la izquierda.
+  const vals = items.map(i => i.value);
+  const vmin = Math.min(0, Math.min.apply(null, vals));
+  const vmax = Math.max(0, Math.max.apply(null, vals));
+  const span = (vmax - vmin) || 1;
+  const scale = iw / span;
+  const zero = labelW + (0 - vmin) * scale;
+  const hayNeg = vmin < 0 && vmax > 0;
+
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: 'img',
+                          'aria-label': opt.aria || 'Ranking' }, host);
+
+  items.forEach((it, i) => {
+    const y = i * (rowH + gap) + 3;
+    const len = Math.max(2, Math.abs(it.value) * scale);
+    const x = it.value < 0 ? zero - len : zero;
+
+    const lbl = el('text', { x: 0, y: y + rowH / 2 + 4, fill: C.ink2, 'font-size': 11.5,
+                             style: 'cursor:pointer' }, svg);
+    lbl.textContent = it.label;
+    lbl.style.fontWeight = '600';
+
+    const bar = el('rect', { x, y: y + 6, width: len, height: rowH - 12, rx: 4,
+                             fill: it.color || C.s1, style: 'cursor:pointer' }, svg);
+
+    const v = el('text', { x: W - 2, y: y + rowH / 2 + 4, 'text-anchor': 'end',
+                           fill: C.ink2, 'font-size': 11.5 }, svg);
+    v.textContent = fmt(it.value) + (opt.unit || '');
+    v.style.fontVariantNumeric = 'tabular-nums';
+
+    const hit = el('rect', { x: 0, y, width: W, height: rowH, fill: 'transparent',
+                             style: 'cursor:pointer' }, svg);
+    const onMove = ev => tipShow(
+      `<div class="t-title">${esc(it.full || it.label)}</div>
+       <div class="t-row">${esc(opt.serieName || 'Valor')}: <b>${fmt(it.value)}${esc(opt.unit || '')}</b></div>
+       ${it.sub ? `<div class="t-row">${esc(it.sub)}</div>` : ''}`, ev);
+    [hit, bar, lbl].forEach(n => {
+      n.addEventListener('mousemove', onMove);
+      n.addEventListener('mouseleave', tipHide);
+      if (it.patente) n.addEventListener('click', () => abrirUnidad(it.patente));
+    });
+  });
+
+  if (hayNeg) el('line', { x1: zero, x2: zero, y1: 0, y2: H, stroke: C.axis, 'stroke-width': 1 }, svg);
+}
+
+/** Tabla equivalente a un grafico (vista accesible / WCAG). */
+function tablaDe(cols, rows) {
+  return `<table class="mini"><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead>
+          <tbody>${rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+
+/** Registra el par grafico/tabla para el boton "Tabla". */
+const VISTAS = {};
+function registrarVista(id, dibujar, tablaHTML) {
+  VISTAS[id] = { dibujar, tablaHTML, modo: (VISTAS[id] && VISTAS[id].modo) || 'chart' };
+  pintarVista(id);
+}
+function pintarVista(id) {
+  const v = VISTAS[id], host = document.getElementById(id);
+  if (!v || !host) return;
+  if (v.modo === 'tabla') host.innerHTML = v.tablaHTML();
+  else v.dibujar(host);
+}
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('.btn-view');
+  if (!b) return;
+  const id = b.dataset.view, v = VISTAS[id];
+  if (!v) return;
+  v.modo = v.modo === 'tabla' ? 'chart' : 'tabla';
+  b.setAttribute('aria-pressed', v.modo === 'tabla' ? 'true' : 'false');
+  b.textContent = v.modo === 'tabla' ? 'Gráfico' : 'Tabla';
+  pintarVista(id);
+});
+
+/* =====================================================================
+   COMPONENTES DE UI
+   ===================================================================== */
+function pillHTML(estado) {
+  const e = ESTADOS[estado];
+  return `<span class="pill ${e.cls}"><span class="ic"><span>${e.icon}</span></span>${e.label}</span>`;
+}
+
+function kpiHTML(label, value, foot, accent) {
+  return `<div class="kpi" style="--kpi-accent:${accent || 'var(--brand)'}">
+            <div class="k-label">${esc(label)}</div>
+            <div class="k-value">${value}</div>
+            <div class="k-foot">${foot || ''}</div>
+          </div>`;
+}
+
+function contarEstados(lista) {
+  const c = { vencido:0, urgente:0, proximo:0, ok:0, sindato:0 };
+  lista.forEach(u => c[u.estado]++);
+  return c;
+}
+
+function stackHTML(c, total) {
+  if (!total) return '';
+  return `<div class="stack" role="img" aria-label="Distribución de estados">` +
+    ORDEN_ESTADOS.filter(k => c[k] > 0).map(k =>
+      `<i style="flex:${c[k]};background:${ESTADOS[k].color}" title="${ESTADOS[k].label}: ${c[k]}"></i>`
+    ).join('') + `</div>`;
+}
+
+function legendEstadosHTML(c) {
+  return `<div class="legend">` + ORDEN_ESTADOS.map(k =>
+    `<span class="item"><span class="swatch" style="background:${ESTADOS[k].color}"></span>
+       ${ESTADOS[k].label} <span class="val">${c[k]}</span></span>`).join('') + `</div>`;
+}
+
+/* =====================================================================
+   PANEL: CONTROL GENERAL
+   ===================================================================== */
+function unidadesDe(grupo) {
+  const arr = Array.from(APP.unidades.values());
+  return grupo ? arr.filter(u => u.grupo === grupo) : arr;
+}
+
+function ultimoValor(u, campo) {
+  for (let i = u.serie.length - 1; i >= 0; i--) {
+    const v = u.serie[i][campo];
+    if (v !== null && isFinite(v)) return { mes: u.serie[i].mes, valor: v };
+  }
+  return null;
+}
+
+/** Ultimo mes con dato de `campo` en todo el conjunto: unifica la referencia
+ *  de los rankings para no comparar meses distintos entre unidades. */
+function mesRef(lista, campo) {
+  let mx = null;
+  lista.forEach(u => u.serie.forEach(s => {
+    if (s[campo] !== null && isFinite(s[campo]) && (mx === null || s.mes > mx)) mx = s.mes;
+  }));
+  return mx;
+}
+
+function valorEnMes(u, campo, mes) {
+  if (!mes) return null;
+  const s = u.serie.find(x => x.mes === mes);
+  const v = s ? s[campo] : null;
+  return (v === null || v === undefined || !isFinite(v)) ? null : v;
+}
+
+function renderGeneral() {
+  const todas = unidadesDe('');
+  const lad   = unidadesDe('LAD');
+  const dis   = unidadesDe('DIS');
+  const cAll  = contarEstados(todas);
+
+  const criticas = cAll.vencido + cAll.urgente;
+  const conTelem = todas.filter(u => u.serie.length).length;
+
+  $('#kpis-globales').innerHTML =
+    kpiHTML('Unidades en flota', fmt0(todas.length),
+            `${lad.length} larga distancia · ${dis.length} distribución`) +
+    kpiHTML('Requieren acción', fmt0(criticas),
+            `${cAll.vencido} vencidas · ${cAll.urgente} a menos de ${fmt0(UMBRAL_URGENTE)} km`,
+            criticas > 0 ? ESTADOS.vencido.color : ESTADOS.ok.color) +
+    kpiHTML('Próximo service', fmt0(cAll.proximo),
+            `entre ${fmt0(UMBRAL_URGENTE)} y ${fmt0(UMBRAL_PROXIMO)} km`, ESTADOS.proximo.color) +
+    kpiHTML('Al día', fmt0(cAll.ok),
+            `más de ${fmt0(UMBRAL_PROXIMO)} km de margen`, ESTADOS.ok.color) +
+    kpiHTML('Con telemetría', fmt0(conTelem),
+            `${fmt0(todas.length - conTelem)} sin datos de consumo`, C.s1);
+
+  // --- Paneles por grupo -------------------------------------------------
+  const panelGrupo = (titulo, lista, nota) => {
+    const c = contarEstados(lista);
+    const consumos = lista.map(u => ultimoValor(u, 'c100')).filter(Boolean);
+    const prom = consumos.length ? consumos.reduce((a, x) => a + x.valor, 0) / consumos.length : null;
+    const venc = lista.filter(u => u.estado === 'vencido').length;
+    return `<div class="card">
+      <div class="card-head"><h3>${esc(titulo)}</h3><span class="spacer"></span>
+        <span class="chip">${lista.length} unidades</span></div>
+      <div class="card-body">
+        ${legendEstadosHTML(c)}
+        ${stackHTML(c, lista.length)}
+        <div class="grid-3" style="margin-top:16px">
+          ${kpiHTML('Vencidas', fmt0(venc), venc ? 'service pasado de km' : 'ninguna', venc ? ESTADOS.vencido.color : ESTADOS.ok.color)}
+          ${kpiHTML('A menos de 5.000 km', fmt0(c.urgente), 'programar turno', ESTADOS.urgente.color)}
+          ${kpiHTML('Consumo promedio', prom === null ? '—' : fmt1(prom) + ' <span class="u">l/100</span>',
+                    consumos.length ? `sobre ${consumos.length} unidades con telemetría` : 'sin telemetría', C.s1)}
+        </div>
+        <div class="chart-note">${esc(nota)}</div>
+      </div></div>`;
+  };
+
+  $('#grupos-panel').innerHTML =
+    panelGrupo('Larga distancia', lad,
+      'Unidades marcadas como LARGA DISTANCIA en el maestro de flota. Ciclo de service de 40.000 a 45.000 km.') +
+    panelGrupo('Distribución', dis,
+      'Distribución local y reparto de sucursales. Ciclo de service de 10.000 a 30.000 km según unidad.');
+
+  // --- Rankings de urgencia ---------------------------------------------
+  const rank = (lista, n) => lista
+    .filter(u => u.falta !== null && isFinite(u.falta))
+    .sort((a, b) => a.falta - b.falta)
+    .slice(0, n)
+    .map(u => ({ label: u.display, full: u.display + ' · ' + (u.modelo || u.marca),
+                 value: u.falta, color: ESTADOS[u.estado].color, patente: u.patente,
+                 sub: `${ESTADOS[u.estado].label} · ${u.sucursal || 's/suc.'} · ${u.chofer || 'sin chofer'}` }));
+
+  const rankTabla = items => tablaDe(['Unidad', 'Estado', 'Km restantes'],
+    items.map(i => [esc(i.label), esc(i.sub.split(' · ')[0]), fmt0(i.value)]));
+
+  const rLad = rank(lad, 8), rDis = rank(dis, 8);
+  registrarVista('rank-lad',
+    host => hbarChart(host, rLad, { serieName: 'Km restantes', unit: ' km', aria: 'Larga distancia por km restantes' }),
+    () => rankTabla(rLad));
+  registrarVista('rank-dist',
+    host => hbarChart(host, rDis, { serieName: 'Km restantes', unit: ' km', aria: 'Distribución por km restantes' }),
+    () => rankTabla(rDis));
+
+  // --- Sucursales --------------------------------------------------------
+  const porSuc = new Map();
+  todas.forEach(u => {
+    const s = u.grupo === 'LAD' ? 'LAD (larga distancia)' : (u.sucursal || 'Sin sucursal');
+    if (!porSuc.has(s)) porSuc.set(s, { total: 0, criticas: 0 });
+    const e = porSuc.get(s);
+    e.total++;
+    if (u.estado === 'vencido' || u.estado === 'urgente') e.criticas++;
+  });
+  const sucItems = Array.from(porSuc.entries())
+    .sort((a, b) => b[1].total - a[1].total)
+    .map(([k, v]) => ({ label: k, value: v.total, color: C.s1,
+                        sub: `${v.criticas} con service vencido o urgente` }));
+
+  registrarVista('suc-chart',
+    host => hbarChart(host, sucItems, { serieName: 'Unidades', labelW: 150, valueW: 60, aria: 'Unidades por sucursal' }),
+    () => tablaDe(['Sucursal', 'Unidades', 'Vencidas o urgentes'],
+                  sucItems.map(i => [esc(i.label), fmt0(i.value), esc(i.sub.split(' ')[0])])));
+
+  // --- Telemetria agregada de la flota ----------------------------------
+  const porMes = new Map();
+  todas.forEach(u => u.serie.forEach(s => {
+    if (!porMes.has(s.mes)) porMes.set(s.mes, { km: 0, lts: 0, co2: 0, nCo2: 0 });
+    const e = porMes.get(s.mes);
+    if (s.km !== null && s.lts !== null) { e.km += s.km; e.lts += s.lts; }
+    if (s.co2 !== null) { e.co2 += s.co2; e.nCo2++; }
+  }));
+  const mesesOrd = Array.from(porMes.keys()).sort();
+
+  const consumoFlota = mesesOrd
+    .map(m => ({ x: m, y: porMes.get(m).km > 0 ? (porMes.get(m).lts / porMes.get(m).km) * 100 : null }))
+    .filter(p => p.y !== null);
+  registrarVista('flota-consumo',
+    host => lineChart(host, consumoFlota, { color: C.s1, fmt: fmt1, unit: ' l/100 km',
+                                            serieName: 'Consumo', aria: 'Consumo promedio de la flota' }),
+    () => tablaDe(['Mes', 'l/100 km'], consumoFlota.map(p => [mesLabel(p.x), fmt1(p.y)])));
+
+  const co2Flota = mesesOrd.filter(m => porMes.get(m).nCo2 > 0).map(m => ({ x: m, y: porMes.get(m).co2 }));
+  registrarVista('flota-co2',
+    host => barChart(host, co2Flota, { color: C.s2, fmt: fmt0, unit: ' kg',
+                                       serieName: 'CO₂', aria: 'Emisiones totales de la flota' }),
+    () => tablaDe(['Mes', 'kg CO₂'], co2Flota.map(p => [mesLabel(p.x), fmt0(p.y)])));
+
+  // --- Rankings de telemetria (un unico mes de referencia) --------------
+  const mConsumo = mesRef(todas, 'c100');
+  const mRalenti = mesRef(todas, 'ralenti');
+  $('#lbl-rank-consumo').textContent = mConsumo ? mesLabel(mConsumo) : 'sin datos';
+  $('#lbl-rank-ralenti').textContent = mRalenti ? mesLabel(mRalenti) : 'sin datos';
+
+  const consumoItems = todas.map(u => {
+    const v = valorEnMes(u, 'c100', mConsumo);
+    return v === null ? null : { label: u.display, value: v, color: C.s1, patente: u.patente,
+                                 sub: u.modelo || u.marca || '' };
+  }).filter(Boolean).sort((a, b) => b.value - a.value);
+
+  registrarVista('rank-consumo',
+    host => hbarChart(host, consumoItems, { serieName: 'Consumo', unit: ' l/100', fmt: fmt1,
+                                            aria: 'Consumo por unidad' }),
+    () => tablaDe(['Unidad', 'Modelo', 'l/100 km'],
+                  consumoItems.map(i => [esc(i.label), esc(i.sub), fmt1(i.value)])));
+
+  const ralentiItems = todas.map(u => {
+    const v = valorEnMes(u, 'ralenti', mRalenti);
+    return v === null ? null : { label: u.display, value: v, color: C.s3, patente: u.patente,
+                                 sub: u.chofer || 'sin chofer' };
+  }).filter(Boolean).sort((a, b) => b.value - a.value);
+
+  registrarVista('rank-ralenti',
+    host => hbarChart(host, ralentiItems, { serieName: 'Ralentí', unit: ' %', fmt: fmt1,
+                                            aria: 'Ralentí por unidad' }),
+    () => tablaDe(['Unidad', 'Chofer', '% ralentí'],
+                  ralentiItems.map(i => [esc(i.label), esc(i.sub), fmt1(i.value)])));
+
+  // --- KPIs por pestana de grupo ----------------------------------------
+  renderKpisGrupo('#kpis-lad', lad);
+  renderKpisGrupo('#kpis-dist', dis);
+  $('#cnt-lad').textContent  = lad.length;
+  $('#cnt-dist').textContent = dis.length;
+  $('#cnt-pref').textContent = APP.prefiltros.length;
+}
+
+function renderKpisGrupo(sel, lista) {
+  const c = contarEstados(lista);
+  const consumos = lista.map(u => ultimoValor(u, 'c100')).filter(Boolean);
+  const prom = consumos.length ? consumos.reduce((a, x) => a + x.valor, 0) / consumos.length : null;
+  const mCo2 = mesRef(lista, 'co2');
+  const co2 = lista.reduce((a, u) => a + (valorEnMes(u, 'co2', mCo2) || 0), 0);
+  $(sel).innerHTML =
+    kpiHTML('Unidades', fmt0(lista.length), 'en esta operación') +
+    kpiHTML('Vencidas', fmt0(c.vencido), 'service pasado de km',
+            c.vencido ? ESTADOS.vencido.color : ESTADOS.ok.color) +
+    kpiHTML('Urgentes', fmt0(c.urgente), `a menos de ${fmt0(UMBRAL_URGENTE)} km`, ESTADOS.urgente.color) +
+    kpiHTML('Consumo promedio', prom === null ? '—' : fmt1(prom) + ' <span class="u">l/100</span>',
+            consumos.length ? `${consumos.length} unidades con telemetría` : 'sin telemetría', C.s1) +
+    kpiHTML('CO₂ del mes', co2 ? fmt0(co2) + ' <span class="u">kg</span>' : '—',
+            mCo2 ? `suma de la operación en ${mesLabel(mCo2)}` : 'sin datos', C.s2);
+}
+
+/* =====================================================================
+   TABLAS DE SERVICE
+   ===================================================================== */
+const TABLAS = {};
+
+const COL = {
+  patente : { k:'display',  t:'Patente',     tipo:'pat' },
+  modelo  : { k:'modelo',   t:'Modelo' },
+  marca   : { k:'marca',    t:'Marca' },
+  sucursal: { k:'sucursal', t:'Sucursal' },
+  chofer  : { k:'chofer',   t:'Chofer' },
+  fecha   : { k:'fechaUlt', t:'Últ. serv.' },
+  kmUlt   : { k:'kmUlt',    t:'Km últ.',     tipo:'num' },
+  kmProx  : { k:'kmProx',   t:'Km próx.',    tipo:'num' },
+  kmAct   : { k:'kmAct',    t:'Km act.',     tipo:'num' },
+  falta   : { k:'falta',    t:'Faltan',      tipo:'num' },
+  estado  : { k:'estado',   t:'Estado',      tipo:'estado' },
+  c100    : { k:'_c100',    t:'l/100 km',    tipo:'dec' },
+  ralenti : { k:'_ralenti', t:'Ralentí',     tipo:'dec' }
+};
+
+// La operacion de larga distancia comparte sucursal (LAD) y si tiene telemetria;
+// la de distribucion necesita la sucursal y no tiene datos de consumo.
+const COLS_LAD  = [COL.patente, COL.modelo, COL.chofer, COL.fecha, COL.kmUlt,
+                   COL.kmProx, COL.kmAct, COL.falta, COL.estado, COL.c100, COL.ralenti];
+const COLS_DIST = [COL.patente, COL.modelo, COL.sucursal, COL.chofer,
+                   COL.fecha, COL.kmUlt, COL.kmProx, COL.kmAct, COL.falta, COL.estado];
+
+function filaUnidad(u, cols) {
+  const c100 = ultimoValor(u, 'c100'), ral = ultimoValor(u, 'ralenti');
+  return cols.map(col => {
+    if (col.tipo === 'pat')
+      return `<td><button class="pat" type="button" data-pat="${esc(u.patente)}">${esc(u.display)}</button></td>`;
+    if (col.tipo === 'estado') return `<td>${pillHTML(u.estado)}</td>`;
+    if (col.k === '_c100')     return `<td class="num">${c100 ? fmt1(c100.valor) : '—'}</td>`;
+    if (col.k === '_ralenti')  return `<td class="num">${ral ? fmt1(ral.valor) : '—'}</td>`;
+    if (col.tipo === 'num')    return `<td class="num">${fmt0(u[col.k])}</td>`;
+    return `<td>${esc(u[col.k] || '—')}</td>`;
+  }).join('');
+}
+
+function renderTabla(id, lista, cols, estadoOrden) {
+  const tbl = document.getElementById(id);
+  const st = TABLAS[id] || (TABLAS[id] = { col: null, asc: true });
+
+  let filas = lista.slice();
+  if (st.col === null) {
+    filas.sort((a, b) => (ESTADOS[a.estado].orden - ESTADOS[b.estado].orden) ||
+                         ((a.falta === null ? 1e12 : a.falta) - (b.falta === null ? 1e12 : b.falta)));
+  } else {
+    const col = cols[st.col];
+    filas.sort((a, b) => {
+      let va, vb;
+      if (col.k === '_c100' || col.k === '_ralenti') {
+        const f = col.k === '_c100' ? 'c100' : 'ralenti';
+        va = (ultimoValor(a, f) || {}).valor; vb = (ultimoValor(b, f) || {}).valor;
+      } else if (col.tipo === 'estado') { va = ESTADOS[a.estado].orden; vb = ESTADOS[b.estado].orden; }
+      else { va = a[col.k]; vb = b[col.k]; }
+      if (va === null || va === undefined || va === '') va = col.tipo === 'num' || col.tipo === 'dec' ? Infinity : '￿';
+      if (vb === null || vb === undefined || vb === '') vb = col.tipo === 'num' || col.tipo === 'dec' ? Infinity : '￿';
+      const r = (typeof va === 'number' && typeof vb === 'number')
+        ? va - vb : String(va).localeCompare(String(vb), 'es');
+      return st.asc ? r : -r;
+    });
+  }
+
+  tbl.innerHTML =
+    `<thead><tr>${cols.map((c, i) =>
+      `<th data-col="${i}" ${st.col === i ? `aria-sort="${st.asc ? 'ascending' : 'descending'}"` : ''}>
+         ${esc(c.t)}<span class="arrow">${st.col === i ? (st.asc ? '▲' : '▼') : '⇅'}</span></th>`).join('')}</tr></thead>
+     <tbody>${filas.length
+        ? filas.map(u => `<tr>${filaUnidad(u, cols)}</tr>`).join('')
+        : `<tr><td colspan="${cols.length}" class="empty">Ninguna unidad coincide con el filtro.</td></tr>`}</tbody>`;
+
+  $$('th[data-col]', tbl).forEach(th => th.addEventListener('click', () => {
+    const i = +th.dataset.col;
+    if (st.col === i) st.asc = !st.asc; else { st.col = i; st.asc = true; }
+    estadoOrden();
+  }));
+}
+
+function coincide(u, txt) {
+  if (!txt) return true;
+  const q = txt.toUpperCase();
+  return [u.display, u.patente, u.modelo, u.marca, u.chofer, u.sucursal, u.interno, u.semi]
+    .some(v => String(v || '').toUpperCase().includes(q));
+}
+
+function renderLAD() {
+  const txt = $('#f-lad-txt').value.trim();
+  const est = $('#f-lad-estado').value;
+  const lista = unidadesDe('LAD').filter(u => coincide(u, txt) && (!est || u.estado === est));
+  renderTabla('tbl-lad', lista, COLS_LAD, renderLAD);
+}
+
+function renderDist() {
+  const txt = $('#f-dist-txt').value.trim();
+  const est = $('#f-dist-estado').value;
+  const suc = $('#f-dist-suc').value;
+  const lista = unidadesDe('DIS').filter(u =>
+    coincide(u, txt) && (!est || u.estado === est) && (!suc || u.sucursal === suc));
+  renderTabla('tbl-dist', lista, COLS_DIST, renderDist);
+}
+
+function llenarSucursales() {
+  const sel = $('#f-dist-suc');
+  const sucs = Array.from(new Set(unidadesDe('DIS').map(u => u.sucursal).filter(Boolean))).sort();
+  sel.innerHTML = '<option value="">Todas las sucursales</option>' +
+    sucs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+/* =====================================================================
+   PANEL: PREFILTROS
+   ===================================================================== */
+function renderPrefiltros() {
+  const txt = $('#f-pref-txt').value.trim().toUpperCase();
+  const filas = APP.prefiltros
+    .filter(p => !txt || p.patente.includes(normPat(txt)))
+    .map(p => {
+      const est = p.falta === null ? 'sindato' : p.falta < 0 ? 'vencido' : p.falta < 5000 ? 'urgente' : 'ok';
+      const u = APP.unidades.get(p.patente);
+      return `<tr>
+        <td><button class="pat" type="button" data-pat="${esc(p.patente)}">${esc(fmtPat(p.patente))}</button></td>
+        <td>${esc(u ? (u.modelo || u.marca) : '—')}</td>
+        <td class="num">${fmt0(p.kmUlt)}</td>
+        <td class="num">${fmt0(p.kmProx)}</td>
+        <td class="num">${fmt0(p.falta)}</td>
+        <td>${pillHTML(est)}</td></tr>`;
+    });
+
+  $('#tbl-pref').innerHTML =
+    `<thead><tr><th>Patente</th><th>Modelo</th><th>Km últ. cambio</th>
+       <th>Km próximo</th><th>Faltan</th><th>Estado</th></tr></thead>
+     <tbody>${filas.length ? filas.join('')
+        : `<tr><td colspan="6" class="empty">Sin registros de prefiltro.</td></tr>`}</tbody>`;
+}
+
+/* =====================================================================
+   PANEL: POR PATENTE
+   ===================================================================== */
+function renderChips() {
+  const txt = $('#f-unidad').value.trim();
+  const lista = unidadesDe(APP.filtroGrupo)
+    .filter(u => coincide(u, txt))
+    .sort((a, b) => a.display.localeCompare(b.display, 'es'));
+
+  $('#unit-chips').innerHTML = lista.length
+    ? lista.map(u => `<button class="unit-chip" type="button" data-pat="${esc(u.patente)}"
+         aria-pressed="${APP.seleccion === u.patente}">
+         <span class="bullet" style="background:${ESTADOS[u.estado].color}"></span>${esc(u.display)}</button>`).join('')
+    : `<div class="empty" style="padding:14px">Ninguna unidad coincide.</div>`;
+
+  if (lista.length && !lista.some(u => u.patente === APP.seleccion)) {
+    // Por defecto se abre la unidad más urgente del listado visible
+    const porUrgencia = lista.slice().sort((a, b) =>
+      (a.falta === null ? Infinity : a.falta) - (b.falta === null ? Infinity : b.falta));
+    seleccionar(porUrgencia[0].patente);
+  }
+}
+
+function seleccionar(pat) {
+  APP.seleccion = pat;
+  $$('#unit-chips .unit-chip').forEach(b =>
+    b.setAttribute('aria-pressed', b.dataset.pat === pat ? 'true' : 'false'));
+  renderFicha();
+}
+
+function abrirUnidad(pat) {
+  activarTab('tab-unidad');
+  APP.filtroGrupo = '';
+  $$('#seg-grupo button').forEach(b => b.setAttribute('aria-pressed', b.dataset.g === '' ? 'true' : 'false'));
+  $('#f-unidad').value = '';
+  APP.seleccion = pat;
+  renderChips();
+  seleccionar(pat);
+  document.getElementById('ficha').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderFicha() {
+  const host = $('#ficha');
+  const u = APP.unidades.get(APP.seleccion);
+  if (!u) { host.innerHTML = `<div class="card"><div class="empty">Elegí una unidad para ver su ficha.</div></div>`; return; }
+
+  const e = ESTADOS[u.estado];
+  const ciclo = (u.kmProx !== null && u.kmUlt !== null) ? u.kmProx - u.kmUlt : null;
+  const rec = (u.kmAct !== null && u.kmUlt !== null) ? u.kmAct - u.kmUlt : null;
+  const pct = (ciclo && ciclo > 0 && rec !== null) ? Math.max(0, Math.min(1, rec / ciclo)) : null;
+
+  const c100 = ultimoValor(u, 'c100');
+  const ral  = ultimoValor(u, 'ralenti');
+  const co2  = ultimoValor(u, 'co2');
+  const conC100 = u.serie.filter(s => s.c100 !== null);
+  const promC100 = conC100.length ? conC100.reduce((a, s) => a + s.c100, 0) / conC100.length : null;
+
+  // Km/mes promedio de los ultimos 3 meses con dato -> estimacion de fecha
+  const kms = u.serie.filter(s => s.km !== null).slice(-3);
+  const kmMes = kms.length ? kms.reduce((a, s) => a + s.km, 0) / kms.length : null;
+  const mesesRestantes = (kmMes > 0 && u.falta !== null && u.falta > 0) ? u.falta / kmMes : null;
+
+  host.innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="ficha-head">
+        <div style="min-width:230px">
+          <div class="ficha-pat">${esc(u.display)}</div>
+          <div class="ficha-model">${esc(u.modelo || u.marca || 'Modelo no informado')}</div>
+          <div class="ficha-tags">
+            <span class="tag">${u.grupo === 'LAD' ? 'Larga distancia' : 'Distribución'}</span>
+            ${u.sucursal ? `<span class="tag">Sucursal ${esc(u.sucursal)}</span>` : ''}
+            ${u.marca ? `<span class="tag">${esc(u.marca)}</span>` : ''}
+            ${u.interno ? `<span class="tag">Interno ${esc(u.interno)}</span>` : ''}
+          </div>
+          <div style="margin-top:14px">${pillHTML(u.estado)}</div>
+        </div>
+        <div class="specs">
+          <div class="spec"><div class="s-label">Chofer</div><div class="s-value">${esc(u.chofer || '—')}</div></div>
+          <div class="spec"><div class="s-label">Semi asociado</div><div class="s-value">${esc(u.semi ? fmtPat(u.semi) : '—')}</div></div>
+          <div class="spec"><div class="s-label">Uso</div><div class="s-value">${esc(u.uso || (u.grupo === 'LAD' ? 'LARGA DISTANCIA' : '—'))}</div></div>
+          <div class="spec"><div class="s-label">Último service</div><div class="s-value">${esc(u.fechaUlt || '—')}</div></div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="kpi-row">
+          ${kpiHTML('Faltan para el service',
+                    u.falta === null ? '—' : `${fmt0(u.falta)} <span class="u">km</span>`,
+                    u.falta === null ? 'sin datos de service'
+                      : u.falta < 0 ? `service vencido por ${fmt0(Math.abs(u.falta))} km`
+                      : mesesRestantes ? `≈ ${fmt1(mesesRestantes)} meses al ritmo actual` : 'según km actual',
+                    e.color)}
+          ${kpiHTML('Km actual', fmt0(u.kmAct), u.kmUlt !== null ? `último service a ${fmt0(u.kmUlt)} km` : '')}
+          ${kpiHTML('Próximo service', fmt0(u.kmProx), ciclo ? `ciclo de ${fmt0(ciclo)} km` : '')}
+          ${kpiHTML('Consumo actual',
+                    c100 ? `${fmt1(c100.valor)} <span class="u">l/100</span>` : '—',
+                    c100 ? `${mesLabel(c100.mes)}${promC100 ? ` · promedio ${fmt1(promC100)}` : ''}` : 'sin telemetría', C.s1)}
+          ${kpiHTML('CO₂ último mes', co2 ? `${fmt0(co2.valor)} <span class="u">kg</span>` : '—',
+                    co2 ? mesLabel(co2.mes) : 'sin datos', C.s2)}
+          ${kpiHTML('Ralentí', ral ? `${fmt1(ral.valor)} <span class="u">%</span>` : '—',
+                    ral ? mesLabel(ral.mes) : 'sin datos', C.s3)}
+        </div>
+
+        ${pct !== null ? `
+        <div class="progress" style="margin-top:20px">
+          <div class="bar"><i style="width:${(pct * 100).toFixed(1)}%;background:${e.color}"></i></div>
+          <div class="ends">
+            <span>${fmt0(u.kmUlt)} km · último service</span>
+            <span>${(pct * 100).toFixed(0)}% del ciclo recorrido</span>
+            <span>${fmt0(u.kmProx)} km · próximo</span>
+          </div>
+        </div>` : ''}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-head"><h3>Consumo mensual (l/100 km)</h3><span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="u-consumo" aria-pressed="false">Tabla</button></div>
+        <div class="card-body"><div id="u-consumo"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Emisiones mensuales (kg CO&#8322;)</h3><span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="u-co2" aria-pressed="false">Tabla</button></div>
+        <div class="card-body"><div id="u-co2"></div></div>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-top:16px">
+      <div class="card">
+        <div class="card-head"><h3>Ralentí mensual (%)</h3><span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="u-ralenti" aria-pressed="false">Tabla</button></div>
+        <div class="card-body"><div id="u-ralenti"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Kilómetros recorridos por mes</h3><span class="spacer"></span>
+          <button class="btn-view" type="button" data-view="u-km" aria-pressed="false">Tabla</button></div>
+        <div class="card-body"><div id="u-km"></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><h3>Detalle mensual</h3></div>
+      <div class="table-wrap"><table class="data" id="u-detalle"></table></div>
+    </div>`;
+
+  const serie = u.serie;
+  const pts = f => serie.map(s => ({ x: s.mes, y: s[f] }));
+
+  registrarVista('u-consumo',
+    h => lineChart(h, pts('c100'), { color: C.s1, fmt: fmt1, unit: ' l/100 km',
+                                     serieName: 'Consumo', aria: `Consumo mensual de ${u.display}` }),
+    () => tablaDe(['Mes', 'l/100 km'], serie.filter(s => s.c100 !== null).map(s => [mesLabel(s.mes), fmt1(s.c100)])));
+
+  registrarVista('u-co2',
+    h => barChart(h, pts('co2'), { color: C.s2, fmt: fmt0, unit: ' kg',
+                                   serieName: 'CO₂', aria: `Emisiones de ${u.display}` }),
+    () => tablaDe(['Mes', 'kg CO₂'], serie.filter(s => s.co2 !== null).map(s => [mesLabel(s.mes), fmt0(s.co2)])));
+
+  registrarVista('u-ralenti',
+    h => barChart(h, pts('ralenti'), { color: C.s3, fmt: fmt1, unit: ' %',
+                                       serieName: 'Ralentí', aria: `Ralentí de ${u.display}` }),
+    () => tablaDe(['Mes', '% ralentí'], serie.filter(s => s.ralenti !== null).map(s => [mesLabel(s.mes), fmt1(s.ralenti)])));
+
+  registrarVista('u-km',
+    h => barChart(h, pts('km'), { color: C.s1, fmt: fmt0, unit: ' km',
+                                  serieName: 'Recorrido', aria: `Kilómetros de ${u.display}` }),
+    () => tablaDe(['Mes', 'km'], serie.filter(s => s.km !== null).map(s => [mesLabel(s.mes), fmt0(s.km)])));
+
+  const det = document.getElementById('u-detalle');
+  det.innerHTML =
+    `<thead><tr><th>Mes</th><th>Km recorridos</th><th>Litros</th><th>l/100 km</th><th>kg CO₂</th><th>Ralentí %</th><th>Horas motor</th></tr></thead>
+     <tbody>${serie.length
+        ? serie.slice().reverse().map(s => `<tr>
+            <td>${mesLabel(s.mes)}</td>
+            <td class="num">${fmt0(s.km)}</td>
+            <td class="num">${fmt0(s.lts)}</td>
+            <td class="num">${fmt1(s.c100)}</td>
+            <td class="num">${fmt0(s.co2)}</td>
+            <td class="num">${fmt1(s.ralenti)}</td>
+            <td class="num">${s.horas === null || s.horas === undefined ? '—' : fmt0(s.horas)}</td></tr>`).join('')
+        : `<tr><td colspan="7" class="empty">Esta unidad no tiene telemetría cargada.</td></tr>`}</tbody>`;
+}
+
+/* =====================================================================
+   NAVEGACION
+   ===================================================================== */
+function activarTab(id) {
+  $$('.tab').forEach(t => {
+    const on = t.id === id;
+    t.setAttribute('aria-selected', on ? 'true' : 'false');
+    document.getElementById(t.dataset.panel).classList.toggle('active', on);
+  });
+  // Los SVG se dimensionan con el ancho del contenedor: redibujar al mostrar
+  Object.keys(VISTAS).forEach(k => { if (document.getElementById(k)) pintarVista(k); });
+}
+
+$$('.tab').forEach(t => t.addEventListener('click', () => activarTab(t.id)));
+
+document.addEventListener('click', ev => {
+  const b = ev.target.closest('[data-pat]');
+  if (!b) return;
+  if (b.classList.contains('unit-chip')) seleccionar(b.dataset.pat);
+  else abrirUnidad(b.dataset.pat);
+});
+
+$('#f-lad-txt').addEventListener('input', renderLAD);
+$('#f-lad-estado').addEventListener('change', renderLAD);
+$('#f-dist-txt').addEventListener('input', renderDist);
+$('#f-dist-estado').addEventListener('change', renderDist);
+$('#f-dist-suc').addEventListener('change', renderDist);
+$('#f-pref-txt').addEventListener('input', renderPrefiltros);
+$('#f-unidad').addEventListener('input', renderChips);
+$$('#seg-grupo button').forEach(b => b.addEventListener('click', () => {
+  APP.filtroGrupo = b.dataset.g;
+  $$('#seg-grupo button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+  renderChips();
+}));
+$('#btn-refresh').addEventListener('click', () => { telemCache = { t: 0, data: null }; cargarTodo(true); });
+
+let resizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeT);
+  resizeT = setTimeout(() => Object.keys(VISTAS).forEach(k => {
+    if (document.getElementById(k)) pintarVista(k);
+  }), 180);
+});
+
+/* =====================================================================
+   ORQUESTACION
+   ===================================================================== */
+function marcarFuente() {
+  const f = APP.fuentes;
+  const respaldo = [f.servicios === 'local' && 'services',
+                    f.flota === 'local' && 'flota',
+                    f.telemetria === 'local' && 'telemetría'].filter(Boolean);
+  const chip = $('#chip-fuente'), dot = chip.querySelector('.dot');
+  const todoLocal = respaldo.length === 3;
+  dot.className = 'dot ' + (respaldo.length === 0 ? 'live' : todoLocal ? 'off' : 'warn');
+  $('#fuente-txt').textContent = respaldo.length === 0 ? 'Datos en vivo'
+    : todoLocal ? 'Respaldo local del repositorio'
+    : `En vivo · respaldo local: ${respaldo.join(' y ')}`;
+  chip.title = `Services: ${f.servicios || '—'} · Flota: ${f.flota || '—'} · Telemetría: ${f.telemetria || '—'}`;
+}
+
+let cargando = false;
+async function cargarTodo(manual) {
+  if (cargando) return;
+  cargando = true;
+  const btn = $('#btn-refresh');
+  btn.disabled = true;
+  btn.textContent = 'Actualizando…';
+  document.querySelectorAll('.panel').forEach(p => p.style.opacity = manual ? '0.55' : '1');
+
+  try {
+    const [flota, srv, tel] = await Promise.all([cargarFlota(), cargarServicios(), cargarTelemetria()]);
+    construirUnidades(flota, srv.servicios, srv.setLAD, tel);
+
+    llenarSucursales();
+    renderGeneral();
+    renderLAD();
+    renderDist();
+    renderPrefiltros();
+    renderChips();
+
+    marcarFuente();
+    $('#update-txt').textContent = 'Actualizado ' +
+      new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  } catch (err) {
+    console.error('Error de carga:', err);
+    $('#fuente-txt').textContent = 'Error al cargar los datos';
+    $('#chip-fuente').querySelector('.dot').className = 'dot off';
+  } finally {
+    document.querySelectorAll('.panel').forEach(p => p.style.opacity = '1');
+    btn.disabled = false;
+    btn.textContent = 'Actualizar';
+    cargando = false;
+  }
+}
+
+cargarTodo(false);
+setInterval(() => cargarTodo(false), CFG.refreshMs);
+</script>
+</body>
+</html>
