@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-HAWK GPS -> kilometraje de cada movil -> Excel
+HAWK GPS -> kilometraje de cada movil -> Excel + Google Sheets
 Login con Selenium (headless), lectura via API JsonMoviles.aspx.
 Rapido: ~1 min para toda la flota.
 
+Ademas de los Excel, escribe el km actual (columna H) en las hojas de
+services de la planilla SERVICES, buscando la patente en la columna A.
+
 Secrets: HAWK_USER, HAWK_PASS
+Opcional (para escribir en la planilla): GOOGLE_CREDENTIALS_JSON, SHEET_ID_SERVICES
 """
 
-import os, re, sys, time, datetime, traceback
+import os, re, sys, json, time, datetime, traceback
 import requests
 import pandas as pd
 from selenium import webdriver
@@ -24,6 +28,29 @@ PASS  = os.environ.get("HAWK_PASS", "")
 SOLO  = [s.strip().upper() for s in os.environ.get("SOLO_EMPRESAS", "CATAMARCA").split(",") if s.strip()]
 
 OUT_DIR = "data"
+
+# ---------------------------------------------------------------- sheets cfg
+# Planilla SERVICES. Acepta el ID pelado o la URL completa.
+_sheet_raw = os.environ.get("SHEET_ID_SERVICES") or os.environ.get("SHEET_ID", "")
+_m_sheet   = re.search(r"/spreadsheets/d/([a-zA-Z0-9_-]+)", _sheet_raw)
+SHEET_ID   = _m_sheet.group(1) if _m_sheet else _sheet_raw.strip()
+GOOGLE_CREDS = os.environ.get("GOOGLE_CREDENTIALS_JSON", "")
+
+# Hojas donde buscar la patente, por gid (Services-LAD/BUE/CAT/COR/LRJ/TUC).
+# Se resuelven por gid y no por nombre para que un renombre no rompa el script.
+SHEET_GIDS = [
+    1845378611,
+    1314480090,
+    645119605,
+    510298228,
+    988630097,
+    148781788,
+]
+COL_PATENTE   = 0   # columna A
+COL_KM_ACTUAL = 7   # columna H
+
+# SHEETS_DRY_RUN=1 -> muestra que escribiria, sin tocar la planilla
+DRY_RUN = os.environ.get("SHEETS_DRY_RUN", "").strip().lower() in ("1", "true", "yes", "si")
 
 JS_PATENTES = """
 const re = /\\b([A-Z]{2}\\d{3}[A-Z]{2}|[A-Z]{3}\\d{3})\\b/;
@@ -66,6 +93,21 @@ def parse_fecha(s):
     ts = int(m.group(1)) / 1000
     dt = datetime.datetime.fromtimestamp(ts, datetime.timezone(datetime.timedelta(hours=-3)))
     return dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def norm_pat(texto):
+    """'AE 527 FA' y 'AE527FA' son la misma unidad."""
+    return re.sub(r"[^A-Z0-9]", "", str(texto or "").upper())
+
+def km_de_celda(texto):
+    """Lee el km que ya esta en la planilla (formato es-AR: 1.234.567,89)."""
+    t = str(texto or "").strip()
+    if not t:
+        return 0.0
+    t = t.replace(".", "").replace(",", ".")
+    try:
+        return float(re.sub(r"[^0-9.\-]", "", t) or 0)
+    except ValueError:
+        return 0.0
 
 # ------------------------------------------------------------------ login
 
@@ -138,6 +180,108 @@ def obtener_movil(s, id_gps):
         return None
     return r.json().get("d")
 
+# ------------------------------------------------------------------ sheets
+
+def conectar_sheets():
+    import gspread
+    creds = json.loads(GOOGLE_CREDS)
+    print(f"  service account : {creds.get('client_email', 'NO ENCONTRADO')}")
+    print(f"  SHEET_ID        : {SHEET_ID}")
+    gc = gspread.service_account_from_dict(creds)
+    return gc.open_by_key(SHEET_ID)
+
+def actualizar_sheets(df):
+    """
+    Escribe el km actual en la columna H de cada hoja de SHEET_GIDS,
+    buscando la patente en la columna A.
+
+    Solo pisa el valor si el km de Hawk es mayor al que ya esta cargado:
+    el odometro nunca baja, asi que un valor menor es una lectura mala y
+    no debe borrar el bueno.
+    """
+    if not GOOGLE_CREDS or not SHEET_ID:
+        print("\n[sheets] sin GOOGLE_CREDENTIALS_JSON o SHEET_ID_SERVICES: no se actualiza la planilla")
+        return
+
+    import gspread
+
+    # patente normalizada -> km leido de Hawk
+    kms = {}
+    for _, f in df.iterrows():
+        p = norm_pat(f["Patente"])
+        if p and pd.notna(f["Kilometraje"]):
+            kms[p] = float(f["Kilometraje"])
+    if not kms:
+        print("\n[sheets] sin kilometrajes para escribir")
+        return
+
+    print(f"\n[{datetime.datetime.now().strftime('%H:%M:%S')}] Google Sheets"
+          f"{' (DRY RUN)' if DRY_RUN else ''}...")
+
+    sheet = None
+    for intento in range(1, 4):
+        try:
+            sheet = conectar_sheets()
+            break
+        except Exception as e:
+            print(f"  intento {intento}/3 fallo: {type(e).__name__}: {str(e)[:200]}")
+            if intento == 3:
+                print("  no se pudo conectar: los Excel igual quedaron guardados")
+                return
+            time.sleep(10)
+
+    total, sin_dato = 0, []
+
+    for gid in SHEET_GIDS:
+        try:
+            ws = sheet.get_worksheet_by_id(gid)
+        except Exception:
+            print(f"  hoja gid={gid} no encontrada")
+            continue
+
+        try:
+            datos = ws.get_all_values()
+        except Exception as e:
+            print(f"  {ws.title}: no se pudo leer ({type(e).__name__}: {str(e)[:120]})")
+            continue
+
+        batch, saltadas = [], 0
+        for idx, fila in enumerate(datos, start=1):
+            if len(fila) <= COL_PATENTE:
+                continue
+            pat = norm_pat(fila[COL_PATENTE])
+            # descarta encabezados y celdas que no son patente
+            if not re.match(r"^([A-Z]{2}\d{3}[A-Z]{2}|[A-Z]{3}\d{3})$", pat):
+                continue
+            if pat not in kms:
+                sin_dato.append(f"{ws.title}: {fila[COL_PATENTE].strip()}")
+                continue
+
+            km_nuevo   = kms[pat]
+            km_actual  = km_de_celda(fila[COL_KM_ACTUAL] if len(fila) > COL_KM_ACTUAL else "")
+            if km_nuevo <= km_actual:
+                saltadas += 1
+                continue
+
+            batch.append({
+                "range":  gspread.utils.rowcol_to_a1(idx, COL_KM_ACTUAL + 1),
+                "values": [[round(km_nuevo, 2)]],
+            })
+            total += 1
+
+        if batch and not DRY_RUN:
+            ws.batch_update(batch, value_input_option="USER_ENTERED")
+
+        print(f"  {ws.title}: {len(batch)} actualizadas, {saltadas} sin cambio")
+
+    print(f"\n[sheets] {'se escribirian' if DRY_RUN else 'actualizadas'}: {total} unidades")
+    if sin_dato:
+        print(f"[sheets] sin lectura de Hawk ({len(sin_dato)}):")
+        for p in sin_dato[:15]:
+            print(f"   - {p}")
+        if len(sin_dato) > 15:
+            print(f"   ... y {len(sin_dato) - 15} mas")
+
 # ------------------------------------------------------------------ main
 
 def main():
@@ -171,6 +315,9 @@ def main():
 
     filas = []
     for i, m in enumerate(lista, 1):
+        # dd se reinicia en cada vuelta: si una lectura falla no puede
+        # quedar el detalle del movil anterior y asignar mal la patente
+        dd = None
         km = ult = err = None
         try:
             dd = obtener_movil(s, m["idGPS"])
@@ -179,15 +326,11 @@ def main():
             else:
                 km = dd.get("Kilometraje")
                 ult = parse_fecha(dd.get("FechaServer"))
-                pat = (dd.get("Descripcion") or dd.get("Patente") or "").strip()
         except Exception as e:
             err = str(e)[:100]
         pat = (m.get("Patente") or m.get("Descripcion") or "").strip()
-        try:
-            if dd:
-                pat = (dd.get("Descripcion") or dd.get("Patente") or pat).strip()
-        except Exception:
-            pass
+        if dd:
+            pat = (dd.get("Descripcion") or dd.get("Patente") or pat).strip()
         filas.append({
             "Patente": pat,
             "Kilometraje": round(km, 2) if isinstance(km, (int, float)) else None,
@@ -212,6 +355,13 @@ def main():
     print(f"\nOK {ok}/{len(df)} -> {OUT_DIR}/kilometrajes_{stamp}.xlsx")
     if ok == 0:
         sys.exit(1)
+
+    # Los Excel ya estan escritos: un fallo de la planilla no debe tirar el job
+    try:
+        actualizar_sheets(df)
+    except Exception:
+        print("\n[sheets] error al actualizar la planilla:")
+        traceback.print_exc()
 
 if __name__ == "__main__":
     try:
