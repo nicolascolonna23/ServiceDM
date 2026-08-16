@@ -7,6 +7,10 @@ on:
         description: "Filtrar empresas (subcadena, coma). Vacio = toda la flota."
         required: false
         default: "CATAMARCA"
+      dry_run:
+        description: "Probar sin escribir en la planilla (1 = si)"
+        required: false
+        default: ""
   schedule:
     - cron: "0 11 * * 1-5"   # 08:00 ART, lun-vie
 
@@ -26,7 +30,7 @@ jobs:
           python-version: "3.11"
 
       - name: Instalar dependencias
-        run: pip install selenium requests pandas openpyxl
+        run: pip install selenium requests pandas openpyxl gspread google-auth
 
       - name: Instalar Chrome
         uses: browser-actions/setup-chrome@v1
@@ -42,6 +46,9 @@ jobs:
           HAWK_USER: ${{ secrets.HAWK_USER }}
           HAWK_PASS: ${{ secrets.HAWK_PASS }}
           SOLO_EMPRESAS: ${{ github.event.inputs.solo_empresas }}
+          SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SHEETS_DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: python hawk_km.py
 
       - name: Subir resultados
