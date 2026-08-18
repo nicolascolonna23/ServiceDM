@@ -384,6 +384,60 @@
     }
     .banner b { color: var(--ink); font-weight: 600; }
 
+    /* --- Formulario de carga de service --------------------------------- */
+    .modal-bg {
+      position: fixed; inset: 0; z-index: 40; display: none;
+      background: rgba(0,0,0,0.62); backdrop-filter: blur(2px);
+      align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-bg[open] { display: flex; }
+    .modal {
+      width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto;
+      background: var(--surface-1); border: 1px solid var(--hairline);
+      border-radius: 14px; padding: 20px 22px 22px;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+    }
+    .modal h2 {
+      font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 2px;
+    }
+    .modal .hint { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 16px; }
+    .modal label {
+      display: block; font-size: 10.5px; letter-spacing: 0.7px; text-transform: uppercase;
+      font-weight: 600; color: var(--ink-muted); margin: 13px 0 5px;
+    }
+    .modal .inp, .modal .sel { width: 100%; }
+    .modal .row { display: flex; gap: 10px; }
+    .modal .row > div { flex: 1; min-width: 0; }
+    .modal-ref { font-size: 11px; color: var(--ink-muted); margin-top: 6px; min-height: 15px; }
+    .modal-acciones { display: flex; gap: 10px; margin-top: 20px; }
+    .modal-acciones button { flex: 1; }
+    .btn-plano {
+      font: inherit; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+      font-weight: 600; color: var(--ink-2); background: var(--surface-3);
+      border: 1px solid var(--hairline); border-radius: 999px;
+      padding: 9px 14px; cursor: pointer;
+    }
+    .btn-plano:hover { color: var(--ink); }
+    .btn-ok {
+      font: inherit; font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase;
+      font-weight: 600; color: #fff; background: var(--brand);
+      border: 1px solid var(--brand); border-radius: 999px;
+      padding: 9px 14px; cursor: pointer;
+    }
+    .btn-ok[disabled], .btn-plano[disabled] { opacity: .5; cursor: default; }
+    .modal-msg {
+      margin-top: 14px; font-size: 12px; line-height: 1.5; display: none;
+      border-radius: 8px; padding: 10px 12px;
+    }
+    .modal-msg[data-tipo="error"] {
+      display: block; color: var(--st-critical);
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    }
+    .modal-msg[data-tipo="ok"] {
+      display: block; color: var(--st-good);
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+    }
+
     footer {
       max-width: 1400px; margin: 42px auto 0; padding: 18px 20px 0;
       border-top: 1px solid var(--hairline);
@@ -412,6 +466,7 @@
     <div class="meta">
       <span class="chip" id="chip-fuente" title="Origen de los datos"><span class="dot off"></span><span id="fuente-txt">Sincronizando</span></span>
       <span class="chip" id="chip-update"><span id="update-txt">--:--</span></span>
+      <button class="btn-refresh" id="btn-service" type="button" hidden>Registrar service</button>
       <button class="btn-refresh" id="btn-refresh" type="button">Actualizar</button>
     </div>
   </div>
@@ -578,6 +633,43 @@
   <div>Si una planilla no responde en vivo, el tablero usa el respaldo local en <code>data/flota.json</code> y <code>data/telemetria.json</code>.</div>
 </footer>
 
+<!-- ============ FORMULARIO: REGISTRAR SERVICE ============ -->
+<div class="modal-bg" id="modal-service" role="dialog" aria-modal="true" aria-labelledby="modal-titulo">
+  <form class="modal" id="form-service" autocomplete="off">
+    <h2 id="modal-titulo">Registrar service</h2>
+    <div class="hint">Actualiza la planilla y deja el registro en el historial.</div>
+
+    <label for="sv-patente">Unidad</label>
+    <select class="sel" id="sv-patente" required></select>
+
+    <div class="row">
+      <div>
+        <label for="sv-fecha">Fecha</label>
+        <input class="inp" type="text" id="sv-fecha" placeholder="DD/MM/AA" required>
+      </div>
+      <div>
+        <label for="sv-km">Km del service</label>
+        <input class="inp" type="number" id="sv-km" min="1" step="1" placeholder="Ej: 217464" required>
+      </div>
+    </div>
+
+    <div class="modal-ref" id="sv-ref"></div>
+
+    <label for="sv-tipo">Tipo de service</label>
+    <input class="inp" type="text" id="sv-tipo" placeholder="Ej: Cambio de aceite y filtros">
+
+    <label for="sv-pin">PIN</label>
+    <input class="inp" type="password" id="sv-pin" required>
+
+    <div class="modal-msg" id="sv-msg"></div>
+
+    <div class="modal-acciones">
+      <button class="btn-plano" type="button" id="sv-cancelar">Cancelar</button>
+      <button class="btn-ok" type="submit" id="sv-guardar">Guardar</button>
+    </div>
+  </form>
+</div>
+
 <div id="tip" role="status" aria-live="polite"></div>
 
 <script>
@@ -604,7 +696,11 @@ const CFG = {
     emisiones : "882343299"     // % ralenti y kg CO2
   },
   local: { flota: "data/flota.json", telemetria: "data/telemetria.json", servicios: "data/services.json" },
-  refreshMs: 300000
+  refreshMs: 300000,
+
+  // URL /exec de la aplicacion web de Apps Script (apps_script/tablero_webapp.gs).
+  // Vacia = el boton "Registrar service" no aparece y el tablero queda de solo lectura.
+  webapp: "https://script.google.com/macros/s/AKfycby8EyrslziNICIYVKqGUCuxEv0KvCUSqeagn639wTgBDB-O_xz9T-GOC_ecCqFQP9shJg/exec"
 };
 
 const gviz = (id, gid) => `https://docs.google.com/spreadsheets/d/${id}/gviz/tq?tqx=out:csv&gid=${gid}`;
@@ -1888,6 +1984,135 @@ window.addEventListener('resize', () => {
 });
 
 /* =====================================================================
+   REGISTRAR SERVICE
+   ---------------------------------------------------------------------
+   El navegador no puede escribir en la planilla: le pasa los datos a la
+   aplicacion web de Apps Script (CFG.webapp) y esa los graba.
+   El Content-Type de texto plano no es casual, evita que el navegador
+   mande un preflight que Apps Script no sabe responder.
+   ===================================================================== */
+const MODAL = $('#modal-service');
+let pinRecordado = '';   // solo mientras la pestana siga abierta
+
+function hoyAR() {
+  const d = new Date();
+  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getFullYear()).slice(2)}`;
+}
+
+function svMensaje(texto, tipo) {
+  const box = $('#sv-msg');
+  box.textContent = texto || '';
+  if (tipo) box.dataset.tipo = tipo; else delete box.dataset.tipo;
+}
+
+function abrirFormService(patente) {
+  const lista = unidadesDe('').filter(u => u.enFlota || u.kmUlt !== null)
+    .sort((a, b) => a.display.localeCompare(b.display, 'es'));
+  if (!lista.length) return;
+
+  const sel = $('#sv-patente');
+  sel.innerHTML = lista.map(u =>
+    `<option value="${esc(u.patente)}">${esc(u.display)} — ${esc(u.modelo || u.marca || 'sin modelo')}</option>`).join('');
+  if (patente && lista.some(u => u.patente === patente)) sel.value = patente;
+
+  $('#sv-fecha').value = hoyAR();
+  $('#sv-km').value    = '';
+  $('#sv-tipo').value  = '';
+  $('#sv-pin').value   = pinRecordado;
+  svMensaje('');
+  sugerirKm();
+
+  MODAL.setAttribute('open', '');
+  (pinRecordado ? $('#sv-km') : $('#sv-pin')).focus();
+}
+
+function cerrarFormService() {
+  MODAL.removeAttribute('open');
+}
+
+/** Muestra el ultimo service y el odometro de la unidad elegida como referencia. */
+function sugerirKm() {
+  const u = APP.unidades.get($('#sv-patente').value);
+  const ref = [];
+  if (u && u.kmUlt !== null) ref.push(`último service ${fmt0(u.kmUlt)} km`);
+  if (u && u.kmAct !== null) ref.push(`odómetro ${fmt0(u.kmAct)} km`);
+  $('#sv-ref').textContent = ref.join('  ·  ');
+}
+
+/** Refleja el service recien cargado sin esperar a que la planilla se actualice. */
+function aplicarServiceLocal(patente, fecha, km) {
+  const u = APP.unidades.get(patente);
+  if (!u) return;
+  const intervalo = (u.kmProx !== null && u.kmUlt !== null) ? u.kmProx - u.kmUlt : null;
+  u.fechaUlt = fecha;
+  u.kmUlt    = km;
+  if (intervalo !== null) u.kmProx = km + intervalo;
+  if (u.kmProx !== null && u.kmAct !== null) {
+    u.falta  = u.kmProx - u.kmAct;
+    u.estado = estadoDe(u.falta);
+  }
+  renderGeneral();
+  renderLAD();
+  renderDist();
+  renderChips();
+  if (APP.seleccion === patente) seleccionar(patente);
+}
+
+$('#btn-service').addEventListener('click', () => abrirFormService(APP.seleccion));
+$('#sv-cancelar').addEventListener('click', cerrarFormService);
+$('#sv-patente').addEventListener('change', sugerirKm);
+MODAL.addEventListener('mousedown', ev => { if (ev.target === MODAL) cerrarFormService(); });
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && MODAL.hasAttribute('open')) cerrarFormService();
+});
+
+$('#form-service').addEventListener('submit', async ev => {
+  ev.preventDefault();
+
+  const patente = $('#sv-patente').value;
+  const km      = Number($('#sv-km').value);
+  const u       = APP.unidades.get(patente);
+
+  if (!isFinite(km) || km <= 0) { svMensaje('El kilometraje no es válido.', 'error'); return; }
+  if (u && u.kmUlt !== null && km < u.kmUlt) {
+    svMensaje(`El km ingresado es menor al último service (${fmt0(u.kmUlt)} km). Revisalo.`, 'error');
+    return;
+  }
+
+  const guardar = $('#sv-guardar'), cancelar = $('#sv-cancelar');
+  guardar.disabled = cancelar.disabled = true;
+  guardar.textContent = 'Guardando…';
+  svMensaje('');
+
+  try {
+    const r = await fetch(CFG.webapp, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        pin    : $('#sv-pin').value,
+        patente: patente,
+        fecha  : $('#sv-fecha').value.trim(),
+        km     : km,
+        tipo   : $('#sv-tipo').value.trim()
+      })
+    });
+    const res = await r.json();
+    if (!res.ok) throw new Error(res.error || 'La planilla rechazó el registro.');
+
+    pinRecordado = $('#sv-pin').value;
+    aplicarServiceLocal(patente, $('#sv-fecha').value.trim(), km);
+    svMensaje(`Guardado en ${res.hoja}. La planilla tarda unos minutos en reflejarlo, la tabla ya está actualizada.`, 'ok');
+    setTimeout(cerrarFormService, 2200);
+
+  } catch (err) {
+    svMensaje(String(err.message || err), 'error');
+  } finally {
+    guardar.disabled = cancelar.disabled = false;
+    guardar.textContent = 'Guardar';
+  }
+});
+
+/* =====================================================================
    ORQUESTACION
    ===================================================================== */
 function marcarFuente() {
@@ -1923,6 +2148,8 @@ async function cargarTodo(manual) {
     renderDist();
     renderPrefiltros();
     renderChips();
+
+    $('#btn-service').hidden = !CFG.webapp || !APP.unidades.size;
 
     marcarFuente();
     $('#update-txt').textContent = 'Actualizado ' +
