@@ -574,7 +574,7 @@
 </div>
 
 <footer class="shell">
-  <div>Fuentes: planilla <b>SERVICES</b> (flota, services y prefiltros) y planilla <b>COMBUSTIBLE</b> (telemetría, emisiones y ralentí).</div>
+  <div>Fuentes: planilla <b>SERVICES</b> (flota, services y prefiltros) y planilla <b>COMBUSTIBLE</b> (telemetría de larga distancia, consumo de toda la flota, emisiones y ralentí).</div>
   <div>Si una planilla no responde en vivo, el tablero usa el respaldo local en <code>data/flota.json</code> y <code>data/telemetria.json</code>.</div>
 </footer>
 
@@ -599,7 +599,8 @@ const CFG = {
     conjunto  : "1026354276",   // services toda la flota
     prefiltro : "1669414303",   // prefiltros
     flota     : "743729287",    // maestro de unidades (modelo/marca/patente/sucursal)
-    telemetria: "0",            // consumo mensual l/100km
+    telemetria: "0",            // consumo mensual l/100km (telemetria larga distancia)
+    telemDist : "1044040871",   // consumo mensual de toda la flota (incluye distribucion)
     emisiones : "882343299"     // % ralenti y kg CO2
   },
   local: { flota: "data/flota.json", telemetria: "data/telemetria.json", servicios: "data/services.json" },
@@ -657,6 +658,13 @@ function esc(s) {
 
 /** Normaliza una patente: "AD 247 MQ" y "AD247MQ" son la misma unidad. */
 function normPat(s) { return String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+
+/** Una patente real: AA123BB (nuevo formato) o ABC123 (formato viejo).
+ *  Evita que encabezados o totales de la planilla entren como si fueran unidades. */
+function esPatente(s) {
+  const n = normPat(s);
+  return /^[A-Z]{2}\d{3}[A-Z]{2}$/.test(n) || /^[A-Z]{3}\d{3}$/.test(n);
+}
 
 /** Formato de patente legible: AD247MQ -> AD 247 MQ */
 function fmtPat(s) {
@@ -802,10 +810,11 @@ async function cargarServicios() {
 
   if (lad || conj) {
     APP.fuentes.servicios = 'vivo';
+    // Solo filas con patente real: la primera fila de la hoja es el encabezado
+    // ("PREFILTRO") y se colaba como si fuera una unidad sin datos.
     APP.prefiltros = (pref || []).reduce((acc, r) => {
-      const p = normPat(r[0]);
-      if (p.length >= 6 && !(r[0] || '').toUpperCase().includes('PATENTE')) {
-        acc.push({ patente: p, kmUlt: num(r[1]), kmProx: num(r[2]), falta: num(r[3]) });
+      if (esPatente(r[0])) {
+        acc.push({ patente: normPat(r[0]), kmUlt: num(r[1]), kmProx: num(r[2]), falta: num(r[3]) });
       }
       return acc;
     }, []);
@@ -820,8 +829,9 @@ async function cargarServicios() {
   APP.fuentes.servicios = 'local';
   const fila = r => ({ patente: normPat(r[0]), marca: r[1], chofer: r[2], residencia: r[3],
                        fechaUlt: r[4], kmUlt: r[5], kmProx: r[6], kmAct: r[7], falta: r[8] });
-  APP.prefiltros = (j.prefiltros || []).map(r =>
-    ({ patente: normPat(r[0]), kmUlt: r[1], kmProx: r[2], falta: r[3] }));
+  APP.prefiltros = (j.prefiltros || [])
+    .filter(r => esPatente(r[0]))
+    .map(r => ({ patente: normPat(r[0]), kmUlt: r[1], kmProx: r[2], falta: r[3] }));
   return {
     servicios: j.lad.concat(j.conjunto).map(fila),
     setLAD: new Set(j.lad.map(r => normPat(r[0])))
@@ -833,16 +843,68 @@ async function cargarServicios() {
 let telemCache = { t: 0, data: null };
 const TELEM_TTL = 6 * 3600 * 1000;
 
+/**
+ * Ubica las columnas de una hoja por el texto del encabezado.
+ * Las hojas de consumo no comparten el mismo orden de columnas, asi que se
+ * buscan por nombre en lugar de fijar indices.
+ * alias: { clave: ['TEXTO', ...] } · devuelve { idx, desde } o null.
+ */
+function mapaColumnas(rows, alias, obligatorias) {
+  for (let i = 0; i < Math.min(rows.length, 12); i++) {
+    const fila = rows[i].map(c => String(c || '').toUpperCase());
+    const idx = {};
+    for (const k in alias) {
+      const j = fila.findIndex(c => alias[k].some(a => c.includes(a)));
+      if (j >= 0) idx[k] = j;
+    }
+    if (obligatorias.every(k => idx[k] !== undefined)) return { idx, desde: i + 1 };
+  }
+  return null;
+}
+
+const ALIAS_CONSUMO = {
+  fecha  : ['FECHA'],
+  patente: ['DOMINIO', 'PATENTE'],
+  tag    : ['TAG'],
+  marca  : ['MARCA'],
+  km     : ['DISTANCIA', 'KILOMETRAJE'],
+  lts    : ['LITROS'],
+  c100   : ['CONSUMO C/', 'L/100', 'L /100']
+};
+
+/** Filas mensuales de consumo de cualquiera de las hojas de COMBUSTIBLE. */
+function leerConsumo(rows) {
+  const map = rows && mapaColumnas(rows, ALIAS_CONSUMO, ['fecha', 'patente']);
+  if (!map) return [];
+  const { idx, desde } = map;
+  const out = [];
+  for (const r of rows.slice(desde)) {
+    const m = mesFromFecha(r[idx.fecha]);
+    if (!m || !esPatente(r[idx.patente])) continue;
+    const km  = idx.km   === undefined ? null : num(r[idx.km]);
+    const lts = idx.lts  === undefined ? null : num(r[idx.lts]);
+    let c100  = idx.c100 === undefined ? null : num(r[idx.c100]);
+    if (c100 === null && km > 0 && lts !== null) c100 = (lts / km) * 100;
+    out.push({
+      patente: normPat(r[idx.patente]), mes: m, km, lts, c100,
+      tag  : idx.tag   === undefined ? '' : (r[idx.tag]   || ''),
+      marca: idx.marca === undefined ? '' : (r[idx.marca] || '')
+    });
+  }
+  return out;
+}
+
 /** Telemetria: consumo mensual + emisiones/ralenti. Devuelve { patentes }. */
 async function cargarTelemetria() {
   if (telemCache.data && Date.now() - telemCache.t < TELEM_TTL) return telemCache.data;
 
-  const [tel, emi] = await Promise.all([
+  const [tel, dist, emi] = await Promise.all([
     fetchCSV([gviz(CFG.idCombust, CFG.gid.telemetria)]),
+    fetchCSV([gviz(CFG.idCombust, CFG.gid.telemDist)]),
     fetchCSV([gviz(CFG.idCombust, CFG.gid.emisiones)])
   ]);
 
-  if (tel || emi) {
+  if (tel || dist || emi) {
     const acc = new Map();
     const slot = (p, m) => {
       if (!acc.has(p)) acc.set(p, new Map());
@@ -850,20 +912,21 @@ async function cargarTelemetria() {
       if (!s.has(m)) s.set(m, { mes:m, km:null, lts:null, c100:null, co2:null, ralenti:null, horas:null });
       return s.get(m);
     };
-    // FECHA(0) DOMINIO(1) TAG(2) MARCA(3) DISTANCIA(4) LITROS(5) CONSUMO/100(6)
     const tags = new Map(), marcas = new Map();
-    for (const r of (tel || [])) {
-      const p = normPat(r[1]), m = mesFromFecha(r[0]);
-      if (!p || !m) continue;
-      const s = slot(p, m);
-      s.km = num(r[4]); s.lts = num(r[5]); s.c100 = num(r[6]);
-      if (r[2]) tags.set(p, r[2]);
-      if (r[3]) marcas.set(p, r[3]);
+    // Primero la hoja de toda la flota (unica fuente de consumo de distribucion)
+    // y despues la de telemetria, que es la referencia para larga distancia.
+    for (const f of leerConsumo(dist).concat(leerConsumo(tel))) {
+      const s = slot(f.patente, f.mes);
+      if (f.km   !== null) s.km   = f.km;
+      if (f.lts  !== null) s.lts  = f.lts;
+      if (f.c100 !== null) s.c100 = f.c100;
+      if (f.tag)   tags.set(f.patente, f.tag);
+      if (f.marca) marcas.set(f.patente, f.marca);
     }
     // FECHA(0) DOMINIO(1) HORAS MOTOR(2) RALENTI %(3) EMISIONES KG CO2(4)
     for (const r of (emi || [])) {
       const p = normPat(r[1]), m = mesFromFecha(r[0]);
-      if (!p || !m) continue;
+      if (!esPatente(p) || !m) continue;
       const s = slot(p, m);
       s.ralenti = num(r[3]); s.co2 = num(r[4]);
       const h = String(r[2] || '').match(/^(\d+):/);
@@ -1480,12 +1543,13 @@ const COL = {
   ralenti : { k:'_ralenti', t:'Ralentí',     tipo:'dec' }
 };
 
-// La operacion de larga distancia comparte sucursal (LAD) y si tiene telemetria;
-// la de distribucion necesita la sucursal y no tiene datos de consumo.
+// La operacion de larga distancia comparte sucursal (LAD) y tiene telemetria
+// completa (consumo y ralenti); la de distribucion necesita la sucursal y solo
+// tiene consumo (hoja de toda la flota de la planilla COMBUSTIBLE).
 const COLS_LAD  = [COL.patente, COL.modelo, COL.chofer, COL.fecha, COL.kmUlt,
                    COL.kmProx, COL.kmAct, COL.falta, COL.estado, COL.c100, COL.ralenti];
-const COLS_DIST = [COL.patente, COL.modelo, COL.sucursal, COL.chofer,
-                   COL.fecha, COL.kmUlt, COL.kmProx, COL.kmAct, COL.falta, COL.estado];
+const COLS_DIST = [COL.patente, COL.modelo, COL.sucursal, COL.chofer, COL.fecha,
+                   COL.kmUlt, COL.kmProx, COL.kmAct, COL.falta, COL.estado, COL.c100];
 
 function filaUnidad(u, cols) {
   const c100 = ultimoValor(u, 'c100'), ral = ultimoValor(u, 'ralenti');
