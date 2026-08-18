@@ -1,1 +1,5165 @@
-{"_comment":"Snapshot de la planilla COMBUSTIBLE. Pestana TELEMETRIA (gid=0): consumo lts/100km mensual. Pestana EMISIONES (gid=882343299): % ralenti y KG de CO2 mensuales. Respaldo local del fetch en vivo.","_fuente":"https://docs.google.com/spreadsheets/d/1u7cckay0IJ60bfoKk2OZo-TjCvTbH9O1wKxNFdSKDCQ","_actualizado":"2026-08-15","meses":["2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10","2025-11","2025-12","2026-01","2026-02","2026-03","2026-04","2026-05","2026-06","2026-07"],"patentes":{"AG708DM":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-03","km":13938.0,"lts":5116.0,"c100":34.43,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":20378.0,"lts":6440.0,"c100":31.6,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":19305.0,"lts":6518.0,"c100":33.76,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":13035.0,"lts":4489.0,"c100":34.44,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":16518.0,"lts":5780.0,"c100":34.99,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":9711.0,"lts":3404.0,"c100":35.05,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18637.0,"lts":6221.0,"c100":33.38,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":15371.0,"lts":5185.0,"c100":33.73,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":14459.0,"lts":4677.0,"c100":32.35,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":9925.0,"lts":3195.0,"c100":32.19,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":17392.0,"lts":5482.0,"c100":31.52,"co2":10576.8,"ralenti":null,"horas":185},{"mes":"2026-02","km":6403.0,"lts":2003.0,"c100":31.28,"co2":5207.8,"ralenti":null,"horas":113},{"mes":"2026-03","km":16462.0,"lts":5324.0,"c100":32.34,"co2":13842.4,"ralenti":null,"horas":0},{"mes":"2026-04","km":16259.0,"lts":5357.0,"c100":32.95,"co2":13928.2,"ralenti":null,"horas":0},{"mes":"2026-05","km":15529.0,"lts":5278.0,"c100":33.99,"co2":13722.8,"ralenti":null,"horas":0},{"mes":"2026-06","km":4104.0,"lts":1340.0,"c100":32.65,"co2":3484.0,"ralenti":null,"horas":null},{"mes":"2026-07","km":7327.0,"lts":2483.0,"c100":33.89,"co2":6455.8,"ralenti":1.0,"horas":null}]},"POD840":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":17016.0,"lts":5585.0,"c100":32.18,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":14739.0,"lts":4761.0,"c100":32.3,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":16884.0,"lts":5437.0,"c100":32.2,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":17070.0,"lts":5524.0,"c100":32.36,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":18855.0,"lts":5943.0,"c100":31.52,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":19656.0,"lts":6362.0,"c100":32.37,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":15905.0,"lts":5081.0,"c100":31.95,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":20714.0,"lts":6701.0,"c100":32.35,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":20584.0,"lts":6610.0,"c100":32.11,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":19369.0,"lts":6219.0,"c100":32.11,"co2":null,"ralenti":null,"horas":null}]},"NWA924":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":10678.0,"lts":4163.0,"c100":31.49,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":6305.0,"lts":2536.0,"c100":40.23,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":11793.0,"lts":4411.0,"c100":37.41,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":11800.0,"lts":4204.0,"c100":35.62,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":10726.0,"lts":3540.0,"c100":33.01,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":10430.0,"lts":4347.0,"c100":41.67,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":7430.0,"lts":3763.0,"c100":50.65,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":6580.0,"lts":4109.0,"c100":null,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":11889.0,"lts":5359.0,"c100":45.08,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":799.0,"lts":953.0,"c100":null,"co2":null,"ralenti":null,"horas":null}]},"AH842GQ":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2026-04","km":20621.83,"lts":5778.24,"c100":28.02,"co2":15557.11,"ralenti":null,"horas":null},{"mes":"2026-05","km":13619.14,"lts":3880.09,"c100":28.49,"co2":10153.07,"ralenti":null,"horas":null},{"mes":"2026-06","km":15845.68,"lts":4580.99,"c100":28.91,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":18469.0,"lts":5059.02,"c100":30.34,"co2":14650.0,"ralenti":20.12,"horas":null}]},"AE988UW":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":18114.0,"lts":6546.0,"c100":36.17,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":18267.0,"lts":6630.0,"c100":30.51,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":15585.0,"lts":5813.0,"c100":37.3,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":17092.0,"lts":6923.0,"c100":40.5,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":19628.0,"lts":6401.0,"c100":32.61,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":20723.0,"lts":6880.0,"c100":33.2,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":19097.0,"lts":6363.0,"c100":33.32,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":21080.0,"lts":7241.0,"c100":34.35,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":19414.0,"lts":6714.0,"c100":34.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":17480.0,"lts":6492.0,"c100":37.14,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":18881.0,"lts":6171.0,"c100":32.68,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":19512.0,"lts":6111.0,"c100":31.32,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":16681.0,"lts":4994.0,"c100":29.94,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":15595.0,"lts":4722.0,"c100":30.28,"co2":13481.0,"ralenti":null,"horas":205},{"mes":"2026-02","km":17482.0,"lts":5604.0,"c100":32.06,"co2":14570.4,"ralenti":null,"horas":300},{"mes":"2026-03","km":17608.0,"lts":5620.0,"c100":31.92,"co2":14612.0,"ralenti":null,"horas":0},{"mes":"2026-04","km":16263.0,"lts":5577.0,"c100":34.29,"co2":14500.2,"ralenti":null,"horas":0},{"mes":"2026-05","km":19268.0,"lts":6747.0,"c100":35.02,"co2":17542.2,"ralenti":null,"horas":0},{"mes":"2026-06","km":16153.0,"lts":5525.0,"c100":34.2,"co2":14365.0,"ralenti":null,"horas":0},{"mes":"2026-07","km":13209.0,"lts":4631.0,"c100":35.06,"co2":12040.6,"ralenti":1.1,"horas":null}]},"AH938VO":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-11","km":9725.23,"lts":3030.38,"c100":31.16,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":16016.54,"lts":4697.65,"c100":29.33,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":15427.72,"lts":4764.08,"c100":30.88,"co2":12467.14,"ralenti":null,"horas":null},{"mes":"2026-02","km":7598.69,"lts":2412.58,"c100":31.75,"co2":6312.99,"ralenti":null,"horas":null},{"mes":"2026-03","km":16549.06,"lts":5247.71,"c100":31.71,"co2":14151.1,"ralenti":null,"horas":null},{"mes":"2026-04","km":15172.64,"lts":4689.86,"c100":30.91,"co2":12565.98,"ralenti":null,"horas":null},{"mes":"2026-05","km":13032.5,"lts":4189.95,"c100":32.15,"co2":10964.24,"ralenti":null,"horas":null},{"mes":"2026-06","km":15877.78,"lts":4728.4,"c100":29.78,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":18562.0,"lts":5759.79,"c100":31.03,"co2":15070.0,"ralenti":20.59,"horas":null}]},"AG286TR":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":9509.0,"lts":3928.0,"c100":40.52,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":19208.0,"lts":6848.0,"c100":34.64,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":15940.0,"lts":6525.0,"c100":35.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":9809.0,"lts":3116.0,"c100":32.55,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":16871.0,"lts":6071.0,"c100":35.98,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":18321.0,"lts":6691.0,"c100":36.52,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":16746.0,"lts":6226.0,"c100":37.18,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":17061.0,"lts":6342.0,"c100":37.17,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":14553.0,"lts":5579.0,"c100":38.34,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":10696.0,"lts":4722.0,"c100":44.15,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":18449.0,"lts":7431.0,"c100":40.28,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":16365.0,"lts":5978.0,"c100":36.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":17982.0,"lts":6438.0,"c100":35.8,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":18326.0,"lts":6470.0,"c100":35.31,"co2":14820.0,"ralenti":null,"horas":188},{"mes":"2026-02","km":12693.0,"lts":4729.0,"c100":37.26,"co2":12295.4,"ralenti":null,"horas":186},{"mes":"2026-03","km":16667.0,"lts":6238.0,"c100":37.43,"co2":16218.8,"ralenti":null,"horas":0},{"mes":"2026-04","km":18186.0,"lts":6374.0,"c100":35.05,"co2":16572.4,"ralenti":null,"horas":0},{"mes":"2026-05","km":15351.0,"lts":5276.0,"c100":34.37,"co2":13717.6,"ralenti":null,"horas":0},{"mes":"2026-06","km":16801.0,"lts":5935.0,"c100":35.33,"co2":15431.0,"ralenti":null,"horas":null},{"mes":"2026-07","km":18086.0,"lts":6338.0,"c100":35.04,"co2":16478.8,"ralenti":28.3,"horas":null}]},"AF533SB":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":16859.0,"lts":6258.0,"c100":37.26,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":15434.0,"lts":5474.0,"c100":34.29,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":12553.0,"lts":4648.0,"c100":37.03,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":14070.0,"lts":5884.0,"c100":41.82,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":17043.0,"lts":6445.0,"c100":37.82,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":20818.0,"lts":7862.0,"c100":37.77,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":15940.0,"lts":6105.0,"c100":38.3,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":15469.0,"lts":6017.0,"c100":38.9,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":14857.0,"lts":5750.0,"c100":38.7,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":16775.0,"lts":6147.0,"c100":36.64,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":17808.0,"lts":6553.0,"c100":36.8,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":14841.0,"lts":5396.0,"c100":36.36,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":15367.0,"lts":5788.0,"c100":37.67,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":9100.0,"lts":3489.0,"c100":38.34,"co2":709.8,"ralenti":null,"horas":53},{"mes":"2026-02","km":7896.0,"lts":3039.0,"c100":38.49,"co2":7901.4,"ralenti":null,"horas":143},{"mes":"2026-03","km":15765.0,"lts":5907.0,"c100":37.47,"co2":15358.2,"ralenti":null,"horas":0},{"mes":"2026-04","km":15696.0,"lts":6047.0,"c100":38.53,"co2":15722.2,"ralenti":null,"horas":0},{"mes":"2026-05","km":15684.0,"lts":5975.0,"c100":38.1,"co2":15535.0,"ralenti":null,"horas":null},{"mes":"2026-06","km":17949.0,"lts":7102.0,"c100":39.57,"co2":18465.2,"ralenti":null,"horas":null},{"mes":"2026-07","km":14480.0,"lts":5546.0,"c100":38.3,"co2":14419.6,"ralenti":1.1,"horas":null}]},"AF796IX":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":13835.0,"lts":5345.0,"c100":36.45,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":12616.0,"lts":4805.0,"c100":35.05,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":12828.0,"lts":6075.0,"c100":37.05,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":18466.0,"lts":7497.0,"c100":40.6,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":15030.0,"lts":5419.0,"c100":36.05,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":15806.0,"lts":5821.0,"c100":36.83,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":11202.0,"lts":4059.0,"c100":36.23,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":12437.0,"lts":4768.0,"c100":38.34,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":13968.0,"lts":5414.0,"c100":38.76,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":15669.0,"lts":6019.0,"c100":38.41,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":13935.0,"lts":5433.0,"c100":38.99,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":15500.0,"lts":6003.0,"c100":38.73,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":11699.0,"lts":4450.0,"c100":38.04,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":8390.0,"lts":3386.0,"c100":40.36,"co2":16822.0,"ralenti":null,"horas":234},{"mes":"2026-02","km":10785.0,"lts":4351.0,"c100":40.34,"co2":11312.6,"ralenti":null,"horas":196},{"mes":"2026-03","km":12240.0,"lts":4965.0,"c100":40.56,"co2":12909.0,"ralenti":null,"horas":0},{"mes":"2026-04","km":13853.0,"lts":5538.0,"c100":39.98,"co2":14398.8,"ralenti":null,"horas":0},{"mes":"2026-05","km":12582.0,"lts":5205.0,"c100":41.37,"co2":13533.0,"ralenti":null,"horas":null},{"mes":"2026-06","km":16102.0,"lts":6541.0,"c100":40.62,"co2":17006.6,"ralenti":null,"horas":null},{"mes":"2026-07","km":13758.0,"lts":5793.0,"c100":42.11,"co2":15061.8,"ralenti":1.6,"horas":null}]},"AE588MW":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-03","km":11931.0,"lts":4971.0,"c100":41.66,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":15142.0,"lts":6187.0,"c100":40.86,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":19909.0,"lts":8283.0,"c100":41.6,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":18043.0,"lts":8200.0,"c100":45.45,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":17200.0,"lts":7081.0,"c100":41.17,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":16610.0,"lts":6957.0,"c100":41.88,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":15794.0,"lts":6530.0,"c100":41.34,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":18111.0,"lts":7441.0,"c100":41.09,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":13839.0,"lts":5470.0,"c100":39.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":16898.0,"lts":6638.0,"c100":39.28,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":14321.0,"lts":5700.0,"c100":39.8,"co2":15584.4,"ralenti":null,"horas":205},{"mes":"2026-02","km":14204.0,"lts":5578.0,"c100":39.27,"co2":14502.8,"ralenti":null,"horas":233},{"mes":"2026-03","km":15993.0,"lts":6657.0,"c100":41.62,"co2":17308.2,"ralenti":null,"horas":0},{"mes":"2026-04","km":10373.0,"lts":4221.0,"c100":40.69,"co2":10974.6,"ralenti":null,"horas":0},{"mes":"2026-05","km":7097.0,"lts":2827.0,"c100":39.83,"co2":7350.2,"ralenti":null,"horas":0},{"mes":"2026-06","km":15786.0,"lts":6608.0,"c100":41.86,"co2":17180.8,"ralenti":null,"horas":0},{"mes":"2026-07","km":19187.0,"lts":7941.0,"c100":41.39,"co2":20646.6,"ralenti":1.2,"horas":null}]},"AD247MQ":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":16277.0,"lts":5951.0,"c100":34.17,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":15636.0,"lts":5335.0,"c100":34.12,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":16899.0,"lts":5936.0,"c100":35.13,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":15118.0,"lts":5424.0,"c100":35.88,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":19286.0,"lts":7196.0,"c100":37.31,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":17105.0,"lts":6129.0,"c100":35.83,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":19350.0,"lts":7280.0,"c100":37.62,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":20124.0,"lts":8027.0,"c100":39.89,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":22316.0,"lts":8621.0,"c100":38.63,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18613.0,"lts":7172.0,"c100":38.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":16837.0,"lts":6234.0,"c100":37.03,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":16952.0,"lts":6172.0,"c100":36.41,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":18602.0,"lts":6798.0,"c100":36.55,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":20346.0,"lts":7343.0,"c100":36.09,"co2":19311.0,"ralenti":null,"horas":379},{"mes":"2026-02","km":12914.0,"lts":4614.0,"c100":35.73,"co2":12134.9,"ralenti":null,"horas":244},{"mes":"2026-03","km":16589.0,"lts":5868.0,"c100":35.37,"co2":15432.8,"ralenti":null,"horas":324},{"mes":"2026-04","km":16904.0,"lts":6050.0,"c100":35.79,"co2":15911.1,"ralenti":null,"horas":342},{"mes":"2026-05","km":13863.0,"lts":4933.0,"c100":35.59,"co2":13000.0,"ralenti":null,"horas":null},{"mes":"2026-06","km":16920.0,"lts":6216.0,"c100":36.74,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":20227.0,"lts":7427.0,"c100":36.72,"co2":19500.0,"ralenti":29.5,"horas":null}]},"AH861UB":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-11","km":14522.58,"lts":4565.9,"c100":31.44,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":15336.6,"lts":4906.18,"c100":31.99,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":14027.19,"lts":4433.99,"c100":31.61,"co2":11604.69,"ralenti":null,"horas":null},{"mes":"2026-02","km":14205.06,"lts":4477.43,"c100":31.52,"co2":11717.75,"ralenti":null,"horas":null},{"mes":"2026-03","km":10872.27,"lts":3413.89,"c100":31.4,"co2":9243.6,"ralenti":null,"horas":null},{"mes":"2026-04","km":15709.39,"lts":4990.87,"c100":31.77,"co2":13422.1,"ralenti":null,"horas":null},{"mes":"2026-05","km":16713.3,"lts":5373.33,"c100":32.15,"co2":14062.57,"ralenti":null,"horas":null},{"mes":"2026-06","km":15714.03,"lts":5096.06,"c100":32.43,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":17538.0,"lts":5698.1,"c100":32.49,"co2":14910.0,"ralenti":19.85,"horas":null}]},"MPV053":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":21871.0,"lts":7531.0,"c100":32.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":18370.0,"lts":6145.0,"c100":33.45,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":7187.0,"lts":2497.0,"c100":34.75,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":19583.0,"lts":6916.0,"c100":35.32,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":20083.0,"lts":6975.0,"c100":34.73,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":25810.0,"lts":9392.0,"c100":36.39,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":24898.0,"lts":8970.0,"c100":36.02,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":21879.0,"lts":8271.0,"c100":37.8,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":18576.0,"lts":7197.0,"c100":38.74,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":21433.0,"lts":8144.0,"c100":38.0,"co2":null,"ralenti":null,"horas":null}]},"AF470UT":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":19211.0,"lts":9453.0,"c100":41.29,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":17652.0,"lts":7130.0,"c100":39.12,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":6732.0,"lts":2875.0,"c100":42.71,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":16768.0,"lts":8161.0,"c100":43.5,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":18847.0,"lts":7957.0,"c100":42.22,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":19862.0,"lts":8131.0,"c100":40.94,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":14521.0,"lts":6132.0,"c100":42.23,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":17529.0,"lts":7324.0,"c100":41.78,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":16226.0,"lts":6654.0,"c100":41.01,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18127.0,"lts":7765.0,"c100":42.84,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":17235.0,"lts":6923.0,"c100":40.17,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":17834.0,"lts":6989.0,"c100":39.19,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":14167.0,"lts":5415.0,"c100":38.22,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":13893.0,"lts":5185.0,"c100":37.32,"co2":8803.6,"ralenti":null,"horas":118},{"mes":"2026-02","km":7427.0,"lts":2623.0,"c100":35.32,"co2":6819.8,"ralenti":null,"horas":171},{"mes":"2026-03","km":18310.0,"lts":6630.0,"c100":36.21,"co2":17238.0,"ralenti":null,"horas":0},{"mes":"2026-04","km":15301.0,"lts":5595.0,"c100":36.57,"co2":14547.0,"ralenti":null,"horas":0},{"mes":"2026-05","km":12043.0,"lts":4573.0,"c100":37.97,"co2":11889.8,"ralenti":null,"horas":0},{"mes":"2026-06","km":16409.0,"lts":6460.0,"c100":39.37,"co2":16796.0,"ralenti":null,"horas":null},{"mes":"2026-07","km":13782.0,"lts":5372.0,"c100":38.98,"co2":13967.2,"ralenti":1.7,"horas":null}]},"AH522SI":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-11","km":21326.8,"lts":6572.92,"c100":30.82,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":19220.26,"lts":5598.86,"c100":29.13,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":18662.74,"lts":5544.7,"c100":29.71,"co2":14508.41,"ralenti":null,"horas":null},{"mes":"2026-02","km":19842.54,"lts":5625.36,"c100":28.35,"co2":14721.18,"ralenti":null,"horas":null},{"mes":"2026-03","km":19736.99,"lts":5409.91,"c100":27.41,"co2":14634.98,"ralenti":null,"horas":null},{"mes":"2026-04","km":18085.74,"lts":5011.56,"c100":27.71,"co2":13491.96,"ralenti":null,"horas":null},{"mes":"2026-05","km":23939.39,"lts":6832.3,"c100":28.54,"co2":17877.94,"ralenti":null,"horas":null},{"mes":"2026-06","km":17760.72,"lts":4957.02,"c100":27.91,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":15571.0,"lts":4401.92,"c100":28.27,"co2":11520.0,"ralenti":22.39,"horas":null}]},"AE423IV":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":16322.0,"lts":6919.0,"c100":38.45,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":19379.0,"lts":8049.0,"c100":40.05,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":17738.0,"lts":8409.0,"c100":49.1,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":16590.0,"lts":6554.0,"c100":39.51,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":16174.0,"lts":5621.0,"c100":34.75,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":3616.0,"lts":1374.0,"c100":38.0,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":1213.0,"lts":496.0,"c100":40.89,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":17247.0,"lts":6646.0,"c100":38.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":16347.0,"lts":6439.0,"c100":39.39,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":14840.0,"lts":5760.0,"c100":38.81,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":13469.0,"lts":5172.0,"c100":38.4,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":15657.0,"lts":5994.0,"c100":38.28,"co2":19949.8,"ralenti":null,"horas":275},{"mes":"2026-02","km":13213.0,"lts":4960.0,"c100":37.54,"co2":12896.0,"ralenti":null,"horas":265},{"mes":"2026-03","km":14863.0,"lts":5716.0,"c100":38.46,"co2":14861.6,"ralenti":null,"horas":0},{"mes":"2026-04","km":14281.0,"lts":5356.0,"c100":37.5,"co2":13925.6,"ralenti":null,"horas":0},{"mes":"2026-05","km":18852.0,"lts":7268.0,"c100":38.55,"co2":18896.8,"ralenti":null,"horas":0},{"mes":"2026-06","km":20519.0,"lts":7988.0,"c100":38.93,"co2":20768.8,"ralenti":null,"horas":0},{"mes":"2026-07","km":14194.0,"lts":5728.0,"c100":40.36,"co2":14892.8,"ralenti":1.3,"horas":null}]},"AG865QF":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":8019.0,"lts":2569.0,"c100":28.88,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":14214.0,"lts":4513.0,"c100":28.87,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":16381.0,"lts":6350.0,"c100":31.13,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":17466.0,"lts":5639.0,"c100":34.62,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":19911.0,"lts":6389.0,"c100":32.09,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":14530.0,"lts":6180.0,"c100":42.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":6141.0,"lts":6141.0,"c100":32.57,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":16297.0,"lts":5497.0,"c100":33.73,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":17239.0,"lts":5669.0,"c100":32.88,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":17818.0,"lts":6191.0,"c100":34.75,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":18708.0,"lts":6299.0,"c100":33.67,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":11268.0,"lts":3960.0,"c100":35.14,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":14766.0,"lts":5118.0,"c100":34.66,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":9718.0,"lts":3780.0,"c100":38.9,"co2":514.8,"ralenti":null,"horas":22},{"mes":"2026-02","km":11046.0,"lts":4046.0,"c100":36.63,"co2":10519.6,"ralenti":null,"horas":241},{"mes":"2026-03","km":13236.0,"lts":4979.0,"c100":37.62,"co2":12945.4,"ralenti":null,"horas":0},{"mes":"2026-04","km":12338.0,"lts":4388.0,"c100":35.56,"co2":11408.8,"ralenti":null,"horas":0},{"mes":"2026-05","km":14104.0,"lts":4846.0,"c100":34.36,"co2":12599.6,"ralenti":null,"horas":0},{"mes":"2026-06","km":14811.0,"lts":4974.0,"c100":33.58,"co2":12932.4,"ralenti":null,"horas":null},{"mes":"2026-07","km":15916.0,"lts":5483.0,"c100":34.45,"co2":14255.8,"ralenti":1.5,"horas":null}]},"AE423IW":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":17877.0,"lts":5892.0,"c100":31.2,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":18417.0,"lts":5715.0,"c100":31.03,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":8848.0,"lts":2824.0,"c100":31.92,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":18212.0,"lts":5764.0,"c100":31.65,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":18064.0,"lts":5532.0,"c100":30.62,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":18321.0,"lts":5623.0,"c100":30.69,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":22013.0,"lts":7161.0,"c100":32.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":20059.0,"lts":5290.0,"c100":26.37,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":21309.0,"lts":6814.0,"c100":31.97,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18573.0,"lts":5946.0,"c100":32.01,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":17082.0,"lts":5441.0,"c100":31.85,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":17996.0,"lts":5884.0,"c100":32.7,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":19868.0,"lts":6473.0,"c100":32.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":17715.0,"lts":5278.0,"c100":29.79,"co2":14276.3,"ralenti":null,"horas":303},{"mes":"2026-02","km":12610.0,"lts":3683.0,"c100":29.21,"co2":9686.6,"ralenti":null,"horas":227},{"mes":"2026-03","km":15617.0,"lts":4784.0,"c100":30.63,"co2":12580.7,"ralenti":null,"horas":268},{"mes":"2026-04","km":13944.0,"lts":4202.0,"c100":30.13,"co2":11050.1,"ralenti":null,"horas":239},{"mes":"2026-05","km":10467.0,"lts":3177.0,"c100":30.35,"co2":8400.0,"ralenti":null,"horas":null},{"mes":"2026-06","km":13902.0,"lts":4244.0,"c100":30.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-07","km":15364.0,"lts":4803.0,"c100":31.26,"co2":12600.0,"ralenti":19.0,"horas":null}]},"AG983HW":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-01","km":15353.0,"lts":5177.0,"c100":29.6,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":19001.0,"lts":6931.0,"c100":31.94,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":17267.0,"lts":6803.0,"c100":34.69,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":13152.0,"lts":4170.0,"c100":31.71,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":24832.0,"lts":7981.0,"c100":32.14,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":24602.0,"lts":8108.0,"c100":32.96,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":21215.0,"lts":7027.0,"c100":33.12,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":23852.0,"lts":7841.0,"c100":32.87,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":16194.0,"lts":5206.0,"c100":32.15,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":18820.0,"lts":6221.0,"c100":33.06,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":16466.0,"lts":5210.0,"c100":31.64,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":10819.0,"lts":3460.0,"c100":31.98,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":13438.0,"lts":4068.0,"c100":30.27,"co2":624.0,"ralenti":null,"horas":60},{"mes":"2026-02","km":14994.0,"lts":4459.0,"c100":29.74,"co2":11593.4,"ralenti":null,"horas":251},{"mes":"2026-03","km":16260.0,"lts":5114.0,"c100":31.45,"co2":13296.4,"ralenti":null,"horas":0},{"mes":"2026-04","km":18012.0,"lts":5609.0,"c100":31.14,"co2":14583.4,"ralenti":null,"horas":0},{"mes":"2026-05","km":15591.0,"lts":5137.0,"c100":32.95,"co2":13356.2,"ralenti":null,"horas":0},{"mes":"2026-06","km":19032.0,"lts":6514.0,"c100":34.23,"co2":16936.4,"ralenti":null,"horas":null},{"mes":"2026-07","km":16344.0,"lts":5410.0,"c100":33.1,"co2":14066.0,"ralenti":1.0,"horas":null}]},"NWA923":{"tag":"LAD","marca":"SCANIA","serie":[{"mes":"2024-12","km":18423.0,"lts":6458.0,"c100":32.81,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":16210.0,"lts":5066.0,"c100":31.25,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":13233.0,"lts":4124.0,"c100":31.16,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":9579.0,"lts":3025.0,"c100":31.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":16430.0,"lts":5141.0,"c100":31.29,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":17899.0,"lts":5595.0,"c100":31.26,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":10424.0,"lts":3260.0,"c100":31.27,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":17931.0,"lts":5473.0,"c100":30.52,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":15472.0,"lts":4605.0,"c100":29.76,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18137.0,"lts":5649.0,"c100":31.15,"co2":null,"ralenti":null,"horas":null}]},"AF577BD":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2024-12","km":19412.0,"lts":8063.0,"c100":40.78,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-01","km":16108.0,"lts":8249.0,"c100":48.37,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-02","km":16491.0,"lts":7328.0,"c100":40.23,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-03","km":13809.0,"lts":6209.0,"c100":41.7,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-04","km":15477.0,"lts":6730.0,"c100":43.48,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":7439.0,"lts":3015.0,"c100":40.53,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":5773.0,"lts":2280.0,"c100":39.49,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":18750.0,"lts":7685.0,"c100":40.99,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":19996.0,"lts":8429.0,"c100":42.15,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":18154.0,"lts":7765.0,"c100":42.77,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":20278.0,"lts":8778.0,"c100":43.29,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":12315.0,"lts":5113.0,"c100":41.52,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":15914.0,"lts":5846.0,"c100":36.73,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":11675.0,"lts":4612.0,"c100":39.5,"co2":14253.2,"ralenti":null,"horas":234},{"mes":"2026-02","km":11359.0,"lts":4262.0,"c100":37.52,"co2":11081.2,"ralenti":null,"horas":183},{"mes":"2026-03","km":18584.0,"lts":6993.0,"c100":37.63,"co2":18181.8,"ralenti":null,"horas":0},{"mes":"2026-04","km":17959.0,"lts":7203.0,"c100":40.11,"co2":18727.8,"ralenti":null,"horas":0},{"mes":"2026-05","km":11785.0,"lts":4747.0,"c100":40.28,"co2":12342.2,"ralenti":null,"horas":null},{"mes":"2026-06","km":16306.0,"lts":6612.0,"c100":40.55,"co2":17191.2,"ralenti":null,"horas":null},{"mes":"2026-07","km":17337.0,"lts":6845.0,"c100":39.48,"co2":17797.0,"ralenti":1.1,"horas":null}]},"AF218HY":{"tag":"LAD","marca":"IVECO","serie":[{"mes":"2025-03","km":7680.0,"lts":3222.0,"c100":41.95,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-05","km":21255.0,"lts":10776.0,"c100":50.7,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-06","km":17659.0,"lts":7342.0,"c100":41.58,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-07","km":21465.0,"lts":9054.0,"c100":42.18,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-08","km":19634.0,"lts":7878.0,"c100":40.12,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-09","km":21776.0,"lts":8561.0,"c100":39.31,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-10","km":19543.0,"lts":7693.0,"c100":39.36,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-11","km":16794.0,"lts":6572.0,"c100":39.13,"co2":null,"ralenti":null,"horas":null},{"mes":"2025-12","km":18330.0,"lts":7136.0,"c100":38.93,"co2":null,"ralenti":null,"horas":null},{"mes":"2026-01","km":19792.0,"lts":7673.0,"c100":38.77,"co2":11991.2,"ralenti":null,"horas":152},{"mes":"2026-02","km":11744.0,"lts":4561.0,"c100":38.84,"co2":11858.6,"ralenti":null,"horas":193},{"mes":"2026-03","km":16558.0,"lts":6310.0,"c100":38.11,"co2":16406.0,"ralenti":null,"horas":0},{"mes":"2026-04","km":14185.0,"lts":5433.0,"c100":38.3,"co2":14125.8,"ralenti":null,"horas":0},{"mes":"2026-05","km":19088.0,"lts":7253.0,"c100":38.0,"co2":18857.8,"ralenti":null,"horas":0},{"mes":"2026-06","km":16227.0,"lts":6474.0,"c100":39.9,"co2":16832.4,"ralenti":null,"horas":0},{"mes":"2026-07","km":11031.0,"lts":4280.0,"c100":38.8,"co2":11128.0,"ralenti":1.2,"horas":null}]}}}
+{
+  "_comment": "Snapshot de la planilla COMBUSTIBLE. Pestana TELEMETRIA (gid=0): consumo lts/100km mensual de larga distancia. Pestana CONSUMO FLOTA (gid=1044040871): consumo mensual de toda la flota, incluida distribucion. Pestana EMISIONES (gid=882343299): % ralenti y KG de CO2 mensuales. Respaldo local del fetch en vivo.",
+  "_fuente": "https://docs.google.com/spreadsheets/d/1u7cckay0IJ60bfoKk2OZo-TjCvTbH9O1wKxNFdSKDCQ",
+  "_actualizado": "2026-08-18",
+  "meses": [
+    "2024-12",
+    "2025-01",
+    "2025-02",
+    "2025-03",
+    "2025-04",
+    "2025-05",
+    "2025-06",
+    "2025-07",
+    "2025-08",
+    "2025-09",
+    "2025-10",
+    "2025-11",
+    "2025-12",
+    "2026-01",
+    "2026-02",
+    "2026-03",
+    "2026-04",
+    "2026-05",
+    "2026-06",
+    "2026-07"
+  ],
+  "patentes": {
+    "AG708DM": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-01",
+          "km": 20819.0,
+          "lts": 6782.22,
+          "c100": 32.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 12924.0,
+          "lts": 4341.48,
+          "c100": 33.59,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 13938.0,
+          "lts": 5116.0,
+          "c100": 34.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 20378.0,
+          "lts": 6440.0,
+          "c100": 31.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 19305.0,
+          "lts": 6518.0,
+          "c100": 33.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 13035.0,
+          "lts": 4489.0,
+          "c100": 34.44,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 16518.0,
+          "lts": 5780.0,
+          "c100": 34.99,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 9711.0,
+          "lts": 3404.0,
+          "c100": 35.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18637.0,
+          "lts": 6221.0,
+          "c100": 33.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 15371.0,
+          "lts": 5185.0,
+          "c100": 33.73,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 14459.0,
+          "lts": 4677.0,
+          "c100": 32.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 9925.0,
+          "lts": 3195.0,
+          "c100": 32.19,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 17392.0,
+          "lts": 5482.0,
+          "c100": 31.52,
+          "co2": 10576.8,
+          "ralenti": null,
+          "horas": 185
+        },
+        {
+          "mes": "2026-02",
+          "km": 6403.0,
+          "lts": 2003.0,
+          "c100": 31.28,
+          "co2": 5207.8,
+          "ralenti": null,
+          "horas": 113
+        },
+        {
+          "mes": "2026-03",
+          "km": 16462.0,
+          "lts": 5324.0,
+          "c100": 32.34,
+          "co2": 13842.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 16259.0,
+          "lts": 5357.0,
+          "c100": 32.95,
+          "co2": 13928.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 15529.0,
+          "lts": 5278.0,
+          "c100": 33.99,
+          "co2": 13722.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 4104.0,
+          "lts": 1340.0,
+          "c100": 32.65,
+          "co2": 3484.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 7327.0,
+          "lts": 2483.0,
+          "c100": 33.89,
+          "co2": 6455.8,
+          "ralenti": 1.0,
+          "horas": null
+        }
+      ]
+    },
+    "POD840": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 17016.0,
+          "lts": 5585.0,
+          "c100": 32.18,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 14739.0,
+          "lts": 4761.0,
+          "c100": 32.3,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 16884.0,
+          "lts": 5437.0,
+          "c100": 32.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 17070.0,
+          "lts": 5524.0,
+          "c100": 32.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 18855.0,
+          "lts": 5943.0,
+          "c100": 31.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 19656.0,
+          "lts": 6362.0,
+          "c100": 32.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 15905.0,
+          "lts": 5081.0,
+          "c100": 31.95,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 20714.0,
+          "lts": 6701.0,
+          "c100": 32.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 20584.0,
+          "lts": 6610.0,
+          "c100": 32.11,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 19369.0,
+          "lts": 6219.0,
+          "c100": 32.11,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "NWA924": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 10678.0,
+          "lts": 4163.0,
+          "c100": 31.49,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 6305.0,
+          "lts": 2536.0,
+          "c100": 40.23,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 11793.0,
+          "lts": 4411.0,
+          "c100": 37.41,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 11800.0,
+          "lts": 4204.0,
+          "c100": 35.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 10726.0,
+          "lts": 3540.0,
+          "c100": 33.01,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 10430.0,
+          "lts": 4347.0,
+          "c100": 41.67,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 7430.0,
+          "lts": 3763.0,
+          "c100": 50.65,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 6580.0,
+          "lts": 4109.0,
+          "c100": null,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 11889.0,
+          "lts": 5359.0,
+          "c100": 45.08,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 799.0,
+          "lts": 953.0,
+          "c100": null,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AH842GQ": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2026-04",
+          "km": 20621.83,
+          "lts": 5778.24,
+          "c100": 28.02,
+          "co2": 15557.11,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-05",
+          "km": 13619.14,
+          "lts": 3880.09,
+          "c100": 28.49,
+          "co2": 10153.07,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 15845.68,
+          "lts": 4580.99,
+          "c100": 28.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 18469.0,
+          "lts": 5059.02,
+          "c100": 30.34,
+          "co2": 14650.0,
+          "ralenti": 20.12,
+          "horas": null
+        }
+      ]
+    },
+    "AE988UW": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 18114.0,
+          "lts": 6546.0,
+          "c100": 36.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 18267.0,
+          "lts": 6630.0,
+          "c100": 30.51,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 15585.0,
+          "lts": 5813.0,
+          "c100": 37.3,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 17092.0,
+          "lts": 6923.0,
+          "c100": 40.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 19628.0,
+          "lts": 6401.0,
+          "c100": 32.61,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 20723.0,
+          "lts": 6880.0,
+          "c100": 33.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 19097.0,
+          "lts": 6363.0,
+          "c100": 33.32,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 21080.0,
+          "lts": 7241.0,
+          "c100": 34.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 19414.0,
+          "lts": 6714.0,
+          "c100": 34.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 17480.0,
+          "lts": 6492.0,
+          "c100": 37.14,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 18881.0,
+          "lts": 6171.0,
+          "c100": 32.68,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 19512.0,
+          "lts": 6111.0,
+          "c100": 31.32,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 16681.0,
+          "lts": 4994.0,
+          "c100": 29.94,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 15595.0,
+          "lts": 4722.0,
+          "c100": 30.28,
+          "co2": 13481.0,
+          "ralenti": null,
+          "horas": 205
+        },
+        {
+          "mes": "2026-02",
+          "km": 17482.0,
+          "lts": 5604.0,
+          "c100": 32.06,
+          "co2": 14570.4,
+          "ralenti": null,
+          "horas": 300
+        },
+        {
+          "mes": "2026-03",
+          "km": 17608.0,
+          "lts": 5620.0,
+          "c100": 31.92,
+          "co2": 14612.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 16263.0,
+          "lts": 5577.0,
+          "c100": 34.29,
+          "co2": 14500.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 19268.0,
+          "lts": 6747.0,
+          "c100": 35.02,
+          "co2": 17542.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 16153.0,
+          "lts": 5525.0,
+          "c100": 34.2,
+          "co2": 14365.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-07",
+          "km": 13209.0,
+          "lts": 4631.0,
+          "c100": 35.06,
+          "co2": 12040.6,
+          "ralenti": 1.1,
+          "horas": null
+        }
+      ]
+    },
+    "AH938VO": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-11",
+          "km": 9725.23,
+          "lts": 3030.38,
+          "c100": 31.16,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 16016.54,
+          "lts": 4697.65,
+          "c100": 29.33,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 15427.72,
+          "lts": 4764.08,
+          "c100": 30.88,
+          "co2": 12467.14,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-02",
+          "km": 7598.69,
+          "lts": 2412.58,
+          "c100": 31.75,
+          "co2": 6312.99,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-03",
+          "km": 16549.06,
+          "lts": 5247.71,
+          "c100": 31.71,
+          "co2": 14151.1,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-04",
+          "km": 15172.64,
+          "lts": 4689.86,
+          "c100": 30.91,
+          "co2": 12565.98,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-05",
+          "km": 13032.5,
+          "lts": 4189.95,
+          "c100": 32.15,
+          "co2": 10964.24,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 15877.78,
+          "lts": 4728.4,
+          "c100": 29.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 18562.0,
+          "lts": 5759.79,
+          "c100": 31.03,
+          "co2": 15070.0,
+          "ralenti": 20.59,
+          "horas": null
+        }
+      ]
+    },
+    "AG286TR": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 9509.0,
+          "lts": 3928.0,
+          "c100": 40.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 19208.0,
+          "lts": 6848.0,
+          "c100": 34.64,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 15940.0,
+          "lts": 6525.0,
+          "c100": 35.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 9809.0,
+          "lts": 3116.0,
+          "c100": 32.55,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 16871.0,
+          "lts": 6071.0,
+          "c100": 35.98,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 18321.0,
+          "lts": 6691.0,
+          "c100": 36.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 16746.0,
+          "lts": 6226.0,
+          "c100": 37.18,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 17061.0,
+          "lts": 6342.0,
+          "c100": 37.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 14553.0,
+          "lts": 5579.0,
+          "c100": 38.34,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 10696.0,
+          "lts": 4722.0,
+          "c100": 44.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 18449.0,
+          "lts": 7431.0,
+          "c100": 40.28,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 16365.0,
+          "lts": 5978.0,
+          "c100": 36.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 17982.0,
+          "lts": 6438.0,
+          "c100": 35.8,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 18326.0,
+          "lts": 6470.0,
+          "c100": 35.31,
+          "co2": 14820.0,
+          "ralenti": null,
+          "horas": 188
+        },
+        {
+          "mes": "2026-02",
+          "km": 12693.0,
+          "lts": 4729.0,
+          "c100": 37.26,
+          "co2": 12295.4,
+          "ralenti": null,
+          "horas": 186
+        },
+        {
+          "mes": "2026-03",
+          "km": 16667.0,
+          "lts": 6238.0,
+          "c100": 37.43,
+          "co2": 16218.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 18186.0,
+          "lts": 6374.0,
+          "c100": 35.05,
+          "co2": 16572.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 15351.0,
+          "lts": 5276.0,
+          "c100": 34.37,
+          "co2": 13717.6,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 16801.0,
+          "lts": 5935.0,
+          "c100": 35.33,
+          "co2": 15431.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 18086.0,
+          "lts": 6338.0,
+          "c100": 35.04,
+          "co2": 16478.8,
+          "ralenti": 28.3,
+          "horas": null
+        }
+      ]
+    },
+    "AF533SB": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 16859.0,
+          "lts": 6258.0,
+          "c100": 37.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 15434.0,
+          "lts": 5474.0,
+          "c100": 34.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 12553.0,
+          "lts": 4648.0,
+          "c100": 37.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 14070.0,
+          "lts": 5884.0,
+          "c100": 41.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 17043.0,
+          "lts": 6445.0,
+          "c100": 37.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 20818.0,
+          "lts": 7862.0,
+          "c100": 37.77,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 15940.0,
+          "lts": 6105.0,
+          "c100": 38.3,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 15469.0,
+          "lts": 6017.0,
+          "c100": 38.9,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 14857.0,
+          "lts": 5750.0,
+          "c100": 38.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 16775.0,
+          "lts": 6147.0,
+          "c100": 36.64,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 17808.0,
+          "lts": 6553.0,
+          "c100": 36.8,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 14841.0,
+          "lts": 5396.0,
+          "c100": 36.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 15367.0,
+          "lts": 5788.0,
+          "c100": 37.67,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 9100.0,
+          "lts": 3489.0,
+          "c100": 38.34,
+          "co2": 709.8,
+          "ralenti": null,
+          "horas": 53
+        },
+        {
+          "mes": "2026-02",
+          "km": 7896.0,
+          "lts": 3039.0,
+          "c100": 38.49,
+          "co2": 7901.4,
+          "ralenti": null,
+          "horas": 143
+        },
+        {
+          "mes": "2026-03",
+          "km": 15765.0,
+          "lts": 5907.0,
+          "c100": 37.47,
+          "co2": 15358.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 15696.0,
+          "lts": 6047.0,
+          "c100": 38.53,
+          "co2": 15722.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 15684.0,
+          "lts": 5975.0,
+          "c100": 38.1,
+          "co2": 15535.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 17949.0,
+          "lts": 7102.0,
+          "c100": 39.57,
+          "co2": 18465.2,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 14480.0,
+          "lts": 5546.0,
+          "c100": 38.3,
+          "co2": 14419.6,
+          "ralenti": 1.1,
+          "horas": null
+        }
+      ]
+    },
+    "AF796IX": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 13835.0,
+          "lts": 5345.0,
+          "c100": 36.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 12616.0,
+          "lts": 4805.0,
+          "c100": 35.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 12828.0,
+          "lts": 6075.0,
+          "c100": 37.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 18466.0,
+          "lts": 7497.0,
+          "c100": 40.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 15030.0,
+          "lts": 5419.0,
+          "c100": 36.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 15806.0,
+          "lts": 5821.0,
+          "c100": 36.83,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 11202.0,
+          "lts": 4059.0,
+          "c100": 36.23,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 12437.0,
+          "lts": 4768.0,
+          "c100": 38.34,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 13968.0,
+          "lts": 5414.0,
+          "c100": 38.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 15669.0,
+          "lts": 6019.0,
+          "c100": 38.41,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 13935.0,
+          "lts": 5433.0,
+          "c100": 38.99,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 15500.0,
+          "lts": 6003.0,
+          "c100": 38.73,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 11699.0,
+          "lts": 4450.0,
+          "c100": 38.04,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 8390.0,
+          "lts": 3386.0,
+          "c100": 40.36,
+          "co2": 16822.0,
+          "ralenti": null,
+          "horas": 234
+        },
+        {
+          "mes": "2026-02",
+          "km": 10785.0,
+          "lts": 4351.0,
+          "c100": 40.34,
+          "co2": 11312.6,
+          "ralenti": null,
+          "horas": 196
+        },
+        {
+          "mes": "2026-03",
+          "km": 12240.0,
+          "lts": 4965.0,
+          "c100": 40.56,
+          "co2": 12909.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 13853.0,
+          "lts": 5538.0,
+          "c100": 39.98,
+          "co2": 14398.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 12582.0,
+          "lts": 5205.0,
+          "c100": 41.37,
+          "co2": 13533.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 16102.0,
+          "lts": 6541.0,
+          "c100": 40.62,
+          "co2": 17006.6,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 13758.0,
+          "lts": 5793.0,
+          "c100": 42.11,
+          "co2": 15061.8,
+          "ralenti": 1.6,
+          "horas": null
+        }
+      ]
+    },
+    "AE588MW": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-01",
+          "km": 16728.0,
+          "lts": 6435.23,
+          "c100": 38.47,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 15268.0,
+          "lts": 5993.96,
+          "c100": 39.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 11931.0,
+          "lts": 4971.0,
+          "c100": 41.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 15142.0,
+          "lts": 6187.0,
+          "c100": 40.86,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 19909.0,
+          "lts": 8283.0,
+          "c100": 41.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 18043.0,
+          "lts": 8200.0,
+          "c100": 45.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 17200.0,
+          "lts": 7081.0,
+          "c100": 41.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 16610.0,
+          "lts": 6957.0,
+          "c100": 41.88,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 15794.0,
+          "lts": 6530.0,
+          "c100": 41.34,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 18111.0,
+          "lts": 7441.0,
+          "c100": 41.09,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 13839.0,
+          "lts": 5470.0,
+          "c100": 39.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 16898.0,
+          "lts": 6638.0,
+          "c100": 39.28,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 14321.0,
+          "lts": 5700.0,
+          "c100": 39.8,
+          "co2": 15584.4,
+          "ralenti": null,
+          "horas": 205
+        },
+        {
+          "mes": "2026-02",
+          "km": 14204.0,
+          "lts": 5578.0,
+          "c100": 39.27,
+          "co2": 14502.8,
+          "ralenti": null,
+          "horas": 233
+        },
+        {
+          "mes": "2026-03",
+          "km": 15993.0,
+          "lts": 6657.0,
+          "c100": 41.62,
+          "co2": 17308.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 10373.0,
+          "lts": 4221.0,
+          "c100": 40.69,
+          "co2": 10974.6,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 7097.0,
+          "lts": 2827.0,
+          "c100": 39.83,
+          "co2": 7350.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 15786.0,
+          "lts": 6608.0,
+          "c100": 41.86,
+          "co2": 17180.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-07",
+          "km": 19187.0,
+          "lts": 7941.0,
+          "c100": 41.39,
+          "co2": 20646.6,
+          "ralenti": 1.2,
+          "horas": null
+        }
+      ]
+    },
+    "AD247MQ": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 16277.0,
+          "lts": 5951.0,
+          "c100": 34.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 15636.0,
+          "lts": 5335.0,
+          "c100": 34.12,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 16899.0,
+          "lts": 5936.0,
+          "c100": 35.13,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 15118.0,
+          "lts": 5424.0,
+          "c100": 35.88,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 19286.0,
+          "lts": 7196.0,
+          "c100": 37.31,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 17105.0,
+          "lts": 6129.0,
+          "c100": 35.83,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 19350.0,
+          "lts": 7280.0,
+          "c100": 37.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 20124.0,
+          "lts": 8027.0,
+          "c100": 39.89,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 22316.0,
+          "lts": 8621.0,
+          "c100": 38.63,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18613.0,
+          "lts": 7172.0,
+          "c100": 38.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 16837.0,
+          "lts": 6234.0,
+          "c100": 37.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 16952.0,
+          "lts": 6172.0,
+          "c100": 36.41,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 18602.0,
+          "lts": 6798.0,
+          "c100": 36.55,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 20346.0,
+          "lts": 7343.0,
+          "c100": 36.09,
+          "co2": 19311.0,
+          "ralenti": null,
+          "horas": 379
+        },
+        {
+          "mes": "2026-02",
+          "km": 12914.0,
+          "lts": 4614.0,
+          "c100": 35.73,
+          "co2": 12134.9,
+          "ralenti": null,
+          "horas": 244
+        },
+        {
+          "mes": "2026-03",
+          "km": 16589.0,
+          "lts": 5868.0,
+          "c100": 35.37,
+          "co2": 15432.8,
+          "ralenti": null,
+          "horas": 324
+        },
+        {
+          "mes": "2026-04",
+          "km": 16904.0,
+          "lts": 6050.0,
+          "c100": 35.79,
+          "co2": 15911.1,
+          "ralenti": null,
+          "horas": 342
+        },
+        {
+          "mes": "2026-05",
+          "km": 13863.0,
+          "lts": 4933.0,
+          "c100": 35.59,
+          "co2": 13000.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 16920.0,
+          "lts": 6216.0,
+          "c100": 36.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 20227.0,
+          "lts": 7427.0,
+          "c100": 36.72,
+          "co2": 19500.0,
+          "ralenti": 29.5,
+          "horas": null
+        }
+      ]
+    },
+    "AH861UB": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-11",
+          "km": 14522.58,
+          "lts": 4565.9,
+          "c100": 31.44,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 15336.6,
+          "lts": 4906.18,
+          "c100": 31.99,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 14027.19,
+          "lts": 4433.99,
+          "c100": 31.61,
+          "co2": 11604.69,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-02",
+          "km": 14205.06,
+          "lts": 4477.43,
+          "c100": 31.52,
+          "co2": 11717.75,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-03",
+          "km": 10872.27,
+          "lts": 3413.89,
+          "c100": 31.4,
+          "co2": 9243.6,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-04",
+          "km": 15709.39,
+          "lts": 4990.87,
+          "c100": 31.77,
+          "co2": 13422.1,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-05",
+          "km": 16713.3,
+          "lts": 5373.33,
+          "c100": 32.15,
+          "co2": 14062.57,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 15714.03,
+          "lts": 5096.06,
+          "c100": 32.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 17538.0,
+          "lts": 5698.1,
+          "c100": 32.49,
+          "co2": 14910.0,
+          "ralenti": 19.85,
+          "horas": null
+        }
+      ]
+    },
+    "MPV053": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 21871.0,
+          "lts": 7531.0,
+          "c100": 32.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 18370.0,
+          "lts": 6145.0,
+          "c100": 33.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 7187.0,
+          "lts": 2497.0,
+          "c100": 34.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 19583.0,
+          "lts": 6916.0,
+          "c100": 35.32,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 20083.0,
+          "lts": 6975.0,
+          "c100": 34.73,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 25810.0,
+          "lts": 9392.0,
+          "c100": 36.39,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 24898.0,
+          "lts": 8970.0,
+          "c100": 36.02,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 21879.0,
+          "lts": 8271.0,
+          "c100": 37.8,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 18576.0,
+          "lts": 7197.0,
+          "c100": 38.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 21433.0,
+          "lts": 8144.0,
+          "c100": 38.0,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AF470UT": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 19211.0,
+          "lts": 9453.0,
+          "c100": 41.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 17652.0,
+          "lts": 7130.0,
+          "c100": 39.12,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 6732.0,
+          "lts": 2875.0,
+          "c100": 42.71,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 16768.0,
+          "lts": 8161.0,
+          "c100": 43.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 18847.0,
+          "lts": 7957.0,
+          "c100": 42.22,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 19862.0,
+          "lts": 8131.0,
+          "c100": 40.94,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 14521.0,
+          "lts": 6132.0,
+          "c100": 42.23,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 17529.0,
+          "lts": 7324.0,
+          "c100": 41.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 16226.0,
+          "lts": 6654.0,
+          "c100": 41.01,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18127.0,
+          "lts": 7765.0,
+          "c100": 42.84,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 17235.0,
+          "lts": 6923.0,
+          "c100": 40.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 17834.0,
+          "lts": 6989.0,
+          "c100": 39.19,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 14167.0,
+          "lts": 5415.0,
+          "c100": 38.22,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 13893.0,
+          "lts": 5185.0,
+          "c100": 37.32,
+          "co2": 8803.6,
+          "ralenti": null,
+          "horas": 118
+        },
+        {
+          "mes": "2026-02",
+          "km": 7427.0,
+          "lts": 2623.0,
+          "c100": 35.32,
+          "co2": 6819.8,
+          "ralenti": null,
+          "horas": 171
+        },
+        {
+          "mes": "2026-03",
+          "km": 18310.0,
+          "lts": 6630.0,
+          "c100": 36.21,
+          "co2": 17238.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 15301.0,
+          "lts": 5595.0,
+          "c100": 36.57,
+          "co2": 14547.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 12043.0,
+          "lts": 4573.0,
+          "c100": 37.97,
+          "co2": 11889.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 16409.0,
+          "lts": 6460.0,
+          "c100": 39.37,
+          "co2": 16796.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 13782.0,
+          "lts": 5372.0,
+          "c100": 38.98,
+          "co2": 13967.2,
+          "ralenti": 1.7,
+          "horas": null
+        }
+      ]
+    },
+    "AH522SI": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-11",
+          "km": 21326.8,
+          "lts": 6572.92,
+          "c100": 30.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 19220.26,
+          "lts": 5598.86,
+          "c100": 29.13,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 18662.74,
+          "lts": 5544.7,
+          "c100": 29.71,
+          "co2": 14508.41,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-02",
+          "km": 19842.54,
+          "lts": 5625.36,
+          "c100": 28.35,
+          "co2": 14721.18,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-03",
+          "km": 19736.99,
+          "lts": 5409.91,
+          "c100": 27.41,
+          "co2": 14634.98,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-04",
+          "km": 18085.74,
+          "lts": 5011.56,
+          "c100": 27.71,
+          "co2": 13491.96,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-05",
+          "km": 23939.39,
+          "lts": 6832.3,
+          "c100": 28.54,
+          "co2": 17877.94,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 17760.72,
+          "lts": 4957.02,
+          "c100": 27.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 15571.0,
+          "lts": 4401.92,
+          "c100": 28.27,
+          "co2": 11520.0,
+          "ralenti": 22.39,
+          "horas": null
+        }
+      ]
+    },
+    "AE423IV": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 16322.0,
+          "lts": 6919.0,
+          "c100": 38.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 19379.0,
+          "lts": 8049.0,
+          "c100": 40.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 17738.0,
+          "lts": 8409.0,
+          "c100": 49.1,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 16590.0,
+          "lts": 6554.0,
+          "c100": 39.51,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 16174.0,
+          "lts": 5621.0,
+          "c100": 34.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 3616.0,
+          "lts": 1374.0,
+          "c100": 38.0,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 17676.43,
+          "lts": 6447.13,
+          "c100": 36.47,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 15388.31,
+          "lts": 5689.32,
+          "c100": 36.97,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 1213.0,
+          "lts": 496.0,
+          "c100": 40.89,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 17247.0,
+          "lts": 6646.0,
+          "c100": 38.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 16347.0,
+          "lts": 6439.0,
+          "c100": 39.39,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 14840.0,
+          "lts": 5760.0,
+          "c100": 38.81,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 13469.0,
+          "lts": 5172.0,
+          "c100": 38.4,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 15657.0,
+          "lts": 5994.0,
+          "c100": 38.28,
+          "co2": 19949.8,
+          "ralenti": null,
+          "horas": 275
+        },
+        {
+          "mes": "2026-02",
+          "km": 13213.0,
+          "lts": 4960.0,
+          "c100": 37.54,
+          "co2": 12896.0,
+          "ralenti": null,
+          "horas": 265
+        },
+        {
+          "mes": "2026-03",
+          "km": 14863.0,
+          "lts": 5716.0,
+          "c100": 38.46,
+          "co2": 14861.6,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 14281.0,
+          "lts": 5356.0,
+          "c100": 37.5,
+          "co2": 13925.6,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 18852.0,
+          "lts": 7268.0,
+          "c100": 38.55,
+          "co2": 18896.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 20519.0,
+          "lts": 7988.0,
+          "c100": 38.93,
+          "co2": 20768.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-07",
+          "km": 14194.0,
+          "lts": 5728.0,
+          "c100": 40.36,
+          "co2": 14892.8,
+          "ralenti": 1.3,
+          "horas": null
+        }
+      ]
+    },
+    "AG865QF": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 8019.0,
+          "lts": 2569.0,
+          "c100": 28.88,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 14214.0,
+          "lts": 4513.0,
+          "c100": 28.87,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 16381.0,
+          "lts": 6350.0,
+          "c100": 31.13,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 17466.0,
+          "lts": 5639.0,
+          "c100": 34.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 19911.0,
+          "lts": 6389.0,
+          "c100": 32.09,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 14530.0,
+          "lts": 6180.0,
+          "c100": 42.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 6141.0,
+          "lts": 6141.0,
+          "c100": 32.57,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 16297.0,
+          "lts": 5497.0,
+          "c100": 33.73,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 17239.0,
+          "lts": 5669.0,
+          "c100": 32.88,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 17818.0,
+          "lts": 6191.0,
+          "c100": 34.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 18708.0,
+          "lts": 6299.0,
+          "c100": 33.67,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 11268.0,
+          "lts": 3960.0,
+          "c100": 35.14,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 14766.0,
+          "lts": 5118.0,
+          "c100": 34.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 9718.0,
+          "lts": 3780.0,
+          "c100": 38.9,
+          "co2": 514.8,
+          "ralenti": null,
+          "horas": 22
+        },
+        {
+          "mes": "2026-02",
+          "km": 11046.0,
+          "lts": 4046.0,
+          "c100": 36.63,
+          "co2": 10519.6,
+          "ralenti": null,
+          "horas": 241
+        },
+        {
+          "mes": "2026-03",
+          "km": 13236.0,
+          "lts": 4979.0,
+          "c100": 37.62,
+          "co2": 12945.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 12338.0,
+          "lts": 4388.0,
+          "c100": 35.56,
+          "co2": 11408.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 14104.0,
+          "lts": 4846.0,
+          "c100": 34.36,
+          "co2": 12599.6,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 14811.0,
+          "lts": 4974.0,
+          "c100": 33.58,
+          "co2": 12932.4,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 15916.0,
+          "lts": 5483.0,
+          "c100": 34.45,
+          "co2": 14255.8,
+          "ralenti": 1.5,
+          "horas": null
+        }
+      ]
+    },
+    "AE423IW": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 17877.0,
+          "lts": 5892.0,
+          "c100": 31.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 18417.0,
+          "lts": 5715.0,
+          "c100": 31.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 8848.0,
+          "lts": 2824.0,
+          "c100": 31.92,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 18212.0,
+          "lts": 5764.0,
+          "c100": 31.65,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 18064.0,
+          "lts": 5532.0,
+          "c100": 30.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 18321.0,
+          "lts": 5623.0,
+          "c100": 30.69,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 22013.0,
+          "lts": 7161.0,
+          "c100": 32.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 20059.0,
+          "lts": 5290.0,
+          "c100": 26.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 21309.0,
+          "lts": 6814.0,
+          "c100": 31.97,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18573.0,
+          "lts": 5946.0,
+          "c100": 32.01,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 17082.0,
+          "lts": 5441.0,
+          "c100": 31.85,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 17996.0,
+          "lts": 5884.0,
+          "c100": 32.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 19868.0,
+          "lts": 6473.0,
+          "c100": 32.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 17715.0,
+          "lts": 5278.0,
+          "c100": 29.79,
+          "co2": 14276.3,
+          "ralenti": null,
+          "horas": 303
+        },
+        {
+          "mes": "2026-02",
+          "km": 12610.0,
+          "lts": 3683.0,
+          "c100": 29.21,
+          "co2": 9686.6,
+          "ralenti": null,
+          "horas": 227
+        },
+        {
+          "mes": "2026-03",
+          "km": 15617.0,
+          "lts": 4784.0,
+          "c100": 30.63,
+          "co2": 12580.7,
+          "ralenti": null,
+          "horas": 268
+        },
+        {
+          "mes": "2026-04",
+          "km": 13944.0,
+          "lts": 4202.0,
+          "c100": 30.13,
+          "co2": 11050.1,
+          "ralenti": null,
+          "horas": 239
+        },
+        {
+          "mes": "2026-05",
+          "km": 10467.0,
+          "lts": 3177.0,
+          "c100": 30.35,
+          "co2": 8400.0,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 13902.0,
+          "lts": 4244.0,
+          "c100": 30.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 15364.0,
+          "lts": 4803.0,
+          "c100": 31.26,
+          "co2": 12600.0,
+          "ralenti": 19.0,
+          "horas": null
+        }
+      ]
+    },
+    "AG983HW": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-01",
+          "km": 15353.0,
+          "lts": 5177.0,
+          "c100": 29.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 19001.0,
+          "lts": 6931.0,
+          "c100": 31.94,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 17267.0,
+          "lts": 6803.0,
+          "c100": 34.69,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 13152.0,
+          "lts": 4170.0,
+          "c100": 31.71,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 24832.0,
+          "lts": 7981.0,
+          "c100": 32.14,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 24602.0,
+          "lts": 8108.0,
+          "c100": 32.96,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 21215.0,
+          "lts": 7027.0,
+          "c100": 33.12,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 23852.0,
+          "lts": 7841.0,
+          "c100": 32.87,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 16194.0,
+          "lts": 5206.0,
+          "c100": 32.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 18820.0,
+          "lts": 6221.0,
+          "c100": 33.06,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 16466.0,
+          "lts": 5210.0,
+          "c100": 31.64,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 10819.0,
+          "lts": 3460.0,
+          "c100": 31.98,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 13438.0,
+          "lts": 4068.0,
+          "c100": 30.27,
+          "co2": 624.0,
+          "ralenti": null,
+          "horas": 60
+        },
+        {
+          "mes": "2026-02",
+          "km": 14994.0,
+          "lts": 4459.0,
+          "c100": 29.74,
+          "co2": 11593.4,
+          "ralenti": null,
+          "horas": 251
+        },
+        {
+          "mes": "2026-03",
+          "km": 16260.0,
+          "lts": 5114.0,
+          "c100": 31.45,
+          "co2": 13296.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 18012.0,
+          "lts": 5609.0,
+          "c100": 31.14,
+          "co2": 14583.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 15591.0,
+          "lts": 5137.0,
+          "c100": 32.95,
+          "co2": 13356.2,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 19032.0,
+          "lts": 6514.0,
+          "c100": 34.23,
+          "co2": 16936.4,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 16344.0,
+          "lts": 5410.0,
+          "c100": 33.1,
+          "co2": 14066.0,
+          "ralenti": 1.0,
+          "horas": null
+        }
+      ]
+    },
+    "NWA923": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 18423.0,
+          "lts": 6458.0,
+          "c100": 32.81,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 16210.0,
+          "lts": 5066.0,
+          "c100": 31.25,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 13233.0,
+          "lts": 4124.0,
+          "c100": 31.16,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 9579.0,
+          "lts": 3025.0,
+          "c100": 31.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 16430.0,
+          "lts": 5141.0,
+          "c100": 31.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 17899.0,
+          "lts": 5595.0,
+          "c100": 31.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 10424.0,
+          "lts": 3260.0,
+          "c100": 31.27,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 17931.0,
+          "lts": 5473.0,
+          "c100": 30.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 15472.0,
+          "lts": 4605.0,
+          "c100": 29.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18137.0,
+          "lts": 5649.0,
+          "c100": 31.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AF577BD": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2024-12",
+          "km": 19412.0,
+          "lts": 8063.0,
+          "c100": 40.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-01",
+          "km": 16108.0,
+          "lts": 8249.0,
+          "c100": 48.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 16491.0,
+          "lts": 7328.0,
+          "c100": 40.23,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 13809.0,
+          "lts": 6209.0,
+          "c100": 41.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 15477.0,
+          "lts": 6730.0,
+          "c100": 43.48,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 7439.0,
+          "lts": 3015.0,
+          "c100": 40.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 5773.0,
+          "lts": 2280.0,
+          "c100": 39.49,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 18750.0,
+          "lts": 7685.0,
+          "c100": 40.99,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 19996.0,
+          "lts": 8429.0,
+          "c100": 42.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 18154.0,
+          "lts": 7765.0,
+          "c100": 42.77,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 20278.0,
+          "lts": 8778.0,
+          "c100": 43.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 12315.0,
+          "lts": 5113.0,
+          "c100": 41.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 15914.0,
+          "lts": 5846.0,
+          "c100": 36.73,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 11675.0,
+          "lts": 4612.0,
+          "c100": 39.5,
+          "co2": 14253.2,
+          "ralenti": null,
+          "horas": 234
+        },
+        {
+          "mes": "2026-02",
+          "km": 11359.0,
+          "lts": 4262.0,
+          "c100": 37.52,
+          "co2": 11081.2,
+          "ralenti": null,
+          "horas": 183
+        },
+        {
+          "mes": "2026-03",
+          "km": 18584.0,
+          "lts": 6993.0,
+          "c100": 37.63,
+          "co2": 18181.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 17959.0,
+          "lts": 7203.0,
+          "c100": 40.11,
+          "co2": 18727.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 11785.0,
+          "lts": 4747.0,
+          "c100": 40.28,
+          "co2": 12342.2,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-06",
+          "km": 16306.0,
+          "lts": 6612.0,
+          "c100": 40.55,
+          "co2": 17191.2,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-07",
+          "km": 17337.0,
+          "lts": 6845.0,
+          "c100": 39.48,
+          "co2": 17797.0,
+          "ralenti": 1.1,
+          "horas": null
+        }
+      ]
+    },
+    "AF218HY": {
+      "tag": "LAD",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-01",
+          "km": 16210.0,
+          "lts": 6151.91,
+          "c100": 37.95,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 22401.0,
+          "lts": 8389.69,
+          "c100": 37.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 7680.0,
+          "lts": 3222.0,
+          "c100": 41.95,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 18215.3,
+          "lts": 6808.67,
+          "c100": 37.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 21255.0,
+          "lts": 10776.0,
+          "c100": 50.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 17659.0,
+          "lts": 7342.0,
+          "c100": 41.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 21465.0,
+          "lts": 9054.0,
+          "c100": 42.18,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-08",
+          "km": 19634.0,
+          "lts": 7878.0,
+          "c100": 40.12,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-09",
+          "km": 21776.0,
+          "lts": 8561.0,
+          "c100": 39.31,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-10",
+          "km": 19543.0,
+          "lts": 7693.0,
+          "c100": 39.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-11",
+          "km": 16794.0,
+          "lts": 6572.0,
+          "c100": 39.13,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-12",
+          "km": 18330.0,
+          "lts": 7136.0,
+          "c100": 38.93,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2026-01",
+          "km": 19792.0,
+          "lts": 7673.0,
+          "c100": 38.77,
+          "co2": 11991.2,
+          "ralenti": null,
+          "horas": 152
+        },
+        {
+          "mes": "2026-02",
+          "km": 11744.0,
+          "lts": 4561.0,
+          "c100": 38.84,
+          "co2": 11858.6,
+          "ralenti": null,
+          "horas": 193
+        },
+        {
+          "mes": "2026-03",
+          "km": 16558.0,
+          "lts": 6310.0,
+          "c100": 38.11,
+          "co2": 16406.0,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-04",
+          "km": 14185.0,
+          "lts": 5433.0,
+          "c100": 38.3,
+          "co2": 14125.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-05",
+          "km": 19088.0,
+          "lts": 7253.0,
+          "c100": 38.0,
+          "co2": 18857.8,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-06",
+          "km": 16227.0,
+          "lts": 6474.0,
+          "c100": 39.9,
+          "co2": 16832.4,
+          "ralenti": null,
+          "horas": 0
+        },
+        {
+          "mes": "2026-07",
+          "km": 11031.0,
+          "lts": 4280.0,
+          "c100": 38.8,
+          "co2": 11128.0,
+          "ralenti": 1.2,
+          "horas": null
+        }
+      ]
+    },
+    "AC078XC": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2025-01",
+          "km": 21160.0,
+          "lts": 6967.74,
+          "c100": 32.93,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-02",
+          "km": 18996.0,
+          "lts": 6324.68,
+          "c100": 33.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 14622.53,
+          "lts": 4898.2,
+          "c100": 33.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 21799.76,
+          "lts": 7163.37,
+          "c100": 32.86,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 21537.28,
+          "lts": 6442.8,
+          "c100": 29.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 19219.67,
+          "lts": 6335.18,
+          "c100": 32.96,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 17494.96,
+          "lts": 5696.59,
+          "c100": 32.56,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AD815KX": {
+      "tag": "LAD",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 15780.0,
+          "lts": 4529.91,
+          "c100": 28.71,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 16548.95,
+          "lts": 4998.97,
+          "c100": 30.21,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 19960.2,
+          "lts": 6120.42,
+          "c100": 30.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 19455.19,
+          "lts": 5946.31,
+          "c100": 30.56,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 20033.86,
+          "lts": 6767.92,
+          "c100": 33.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 18145.87,
+          "lts": 5797.87,
+          "c100": 31.95,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AA823XJ": {
+      "tag": "CAT",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 4802.81,
+          "lts": 1907.22,
+          "c100": 39.71,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2096.55,
+          "lts": 608.56,
+          "c100": 29.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1671.54,
+          "lts": 658.69,
+          "c100": 39.41,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1959.03,
+          "lts": 703.76,
+          "c100": 35.92,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1352.49,
+          "lts": 508.6,
+          "c100": 37.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1553.44,
+          "lts": 478.81,
+          "c100": 30.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AD909NU": {
+      "tag": "CAT",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2087.36,
+          "lts": 257.86,
+          "c100": 12.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2180.66,
+          "lts": 502.97,
+          "c100": 23.06,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2106.54,
+          "lts": 351.71,
+          "c100": 16.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2290.82,
+          "lts": 384.06,
+          "c100": 16.77,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2201.74,
+          "lts": 507.07,
+          "c100": 23.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2208.73,
+          "lts": 351.39,
+          "c100": 15.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AE116RO": {
+      "tag": "CAT",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2387.69,
+          "lts": 286.57,
+          "c100": 12.0,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2347.69,
+          "lts": 367.06,
+          "c100": 15.63,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2467.61,
+          "lts": 445.93,
+          "c100": 18.07,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2709.08,
+          "lts": 392.17,
+          "c100": 14.48,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2476.13,
+          "lts": 322.64,
+          "c100": 13.03,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2668.87,
+          "lts": 391.79,
+          "c100": 14.68,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AE527FA": {
+      "tag": "CHI",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2021.94,
+          "lts": 172.11,
+          "c100": 8.51,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 3983.05,
+          "lts": 387.99,
+          "c100": 9.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 4235.95,
+          "lts": 429.69,
+          "c100": 10.14,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 4866.18,
+          "lts": 463.14,
+          "c100": 9.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2535.81,
+          "lts": 223.61,
+          "c100": 8.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 4401.8,
+          "lts": 424.65,
+          "c100": 9.65,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AF310TU": {
+      "tag": "BUE",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2453.68,
+          "lts": 853.78,
+          "c100": 34.8,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 3575.41,
+          "lts": 1218.13,
+          "c100": 34.07,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2420.37,
+          "lts": 1216.88,
+          "c100": 50.28,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1939.04,
+          "lts": 668.47,
+          "c100": 34.47,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2305.55,
+          "lts": 837.18,
+          "c100": 36.31,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2775.76,
+          "lts": 932.79,
+          "c100": 33.6,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AF591UW": {
+      "tag": "CAT",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1785.54,
+          "lts": 366.55,
+          "c100": 20.53,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1556.49,
+          "lts": 324.1,
+          "c100": 20.82,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1724.56,
+          "lts": 242.58,
+          "c100": 14.07,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1889.71,
+          "lts": 394.23,
+          "c100": 20.86,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1800.29,
+          "lts": 239.4,
+          "c100": 13.3,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1885.0,
+          "lts": 323.34,
+          "c100": 17.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AG070OR": {
+      "tag": "CAT",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 3792.92,
+          "lts": 1362.03,
+          "c100": 35.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 4292.57,
+          "lts": 1504.56,
+          "c100": 35.05,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1208.56,
+          "lts": 285.53,
+          "c100": 23.63,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1544.39,
+          "lts": 487.84,
+          "c100": 31.59,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1518.46,
+          "lts": 300.0,
+          "c100": 19.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2415.83,
+          "lts": 1435.89,
+          "c100": 59.44,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AG082ZL": {
+      "tag": "BUE",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1864.72,
+          "lts": 176.17,
+          "c100": 9.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2825.8,
+          "lts": 417.72,
+          "c100": 14.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2891.72,
+          "lts": 337.71,
+          "c100": 11.68,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 3211.46,
+          "lts": 435.68,
+          "c100": 13.57,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2667.68,
+          "lts": 356.8,
+          "c100": 13.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 3156.43,
+          "lts": 335.99,
+          "c100": 10.64,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AG797NJ": {
+      "tag": "BUE",
+      "marca": "TOYOTA",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1398.12,
+          "lts": 202.83,
+          "c100": 14.51,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1437.78,
+          "lts": 191.27,
+          "c100": 13.3,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2415.0,
+          "lts": 305.66,
+          "c100": 12.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1900.1,
+          "lts": 280.54,
+          "c100": 14.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1683.06,
+          "lts": 211.66,
+          "c100": 12.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1425.78,
+          "lts": 89.73,
+          "c100": 6.29,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "CAF865": {
+      "tag": "TUC",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 972.43,
+          "lts": 443.27,
+          "c100": 45.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 972.33,
+          "lts": 470.17,
+          "c100": 48.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 940.67,
+          "lts": 386.66,
+          "c100": 41.1,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 747.75,
+          "lts": 336.67,
+          "c100": 45.02,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "CDZ499": {
+      "tag": "LRJ",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1288.22,
+          "lts": 219.51,
+          "c100": 17.04,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1334.14,
+          "lts": 245.02,
+          "c100": 18.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1375.83,
+          "lts": 202.96,
+          "c100": 14.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1435.39,
+          "lts": 225.95,
+          "c100": 15.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1171.88,
+          "lts": 320.6,
+          "c100": 27.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1490.0,
+          "lts": 307.32,
+          "c100": 20.63,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "CYD468": {
+      "tag": "LRJ",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1020.2,
+          "lts": 106.69,
+          "c100": 10.46,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1182.68,
+          "lts": 136.97,
+          "c100": 11.58,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1421.83,
+          "lts": 209.7,
+          "c100": 14.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1172.85,
+          "lts": 156.11,
+          "c100": 13.31,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1025.4,
+          "lts": 183.81,
+          "c100": 17.93,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1339.3,
+          "lts": 170.95,
+          "c100": 12.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "DHS534": {
+      "tag": "CAT",
+      "marca": "FORD",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1341.34,
+          "lts": 334.93,
+          "c100": 24.97,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1469.02,
+          "lts": 323.53,
+          "c100": 22.02,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1333.5,
+          "lts": 479.83,
+          "c100": 35.98,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1577.82,
+          "lts": 365.76,
+          "c100": 23.18,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1355.34,
+          "lts": 366.53,
+          "c100": 27.04,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1438.81,
+          "lts": 496.73,
+          "c100": 34.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "EWQ717": {
+      "tag": "CAT",
+      "marca": "PEUGEOT",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 240.78,
+          "lts": 51.47,
+          "c100": 21.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 898.27,
+          "lts": 40.55,
+          "c100": 4.51,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 898.47,
+          "lts": 119.11,
+          "c100": 13.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 918.75,
+          "lts": 141.43,
+          "c100": 15.39,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 591.2,
+          "lts": 164.13,
+          "c100": 27.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 784.38,
+          "lts": 193.02,
+          "c100": 24.61,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "FLG593": {
+      "tag": "TUC",
+      "marca": "SCANIA",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2990.24,
+          "lts": 908.14,
+          "c100": 30.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 3428.4,
+          "lts": 870.06,
+          "c100": 25.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2936.55,
+          "lts": 997.65,
+          "c100": 33.97,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2180.44,
+          "lts": 708.13,
+          "c100": 32.48,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2482.81,
+          "lts": 692.67,
+          "c100": 27.9,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1871.12,
+          "lts": 720.47,
+          "c100": 38.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "GWF267": {
+      "tag": "BEL",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 769.42,
+          "lts": 124.57,
+          "c100": 16.19,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1260.98,
+          "lts": 103.35,
+          "c100": 8.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 755.53,
+          "lts": 0.0,
+          "c100": 0.0,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 678.08,
+          "lts": 0.0,
+          "c100": 0.0,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1058.62,
+          "lts": 130.82,
+          "c100": 12.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 331.68,
+          "lts": 71.76,
+          "c100": 21.64,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "HCU499": {
+      "tag": "BEL",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 4866.29,
+          "lts": 1010.14,
+          "c100": 20.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 5185.44,
+          "lts": 1350.3,
+          "c100": 26.04,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 5043.12,
+          "lts": 1131.09,
+          "c100": 22.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 5581.53,
+          "lts": 1332.11,
+          "c100": 23.87,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 5839.1,
+          "lts": 1567.8,
+          "c100": 26.85,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 5256.43,
+          "lts": 1254.6,
+          "c100": 23.87,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "ISK266": {
+      "tag": "LRJ",
+      "marca": "RENAULT",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1207.45,
+          "lts": 177.99,
+          "c100": 14.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1213.76,
+          "lts": 160.85,
+          "c100": 13.25,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1141.68,
+          "lts": 181.81,
+          "c100": 15.92,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1341.56,
+          "lts": 220.08,
+          "c100": 16.4,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1331.56,
+          "lts": 93.96,
+          "c100": 7.06,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 1273.89,
+          "lts": 170.04,
+          "c100": 13.35,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "KOF186": {
+      "tag": "BUE",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1369.4,
+          "lts": 211.23,
+          "c100": 15.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1812.48,
+          "lts": 330.81,
+          "c100": 18.25,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2078.15,
+          "lts": 413.9,
+          "c100": 19.92,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2381.69,
+          "lts": 419.77,
+          "c100": 17.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1821.8,
+          "lts": 288.31,
+          "c100": 15.83,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2022.43,
+          "lts": 391.9,
+          "c100": 19.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "KSP007": {
+      "tag": "BUE",
+      "marca": "FORD",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2645.81,
+          "lts": 274.52,
+          "c100": 10.38,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2827.57,
+          "lts": 240.46,
+          "c100": 8.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2025.88,
+          "lts": 205.73,
+          "c100": 10.16,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2005.92,
+          "lts": 196.7,
+          "c100": 9.81,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2342.85,
+          "lts": 274.58,
+          "c100": 11.72,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2413.49,
+          "lts": 192.51,
+          "c100": 7.98,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "MDH784": {
+      "tag": "COR",
+      "marca": "HYUNDAI",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1391.06,
+          "lts": 253.45,
+          "c100": 18.22,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 2243.67,
+          "lts": 370.71,
+          "c100": 16.52,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2048.62,
+          "lts": 382.95,
+          "c100": 18.69,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2894.22,
+          "lts": 482.0,
+          "c100": 16.65,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2484.76,
+          "lts": 452.13,
+          "c100": 18.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 3174.77,
+          "lts": 503.59,
+          "c100": 15.86,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "MJF275": {
+      "tag": "COR",
+      "marca": "FORD",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 3479.46,
+          "lts": 601.42,
+          "c100": 17.28,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 3459.07,
+          "lts": 723.3,
+          "c100": 20.91,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 3150.83,
+          "lts": 518.57,
+          "c100": 16.46,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 4418.09,
+          "lts": 1040.97,
+          "c100": 23.56,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 3961.89,
+          "lts": 670.99,
+          "c100": 16.94,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 3522.08,
+          "lts": 870.75,
+          "c100": 24.72,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "PAN639": {
+      "tag": "CAT",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1641.29,
+          "lts": 201.54,
+          "c100": 12.28,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1484.74,
+          "lts": 244.96,
+          "c100": 16.5,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1708.94,
+          "lts": 264.58,
+          "c100": 15.48,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1794.22,
+          "lts": 264.44,
+          "c100": 14.74,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1509.0,
+          "lts": 243.76,
+          "c100": 16.15,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "PIQ468": {
+      "tag": "COR",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1720.68,
+          "lts": 168.66,
+          "c100": 9.8,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1835.05,
+          "lts": 261.58,
+          "c100": 14.25,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2322.06,
+          "lts": 314.44,
+          "c100": 13.54,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2201.98,
+          "lts": 255.58,
+          "c100": 11.61,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2044.98,
+          "lts": 258.03,
+          "c100": 12.62,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "RYN309": {
+      "tag": "LRJ",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 734.15,
+          "lts": 119.34,
+          "c100": 16.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 792.72,
+          "lts": 175.97,
+          "c100": 22.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 956.8,
+          "lts": 131.06,
+          "c100": 13.7,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 781.16,
+          "lts": 159.1,
+          "c100": 20.37,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 810.74,
+          "lts": 160.2,
+          "c100": 19.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "VWL688": {
+      "tag": "BUE",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 1745.7,
+          "lts": 442.79,
+          "c100": 25.36,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1500.58,
+          "lts": 194.54,
+          "c100": 12.96,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1413.44,
+          "lts": 416.01,
+          "c100": 29.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 1738.1,
+          "lts": 476.74,
+          "c100": 27.43,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1183.3,
+          "lts": 148.59,
+          "c100": 12.56,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "VXO389": {
+      "tag": "BUE",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2408.6,
+          "lts": 485.68,
+          "c100": 20.16,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1493.31,
+          "lts": 399.56,
+          "c100": 26.76,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2604.93,
+          "lts": 780.83,
+          "c100": 29.98,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 3013.65,
+          "lts": 758.16,
+          "c100": 25.16,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2254.37,
+          "lts": 610.52,
+          "c100": 27.08,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "VYE907": {
+      "tag": "BUE",
+      "marca": "MERCEDES BENZ",
+      "serie": [
+        {
+          "mes": "2025-02",
+          "km": 2463.67,
+          "lts": 388.71,
+          "c100": 15.78,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-03",
+          "km": 1823.61,
+          "lts": 439.61,
+          "c100": 24.11,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 1155.75,
+          "lts": 334.59,
+          "c100": 28.95,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2914.9,
+          "lts": 646.64,
+          "c100": 22.18,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 2613.61,
+          "lts": 667.72,
+          "c100": 25.55,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AF103BT": {
+      "tag": "CAT",
+      "marca": "TOYOTA",
+      "serie": [
+        {
+          "mes": "2025-03",
+          "km": 2103.69,
+          "lts": 355.23,
+          "c100": 16.89,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2064.98,
+          "lts": 355.1,
+          "c100": 17.2,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2081.05,
+          "lts": 355.22,
+          "c100": 17.07,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1947.52,
+          "lts": 358.12,
+          "c100": 18.39,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 2169.13,
+          "lts": 393.03,
+          "c100": 18.12,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "AG224IE": {
+      "tag": "LRJ",
+      "marca": "IVECO",
+      "serie": [
+        {
+          "mes": "2025-03",
+          "km": 6795.15,
+          "lts": 1966.03,
+          "c100": 28.93,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 6141.7,
+          "lts": 1950.01,
+          "c100": 31.75,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 7291.95,
+          "lts": 2312.1,
+          "c100": 31.71,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 7417.51,
+          "lts": 2318.55,
+          "c100": 31.26,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-07",
+          "km": 7637.89,
+          "lts": 2380.88,
+          "c100": 31.17,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    },
+    "NBR784": {
+      "tag": "ROD",
+      "marca": "DFM",
+      "serie": [
+        {
+          "mes": "2025-03",
+          "km": 386.31,
+          "lts": 73.54,
+          "c100": 19.04,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-04",
+          "km": 2653.44,
+          "lts": 495.14,
+          "c100": 18.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-05",
+          "km": 2353.73,
+          "lts": 462.72,
+          "c100": 19.66,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        },
+        {
+          "mes": "2025-06",
+          "km": 1186.18,
+          "lts": 420.53,
+          "c100": 35.45,
+          "co2": null,
+          "ralenti": null,
+          "horas": null
+        }
+      ]
+    }
+  }
+}
