@@ -23,6 +23,9 @@ jobs:
     timeout-minutes: 20
 
     steps:
+      - name: Inicio
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -49,7 +52,9 @@ jobs:
           SHEET_ID_SERVICES: ${{ secrets.SHEET_ID_SERVICES }}
           GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SHEETS_DRY_RUN: ${{ github.event.inputs.dry_run }}
-        run: python hawk_km.py
+        run: |
+          set -o pipefail
+          python hawk_km.py 2>&1 | tee salida.txt
 
       - name: Subir resultados
         if: always()
@@ -67,3 +72,119 @@ jobs:
           git add data/*.xlsx data/historico.csv || true
           git diff --staged --quiet || git commit -m "km $(date -u +%Y-%m-%d)"
           git push
+
+      - name: Fin
+        if: always()
+        run: |
+          END_TIME=$(date +%s)
+          echo "DURACION=$(( END_TIME - ${START_TIME:-END_TIME} )) segundos" >> $GITHUB_ENV
+          echo "FECHA_AR=$(TZ=America/Argentina/Buenos_Aires date '+%d/%m/%Y %H:%M:%S')" >> $GITHUB_ENV
+
+          # Resumen: lineas clave del log (unidades leidas y filas escritas en la planilla)
+          {
+            echo "RESUMEN<<EOF_$GITHUB_RUN_ID"
+            grep -E '^(OK [0-9]+/|\[sheets\])' salida.txt 2>/dev/null | tail -n 15 || true
+            echo "EOF_$GITHUB_RUN_ID"
+          } >> $GITHUB_ENV
+
+          # Ultimas lineas del log, para el mail de error
+          {
+            echo "LOG_TAIL<<EOF_$GITHUB_RUN_ID"
+            tail -n 40 salida.txt 2>/dev/null || echo "(sin salida: el job fallo antes de correr el scraper)"
+            echo "EOF_$GITHUB_RUN_ID"
+          } >> $GITHUB_ENV
+
+      - name: Mail exito
+        if: success()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "✅ Hawk Odometros OK"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Hawk
+          body: |
+            Estado: EXITOSO
+
+            Proceso:
+            hawk_km.py
+
+            Empresas: ${{ github.event.inputs.solo_empresas || 'toda la flota' }}
+            Dry run: ${{ github.event.inputs.dry_run || 'no' }}
+            Disparado por: ${{ github.event_name }}
+
+            Hora Argentina:
+            ${{ env.FECHA_AR }}
+
+            Duracion:
+            ${{ env.DURACION }}
+
+            Resumen:
+            ${{ env.RESUMEN }}
+
+            Workflow:
+            ${{ github.workflow }}
+
+            Run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mail error
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "❌ Error Hawk Odometros"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Hawk
+          body: |
+            Estado: FALLO
+
+            Proceso:
+            hawk_km.py
+
+            Empresas: ${{ github.event.inputs.solo_empresas || 'toda la flota' }}
+            Dry run: ${{ github.event.inputs.dry_run || 'no' }}
+            Disparado por: ${{ github.event_name }}
+
+            Hora Argentina:
+            ${{ env.FECHA_AR }}
+
+            Duracion:
+            ${{ env.DURACION }}
+
+            Ultimas lineas del log:
+            ${{ env.LOG_TAIL }}
+
+            Revisar logs:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+      - name: Mail cancelado
+        if: cancelled()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_FROM }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "⚠️ Hawk Odometros cancelado"
+          to: ${{ secrets.EMAIL_FROM }}
+          from: GitHub Hawk
+          body: |
+            Estado: CANCELADO (timeout de 20 min o cancelacion manual)
+
+            Proceso:
+            hawk_km.py
+
+            Hora Argentina:
+            ${{ env.FECHA_AR }}
+
+            Run:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
